@@ -518,9 +518,17 @@ These defaults apply to **every project** unless overridden by a project-level C
 ~/.claude/
   CLAUDE.md                              # Global defaults for all projects
   settings.json                          # Notification hooks, permissions, model
+  statusline-command.sh                  # Custom status line script
   agents/
     security-reviewer.md                 # Security review subagent
     architecture-reviewer.md             # Architecture review subagent
+  commands/
+    sec-review.md                        # /sec-review — detailed security audit
+  reviews/
+    go.md                                # Go-specific review criteria
+    rust.md                              # Rust-specific review criteria
+    typescript.md                        # TypeScript/Node/Next/Nest review criteria
+    python.md                            # Python/Django/FastAPI/Flask review criteria
   skills/
     prd/
       SKILL.md                           # /prd — product requirements document
@@ -530,12 +538,12 @@ These defaults apply to **every project** unless overridden by a project-level C
       SKILL.md                           # /feature — implement from spec
     review/
       SKILL.md                           # /review — PR/branch review
+    code-review/
+      SKILL.md                           # /code-review — stack-aware code review
     autopilot/
       SKILL.md                           # /autopilot — execute roadmap automatically
     new-project/
       SKILL.md                           # /new-project — scaffold a project
-  commands/
-    sec-review.md                        # /sec-review — detailed security audit
 ```
 
 ---
