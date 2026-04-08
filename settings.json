@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash /home/maradrash/.claude/statusline-command.sh"
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "model": "opus",
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "notify-send 'Claude Code' '$CLAUDE_NOTIFICATION'"
+          }
+        ]
+      }
+    ]
+  }
+}
