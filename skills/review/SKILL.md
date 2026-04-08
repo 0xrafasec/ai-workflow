@@ -23,9 +23,9 @@ You are the **reviewer**, not the writer. Do NOT rewrite the implementation. Fla
 
 3. **Check spec compliance** - Find the relevant spec in `docs/specs/`. Does the implementation match?
 
-4. **Spawn parallel review subagents:**
-   - **security-reviewer** - Security analysis of the changes
-   - **architecture-reviewer** - Architectural consistency review
+4. **Run stack-aware code review** — Run `/code-review` to auto-detect the stack and spawn parallel agents for security, architecture, and stack-specific idiomatic checks. This loads language-specific review guides (Go, Rust, TypeScript, Python) so findings are tailored to the project.
+
+    If `/code-review` is not available, fall back to spawning **security-reviewer** and **architecture-reviewer** subagents in parallel.
 
 5. **Your own review** - Focus on what subagents won't catch:
    - **Business logic correctness** - Does it solve the actual problem?
@@ -44,11 +44,14 @@ You are the **reviewer**, not the writer. Do NOT rewrite the implementation. Fla
    ## Spec Compliance
    - [Does it match the spec? What's missing?]
 
-   ## Security (from subagent)
+   ## Security (from code-review)
    - [Summary of findings]
 
-   ## Architecture (from subagent)
+   ## Architecture (from code-review)
    - [Summary of findings]
+
+   ## Stack-Specific (from code-review)
+   - [Language/framework-specific findings]
 
    ## Business Logic
    - [Your findings]

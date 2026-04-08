@@ -25,15 +25,15 @@ Default behavior is **commit only, no PR**. The user controls when to ship.
 
 5. **Run quality checks** — Run the project's lint, typecheck, and test commands (check CLAUDE.md or Makefile for the right commands).
 
-6. **Security review** — Run `/sec-review` (the full security audit with 4 parallel agents). This is more thorough than just spawning the security-reviewer agent. It covers injection, auth/crypto, data exposure, and config/supply chain in parallel.
+6. **Stack-aware code review** — Run `/code-review` to perform a full stack-aware review. This auto-detects the project's language/framework and spawns 3 parallel agents: security (with language-specific checks), architecture (with language-specific patterns), and a stack-specific idiomatic review. This replaces the separate `/sec-review` + architecture-reviewer steps with a single, more thorough command.
 
-7. **Architecture review** — Spawn an architecture-reviewer subagent to review your changes for pattern consistency, separation of concerns, unnecessary abstractions, and API stability.
+    If `/code-review` is not available, fall back to: run `/sec-review` for security, then spawn an architecture-reviewer subagent.
 
-8. **Address findings** — Fix any HIGH severity issues from both reviews. For MEDIUM issues, use your judgment. Re-run the affected review if you made significant changes.
+7. **Address findings** — Fix any HIGH severity issues from the review. For MEDIUM issues, use your judgment. Re-run `/code-review` if you made significant changes.
 
-9. **Commit** — Use conventional commit messages (feat:, fix:, refactor:, etc.). Split by logical concern. Each commit should leave the codebase working.
+8. **Commit** — Use conventional commit messages (feat:, fix:, refactor:, etc.). Split by logical concern. Each commit should leave the codebase working.
 
-10. **Ship (conditional):**
+9. **Ship (conditional):**
 
     - **No `--pr` flag (default):** Stop here. Tell the user: "Feature implemented and committed on `<current-branch>`. Run with `--pr` when ready to open a PR."
 

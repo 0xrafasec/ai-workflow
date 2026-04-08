@@ -68,9 +68,15 @@ link "agents/architecture-reviewer.md"   "agents/architecture-reviewer.md"
 link "commands/sec-review.md"   "commands/sec-review.md"
 
 # Skills
-for skill in feature spec review new-project prd autopilot; do
+for skill in feature spec review new-project prd autopilot code-review; do
     mkdir -p "$CLAUDE_DIR/skills/$skill"
     link "skills/$skill/SKILL.md" "skills/$skill/SKILL.md"
+done
+
+# Language-specific review guides
+mkdir -p "$CLAUDE_DIR/reviews"
+for guide in go rust typescript python; do
+    link "reviews/$guide.md" "reviews/$guide.md"
 done
 
 echo ""

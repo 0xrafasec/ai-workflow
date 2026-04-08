@@ -42,6 +42,20 @@ Reusable multi-step workflows invoked as slash commands.
 | `/new-project <name> [stack]` | Scaffold a new project with the full workflow |
 | `/autopilot <roadmap-path>` | Execute a full roadmap phase by phase with parallel worktree agents |
 | `/sec-review` | Full security audit with 4 parallel analysis agents |
+| `/code-review` | Stack-aware review — auto-detects language/framework, loads specific best practices |
+
+### Language-Specific Review Guides
+
+`/code-review` auto-detects your stack and loads the right guide. Each covers security **and** architecture best practices.
+
+| Guide | Covers |
+|-------|--------|
+| `reviews/go.md` | Error handling, concurrency, injection, interface design, project structure |
+| `reviews/rust.md` | Unsafe audit, FFI, ownership patterns, async, error design, type system |
+| `reviews/typescript.md` | Node.js, Next.js, Nest.js — prototype pollution, SSR security, DI, async patterns |
+| `reviews/python.md` | Django, FastAPI, Flask — injection, path traversal, async, ORM patterns |
+
+Polyglot projects load multiple guides automatically.
 
 ### Config
 

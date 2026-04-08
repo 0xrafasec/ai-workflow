@@ -8,11 +8,12 @@
 
 1. [Overview](#overview)
 2. [Global Agents](#global-agents)
-3. [Global Skills](#global-skills)
-4. [Global Settings](#global-settings)
-5. [Global CLAUDE.md](#global-claudemd)
-6. [File Map](#file-map)
-7. [Daily Usage](#daily-usage)
+3. [Language-Specific Review Guides](#language-specific-review-guides)
+4. [Global Skills](#global-skills)
+5. [Global Settings](#global-settings)
+6. [Global CLAUDE.md](#global-claudemd)
+7. [File Map](#file-map)
+8. [Daily Usage](#daily-usage)
 
 ---
 
@@ -77,6 +78,40 @@ Agents are spawned as subagents during implementation or review. They run in iso
 | Testability | Is code structured for easy testing? |
 
 **Output:** Numbered concerns with file:line, severity (HIGH/MEDIUM/LOW), issue, suggestion. Ends with summary of what's good.
+
+---
+
+## Language-Specific Review Guides
+
+Review guides provide language and framework-specific criteria that are loaded by the `/code-review` skill (and used by `/feature` and `/review`). They augment the base agents with stack-specific knowledge.
+
+### Go (`reviews/go.md`)
+
+**Security focus:** unchecked errors, goroutine leaks, race conditions, `os/exec` injection, `math/rand` misuse, missing HTTP timeouts, `unsafe` package, CGo, template injection.
+
+**Architecture focus:** project structure (`cmd/`, `internal/`), interface design (accept interfaces/return structs, small interfaces), error patterns (sentinel errors, no panic in libraries), concurrency (channel ownership, context propagation, errgroup), testing (table-driven, `t.Helper()`).
+
+### Rust (`reviews/rust.md`)
+
+**Security focus:** `unsafe` blocks (justification required), FFI boundaries (null pointers, panic across FFI), `unwrap()` in library code, integer overflow, `serde` deserialization with untrusted input, `zeroize` for secrets, `cargo audit`.
+
+**Architecture focus:** ownership patterns (excessive `.clone()`, `Rc`/`Arc` proliferation), type system (newtypes, typestate), error design (`thiserror` for libs, `anyhow` for apps), async patterns (blocking in async, cancellation safety, `Send` bounds), module structure (`pub` visibility, re-exports).
+
+### TypeScript (`reviews/typescript.md`)
+
+Covers **Node.js**, **Next.js**, and **Nest.js** with framework-specific sections for each.
+
+**Security focus:** prototype pollution, `eval()`/`child_process.exec()`, JWT in localStorage, missing `sameSite` cookies. **Next.js:** server actions as public endpoints, RSC data leaks, env var exposure. **Nest.js:** missing guards, unvalidated DTOs, exposed internal errors.
+
+**Architecture focus:** type safety (`any` usage, type assertions, Zod at boundaries), async patterns (missing `await`, sequential vs parallel), module design. **Next.js:** client/server boundary, data fetching strategy, route segment config. **Nest.js:** module boundaries, provider scope, dependency injection, repository pattern.
+
+### Python (`reviews/python.md`)
+
+Covers **FastAPI**, **Django**, **Flask**, and general Python.
+
+**Security focus:** `eval()`/`exec()`, `pickle.loads()`, `yaml.load()`, f-string SQL, path traversal, `random` vs `secrets`. **Django:** `DEBUG=True`, `ALLOWED_HOSTS`, raw SQL, CSRF exemption. **FastAPI:** missing response models, WebSocket auth. **Flask:** debug mode, hardcoded secret key.
+
+**Architecture focus:** type hints (`Any` usage, `# type: ignore`), error handling (bare `except`, silenced exceptions), async patterns (blocking in async). **Django:** fat models, manager methods, signals overuse. **FastAPI:** dependency injection, router organization, async all the way. **Testing:** pytest fixtures, factory pattern, mocking boundaries.
 
 ---
 
@@ -365,6 +400,35 @@ Orchestrator (you — stays thin, only tracks progress)
 - Phases in dependency order
 - Each task needs: spec path, files to modify, dependencies, verification command
 - Parallel tasks must touch different files
+
+---
+
+### /code-review
+
+**File:** `~/.claude/skills/code-review/SKILL.md`
+
+**Purpose:** Stack-aware code review that auto-detects the project's language/framework and runs security + architecture + idiomatic pattern checks with language-specific best practices.
+
+**Usage:**
+```
+/code-review                 # diff current branch vs main
+/code-review diff develop    # diff vs specific branch
+/code-review full            # full codebase scan
+/code-review full src/       # full scan scoped to a directory
+```
+
+**What it does:**
+1. Auto-detects the stack by checking marker files (`go.mod`, `Cargo.toml`, `package.json`, `pyproject.toml`, etc.)
+2. Loads the corresponding review guides from `reviews/`
+3. Spawns 3 parallel agents:
+   - **Security** — base security-reviewer + language-specific security criteria
+   - **Architecture** — base architecture-reviewer + language-specific architecture patterns
+   - **Stack-specific** — idiomatic patterns, common pitfalls, performance antipatterns, testing conventions
+4. Deduplicates and consolidates into a single report with verdict (PASS/REVIEW/FAIL)
+
+**Supported stacks:** Go, Rust, TypeScript (Node.js, Next.js, Nest.js), Python (FastAPI, Django, Flask). Polyglot projects load multiple guides.
+
+**Integration:** Used automatically by `/feature` (step 6) and `/review` (step 4). Can also be run standalone.
 
 ---
 

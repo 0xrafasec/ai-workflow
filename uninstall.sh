@@ -47,6 +47,11 @@ FILES=(
     "skills/new-project/SKILL.md"
     "skills/prd/SKILL.md"
     "skills/autopilot/SKILL.md"
+    "skills/code-review/SKILL.md"
+    "reviews/go.md"
+    "reviews/rust.md"
+    "reviews/typescript.md"
+    "reviews/python.md"
 )
 
 for f in "${FILES[@]}"; do
