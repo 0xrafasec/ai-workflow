@@ -4,7 +4,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "bash /home/maradrash/.claude/statusline-command.sh"
+    "command": "bash ~/.claude/statusline-command.sh"
   },
   "skipDangerousModePermissionPrompt": true,
   "model": "opus",
