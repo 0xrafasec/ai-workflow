@@ -47,8 +47,9 @@ Use AskUserQuestion to dig into the system design. Adapt questions based on what
 5. **Scaling and performance** — What are the expected loads? Where are the bottlenecks? What needs to be fast?
 6. **Integration points** — What external systems does this talk to? What APIs does it expose? What does it depend on?
 7. **Key decisions** — What architectural decisions have already been made? What tradeoffs were accepted and why?
+8. **Testing** — What test frameworks are in use? Where do tests live? Are there separate unit/integration/e2e layers? What needs integration tests vs unit tests? Any critical flows that need e2e coverage?
 
-For inherited projects, focus more on: "Is my understanding correct?" and "What would you change?" rather than "What do you want?"
+For inherited projects, focus more on: "Is my understanding correct?" and "What would you change?" rather than "What do you want?" For testing, explore the existing test directories and patterns before asking — "I see you have pytest with a `tests/` folder but no integration tests yet — is that intentional?"
 
 ### Write
 
@@ -84,6 +85,32 @@ Write to `docs/specs/ARCHITECTURE.md`:
 | Layer | Technology | Rationale |
 |-------|-----------|-----------|
 | [layer] | [tech] | [why] |
+
+## Testing Strategy
+
+[Define the testing approach for this project. This section is the source of truth that all other skills (/feature, /fix, /roadmap, /autopilot) reference when deciding what tests to write.]
+
+### Test Layers
+
+| Layer | Scope | Framework | Run Command | When to Write |
+|-------|-------|-----------|-------------|---------------|
+| Unit | Single function/module, no I/O | [e.g., pytest, vitest, go test] | [e.g., make test-unit] | Every change — business logic, pure functions, validators |
+| Integration | Component boundaries, real dependencies | [e.g., pytest + testcontainers, supertest] | [e.g., make test-integration] | API endpoints, database queries, service interactions, middleware |
+| E2E | Full user flows, production-like environment | [e.g., playwright, cypress, k6] | [e.g., make test-e2e] | Critical user paths, auth flows, payment flows |
+
+### Test Conventions
+
+- **File location:** [e.g., `tests/unit/`, `tests/integration/`, `tests/e2e/` or colocated `__tests__/`]
+- **Naming:** [e.g., `test_<module>.py`, `<module>.test.ts`, `<module>_test.go`]
+- **Fixtures/factories:** [where shared test helpers live]
+- **Test database:** [how integration tests get a database — testcontainers, sqlite, etc.]
+- **CI behavior:** [which layers run on PR, which run nightly]
+
+### Coverage Expectations
+
+- Unit tests: cover all business logic, validation, and error paths
+- Integration tests: cover all API endpoints, database operations, and external service calls
+- E2E tests: cover critical user journeys (list the 3-5 most important flows)
 
 ## Deployment Model
 
@@ -224,9 +251,21 @@ Write to `docs/specs/<feature_name>.md`:
 [Auth requirements, input validation, data exposure risks. Reference THREAT_MODEL.md if it exists.]
 
 ## Verification Criteria
-- [ ] [input] -> [expected output]
-- [ ] [edge case] -> [expected behavior]
-- [ ] [failure mode] -> [expected error]
+
+### Unit Tests
+- [ ] [function/module]: [input] → [expected output]
+- [ ] [validation]: [invalid input] → [expected error]
+- [ ] [edge case]: [boundary condition] → [expected behavior]
+
+### Integration Tests
+- [ ] [API endpoint]: [request] → [response + status code]
+- [ ] [database operation]: [action] → [expected state]
+- [ ] [service interaction]: [call] → [expected result]
+
+### E2E Tests (if applicable)
+- [ ] [user flow]: [steps] → [expected outcome]
+
+*Adapt the layers to what the feature touches. A pure logic change may only need unit tests. An API feature needs unit + integration. A critical user-facing flow needs all three. Reference the Testing Strategy in `docs/specs/ARCHITECTURE.md` if it exists.*
 
 ## Out of Scope
 [What this does NOT include]

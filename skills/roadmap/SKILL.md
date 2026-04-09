@@ -75,6 +75,7 @@ If the user gave a phase name or single spec, write to `docs/roadmap/<phase-name
 - **Spec:** docs/specs/[name].md
 - **Files:** [list of files to create or modify]
 - **Dependencies:** None
+- **Tests:** Unit + Integration (sets up data models and API layer)
 - **Verification:** [command to verify this task works]
 - **Estimated complexity:** Low/Medium/High
 
@@ -82,6 +83,7 @@ If the user gave a phase name or single spec, write to `docs/roadmap/<phase-name
 - **Spec:** docs/specs/[name].md
 - **Files:** [list of files to create or modify]
 - **Dependencies:** Task 1 (needs [specific thing])
+- **Tests:** Unit + Integration (service interactions)
 - **Verification:** [command]
 - **Estimated complexity:** Medium
 
@@ -89,6 +91,7 @@ If the user gave a phase name or single spec, write to `docs/roadmap/<phase-name
 - **Spec:** docs/specs/[name].md
 - **Files:** [list — no overlap with Task 2]
 - **Dependencies:** Task 1
+- **Tests:** Unit only (pure UI logic, no service boundary)
 - **Verification:** [command]
 - **Estimated complexity:** Low
 
@@ -139,8 +142,9 @@ Then create each `docs/roadmap/<phase-name>.md` using the single-phase format ab
 3. **Mark dependencies explicitly** — if Task B needs Task A's output, say so and explain what specifically it needs.
 4. **Keep tasks small** — if a task would fill Claude's context window, split it. A task should be completable in one worktree session.
 5. **Include verification commands** — every task needs a concrete way to prove it works.
-6. **Foundation first** — shared types, interfaces, data models, and config go in Phase 1. Implementation builds on top.
-7. **File overlap = sequential** — if two tasks modify the same file, they cannot run in parallel. Call this out explicitly.
+6. **Specify test layers per task** — based on the Testing Strategy in `docs/specs/ARCHITECTURE.md` (or inferred from the codebase), mark which test layers each task needs: Unit, Integration, E2E. A task that touches APIs needs integration tests. A task that implements a critical user flow needs e2e. Pure logic only needs unit.
+7. **Foundation first** — shared types, interfaces, data models, and config go in Phase 1. Implementation builds on top.
+8. **File overlap = sequential** — if two tasks modify the same file, they cannot run in parallel. Call this out explicitly.
 
 ## After Writing
 

@@ -27,21 +27,43 @@ Default behavior is **commit only, no PR**. The user controls when to ship.
 
 2. **Check for a roadmap task** — Look in `docs/roadmap/` for a task referencing this spec. If found, note dependencies and verification commands.
 
-3. **Plan the implementation** — If the feature is complex (touches 3+ files or has non-obvious design decisions), use Plan Mode to align on the approach before writing code. Otherwise, proceed directly.
+3. **Discover test strategy** — Before writing any code, determine how to test this feature:
 
-4. **Implement with tests** — Write the implementation and tests together. Tests must cover all verification criteria from the spec. Run the test suite after implementation and fix any failures.
+   a. **Check for architecture spec:** Read `docs/specs/ARCHITECTURE.md` — if it has a Testing Strategy section, follow it (frameworks, file locations, naming conventions, coverage expectations).
 
-5. **Run quality checks** — Run the project's lint, typecheck, and test commands (check CLAUDE.md or Makefile for the right commands).
+   b. **If no architecture spec:** Infer from the codebase:
+      - Look for existing test directories (`tests/`, `__tests__/`, `*_test.go`, `*.test.ts`, `test_*.py`, `spec/`)
+      - Check `package.json`, `pyproject.toml`, `Cargo.toml`, `Makefile` for test commands and frameworks
+      - Read 1-2 existing test files to understand the patterns (fixtures, helpers, naming)
+      - Check for separate test layers (unit vs integration vs e2e directories)
 
-6. **Stack-aware code review** — Run `/code-review` to perform a full stack-aware review. This auto-detects the project's language/framework and spawns 3 parallel agents: security (with language-specific checks), architecture (with language-specific patterns), and a stack-specific idiomatic review. This replaces the separate `/sec-review` + architecture-reviewer steps with a single, more thorough command.
+   c. **If no tests exist at all:** Read `docs/PRD.md` or `README.md` for project context, then set up the test infrastructure as part of the implementation (create test directories, add test dependencies if needed). Tell the user what you're setting up.
+
+   d. **Determine which test layers this feature needs** based on the spec's Verification Criteria:
+      - **Unit tests:** Always — for business logic, validators, pure functions
+      - **Integration tests:** If the feature touches APIs, database, external services, or component boundaries
+      - **E2E tests:** If the feature is a critical user flow (auth, payments, onboarding) or the spec explicitly requires them
+
+4. **Plan the implementation** — If the feature is complex (touches 3+ files or has non-obvious design decisions), use Plan Mode to align on the approach before writing code. Include the test plan in the implementation plan. Otherwise, proceed directly.
+
+5. **Implement with tests** — Write implementation and tests together, organized by layer:
+   - **Unit tests first** — they validate core logic and are fastest to run
+   - **Integration tests next** — they validate component interactions
+   - **E2E tests last** — only for critical flows identified in step 3d
+   
+   Tests must cover all verification criteria from the spec. Run each test layer after writing it and fix failures before moving to the next layer.
+
+6. **Run quality checks** — Run the project's lint, typecheck, and test commands (check CLAUDE.md or Makefile for the right commands). Run ALL test layers, not just unit tests.
+
+7. **Stack-aware code review** — Run `/code-review` to perform a full stack-aware review. This auto-detects the project's language/framework and spawns 3 parallel agents: security (with language-specific checks), architecture (with language-specific patterns), and a stack-specific idiomatic review. This replaces the separate `/sec-review` + architecture-reviewer steps with a single, more thorough command.
 
     If `/code-review` is not available, fall back to: run `/sec-review` for security, then spawn an architecture-reviewer subagent.
 
-7. **Address findings** — Fix any HIGH severity issues from the review. For MEDIUM issues, use your judgment. Re-run `/code-review` if you made significant changes.
+8. **Address findings** — Fix any HIGH severity issues from the review. For MEDIUM issues, use your judgment. Re-run `/code-review` if you made significant changes.
 
-8. **Commit** — Use conventional commit messages (feat:, fix:, refactor:, etc.). Split by logical concern. Each commit should leave the codebase working.
+9. **Commit** — Use conventional commit messages (feat:, fix:, refactor:, etc.). Split by logical concern. Each commit should leave the codebase working.
 
-9. **Ship (conditional):**
+10. **Ship (conditional):**
 
     - **No `--pr` flag (default):** Stop here. Tell the user: "Feature implemented and committed on `<current-branch>`. Run with `--pr` when ready to open a PR."
 
@@ -52,8 +74,8 @@ Default behavior is **commit only, no PR**. The user controls when to ship.
     PR contents:
       - Summary (1-3 bullets of what changed and why)
       - Link to the spec
-      - Security review verdict (PASS/REVIEW/FAIL from step 6)
+      - Security review verdict (PASS/REVIEW/FAIL from step 7)
       - Architecture review summary
-      - Test plan with verification criteria from the spec
+      - Test plan: which test layers were written (unit/integration/e2e), what they cover, how to run each layer
 
     The source branch is always your current branch (or worktree branch). `--pr` only controls where the PR points to.

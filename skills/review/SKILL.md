@@ -31,7 +31,12 @@ You are the **reviewer**, not the writer. Do NOT rewrite the implementation. Fla
    - **Business logic correctness** - Does it solve the actual problem?
    - **Design decisions** - Are the tradeoffs right?
    - **What's missing** - What didn't the author think of?
-   - **Test coverage** - Are verification criteria from the spec covered?
+   - **Test layer coverage** - Check against `docs/specs/ARCHITECTURE.md` Testing Strategy (if it exists) or infer from codebase patterns:
+     - Are unit tests present for new business logic?
+     - Are integration tests present for new API endpoints, DB operations, or service boundaries?
+     - Are e2e tests present for critical user flows (if applicable)?
+     - Do tests follow the project's conventions (location, naming, framework)?
+     - Are verification criteria from the spec covered at the right test layer?
    - **Edge cases** - Are failure modes handled?
 
 6. **Consolidate findings** into a single report:
@@ -55,6 +60,12 @@ You are the **reviewer**, not the writer. Do NOT rewrite the implementation. Fla
 
    ## Business Logic
    - [Your findings]
+
+   ## Test Coverage
+   - **Unit:** [Present/Missing — what's covered, what's not]
+   - **Integration:** [Present/Missing/N/A — what's covered]
+   - **E2E:** [Present/Missing/N/A — what's covered]
+   - **Verdict:** [Adequate / Needs more coverage at X layer]
 
    ## Suggestions
    - [Improvements, not blockers]

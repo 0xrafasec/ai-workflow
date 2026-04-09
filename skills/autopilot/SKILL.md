@@ -25,10 +25,10 @@ If the roadmap doesn't have enough detail (missing spec paths, unclear dependenc
 Read these files to understand the project — this is the only heavy reading you do:
 - `CLAUDE.md` — build commands, conventions
 - `docs/PRD.md` or equivalent — what the project is
-- `docs/specs/ARCHITECTURE.md` — system structure (if exists)
+- `docs/specs/ARCHITECTURE.md` — system structure and **Testing Strategy** (if exists)
 - `docs/specs/THREAT_MODEL.md` — security model (if exists)
 
-Summarize what you learned in 3-5 lines. This summary will be passed to every subagent so they have project context without reading everything themselves.
+Summarize what you learned in 3-5 lines, **including the test strategy** (frameworks, test layers, run commands, file locations). This summary will be passed to every subagent so they have project context without reading everything themselves. If no Testing Strategy exists, note that subagents should discover test patterns from the codebase.
 
 ### 3. Execute Phase by Phase
 
@@ -57,25 +57,33 @@ For tasks that can run in parallel (no dependencies between them, no file overla
 ## Build & Test Commands
 [From CLAUDE.md]
 
+## Test Strategy
+[From ARCHITECTURE.md Testing Strategy, or "Discover from codebase — check test directories, frameworks, patterns"]
+
 ## Your Task
 Phase: [phase name]
 Task: [task name]
 Spec: [spec path — the agent MUST read this]
 Files to modify: [list]
+Test layers needed: [from roadmap task — e.g., "Unit + Integration"]
 Verification: [command]
 
 ## Instructions
 1. Read the spec file thoroughly. Also read any referenced specs (architecture, security).
-2. Implement the task following the spec exactly.
-3. Write tests covering all verification criteria from the spec.
-4. Run the verification command and fix any failures.
-5. Run the project's lint and typecheck commands.
-6. Spawn a security-reviewer subagent to review your changes.
-7. Spawn an architecture-reviewer subagent to review your changes.
-8. Fix any HIGH severity findings.
-9. Commit with conventional commit messages, split by logical concern.
-10. Push the branch.
-11. Create a PR with:
+2. If the Test Strategy above says "Discover from codebase", look for existing test directories, frameworks, and patterns before writing any tests.
+3. Implement the task following the spec exactly.
+4. Write tests at the layers specified above, covering all verification criteria from the spec:
+   - **Unit tests:** business logic, validators, pure functions
+   - **Integration tests:** API endpoints, database operations, service boundaries
+   - **E2E tests:** only if specified for critical user flows
+5. Run the verification command and fix any failures.
+6. Run the project's lint and typecheck commands.
+7. Spawn a security-reviewer subagent to review your changes.
+8. Spawn an architecture-reviewer subagent to review your changes.
+9. Fix any HIGH severity findings.
+10. Commit with conventional commit messages, split by logical concern.
+11. Push the branch.
+12. Create a PR with:
     - Summary (what changed and why)
     - Link to the spec
     - Security review status

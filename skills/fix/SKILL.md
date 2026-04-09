@@ -35,23 +35,33 @@ Default behavior is **commit only, no PR**.
    - Check `git log` on the affected files for recent changes that may have introduced the bug.
    - Identify the root cause — not just the symptom. Explain it to the user in 1-2 sentences before proceeding.
 
-4. **Fix**
+4. **Discover test strategy** — Before writing the fix, understand the project's test approach:
+
+   a. **Check for architecture spec:** Read `docs/specs/ARCHITECTURE.md` — if it has a Testing Strategy section, follow it.
+   b. **If no architecture spec:** Infer from the codebase — look for existing test directories, frameworks, patterns, and naming conventions (same discovery as `/feature` step 3b).
+   c. **Determine which test layers the bug touches** — a bug in a pure function needs a unit test; a bug in an API endpoint needs an integration test; a bug in a user flow may need an e2e test.
+
+5. **Fix**
 
    - Make the minimal change that fixes the root cause. Don't refactor surrounding code.
-   - Add a regression test that fails without the fix and passes with it.
+   - Add regression tests at the appropriate layer(s):
+     - **Unit test:** Always — proves the root cause logic is fixed
+     - **Integration test:** If the bug is at a component boundary (API, database, service interaction)
+     - **E2E test:** Only if the bug broke a critical user flow and no e2e coverage existed for it
+   - Each regression test must fail without the fix and pass with it.
    - Run the project's test suite and fix any failures.
 
-5. **Run quality checks** — Run the project's lint, typecheck, and test commands (check CLAUDE.md or Makefile for the right commands).
+6. **Run quality checks** — Run the project's lint, typecheck, and test commands (check CLAUDE.md or Makefile for the right commands). Run ALL test layers, not just unit tests.
 
-6. **Stack-aware code review** — Run `/code-review` to perform a full stack-aware review.
+7. **Stack-aware code review** — Run `/code-review` to perform a full stack-aware review.
 
    If `/code-review` is not available, fall back to: run `/sec-review` for security, then spawn an architecture-reviewer subagent.
 
-7. **Address findings** — Fix any HIGH severity issues from the review. For MEDIUM issues, use your judgment.
+8. **Address findings** — Fix any HIGH severity issues from the review. For MEDIUM issues, use your judgment.
 
-8. **Commit** — Use `fix:` conventional commit message. The message should describe what was broken, not what you changed. Example: `fix: login fails when password contains special characters`.
+9. **Commit** — Use `fix:` conventional commit message. The message should describe what was broken, not what you changed. Example: `fix: login fails when password contains special characters`.
 
-9. **Ship (conditional):**
+10. **Ship (conditional):**
 
    - **No `--pr` flag (default):** Stop here. Tell the user: "Bug fixed and committed on `<current-branch>`."
 
@@ -63,6 +73,6 @@ Default behavior is **commit only, no PR**.
      - Summary: what was broken and why
      - Root cause analysis (1-2 sentences)
      - What the fix does
-     - Regression test description
-     - Security review verdict (PASS/REVIEW/FAIL from step 6)
+     - Regression tests: which layers (unit/integration/e2e), what they cover
+     - Security review verdict (PASS/REVIEW/FAIL from step 7)
      - Link to issue (if one was provided)
