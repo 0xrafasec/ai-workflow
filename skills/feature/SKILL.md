@@ -7,15 +7,23 @@ Implement the feature described in $ARGUMENTS.
 ## Parse Arguments
 
 The argument can be:
-- **Just a spec path:** `/feature docs/specs/auth.md` — implement, commit, no PR
-- **Spec path + `--pr`:** `/feature docs/specs/auth.md --pr` — implement, commit, push, create PR
-- **Spec path + `--pr <branch>`:** `/feature docs/specs/auth.md --pr feat/auth` — implement, commit, push to specific branch, create PR
+- **Just a feature name:** `/feature auth` — resolves to `docs/specs/auth.md`, implement, commit, no PR
+- **Full spec path:** `/feature docs/specs/auth.md` — same, but explicit path
+- **With `--pr`:** `/feature auth --pr` — implement, commit, push, create PR
+- **With `--pr <branch>`:** `/feature auth --pr feat/auth` — implement, commit, push to specific branch, create PR
+
+**Spec resolution:** If the argument is not a file path (no `/` or `.md`), resolve it to `docs/specs/<name>.md`. If it is a path, use it as-is.
 
 Default behavior is **commit only, no PR**. The user controls when to ship.
 
 ## Steps
 
-1. **Read the spec** at the provided path. Understand the problem, solution, technical design, security considerations, and verification criteria thoroughly.
+1. **Read the spec** at the provided path. If the spec file does not exist:
+   - Use AskUserQuestion to ask: "Spec `<path>` not found. Would you like me to:\n\n1. **Create the spec first** — I'll run `/spec <feature-name>` to interview you and create it, then continue with implementation\n2. **Build without a spec** — I'll ask you to describe the feature and implement directly (good for small features, POCs, or quick prototyping)\n"
+   - If option 1: run `/spec <feature-name>` (derive the name from the path, e.g. `docs/specs/work-order-api.md` → `work-order-api`), then continue from step 2 with the newly created spec.
+   - If option 2: skip spec-dependent steps (verification criteria, spec link in PR). Ask the user to describe the feature, then proceed to step 3.
+
+   **Note:** For bugfixes, use `/fix` instead.
 
 2. **Check for a roadmap task** — Look in `docs/roadmap/` for a task referencing this spec. If found, note dependencies and verification commands.
 
