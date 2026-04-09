@@ -2,6 +2,34 @@
 
 A spec-driven, security-first development workflow toolkit for [Claude Code](https://claude.ai/code). Includes global agents, skills, commands, and conventions that apply across all projects.
 
+## Spec-Driven Development
+
+This toolkit implements **Spec-Driven Development (SDD)** — a methodology where specifications are the source of truth for all implementation, testing, and review. AI agents execute specs, not vague instructions.
+
+The core idea: humans decide *what* to build through structured interviews and specs; AI agents decide *how* to build it by following those specs with full context. Every feature flows through a layered document pipeline:
+
+```
+PRD (why) → Architecture + TDD + Security (how) → Specs (what) → Roadmap (when) → Implementation → Review
+```
+
+Each layer builds on the ones above it. A feature spec references the architecture, testing strategy, and threat model — so implementation agents have complete context without repetition.
+
+For a detailed explanation with diagrams, see [docs/spec-driven-development.md](docs/spec-driven-development.md).
+
+### Model Strategy
+
+The workflow uses a tiered model strategy — Opus for decisions, Sonnet for execution:
+
+| Task | Model | Reasoning |
+|------|-------|-----------|
+| Spec writing, design, interviews | **Opus** | Creative reasoning, edge case discovery |
+| Implementation (main session) | **Opus** | Complex design decisions |
+| Security review | **Opus** | False negatives are catastrophic |
+| Orchestration (`/autopilot`) | **Opus** | Dependency logic, phase management |
+| Architecture review | **Sonnet** | Structured criteria, checklist-driven |
+| Stack-specific review | **Sonnet** | Pattern matching against review guides |
+| Worktree agents (`/autopilot`) | **Sonnet** | Following detailed specs, not designing |
+
 ## Quick Start
 
 ```bash
@@ -105,6 +133,7 @@ The typical flow from idea to shipped code:
 
 ## Docs
 
+- [Spec-Driven Development](docs/spec-driven-development.md) — Detailed explanation of the SDD methodology with Mermaid diagrams
 - [WORKFLOW.md](WORKFLOW.md) — Full workflow documentation with phases, conventions, and CI/CD integration
 - [REFERENCE.md](REFERENCE.md) — Quick reference for all agents, skills, settings, and daily usage patterns
 

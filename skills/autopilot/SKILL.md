@@ -49,7 +49,7 @@ If the roadmap marks a phase as complete (e.g., with a checkmark), skip it and a
 
 #### c. Dispatch parallel tasks
 
-For tasks that can run in parallel (no dependencies between them, no file overlap), spawn them **all at once in a single message** using the Agent tool with `isolation: "worktree"` and `run_in_background: true`. This is critical — all parallel agents must be dispatched in the same response so they run concurrently. You will be notified as each completes. Do NOT wait for one to finish before dispatching the next.
+For tasks that can run in parallel (no dependencies between them, no file overlap), spawn them **all at once in a single message** using the Agent tool with `isolation: "worktree"`, `run_in_background: true`, and `model: "sonnet"`. Worktree agents follow detailed specs — they implement, not design — so Sonnet is the right model for cost efficiency without quality loss. This is critical — all parallel agents must be dispatched in the same response so they run concurrently. You will be notified as each completes. Do NOT wait for one to finish before dispatching the next.
 
 Each agent gets this prompt:
 
@@ -81,8 +81,8 @@ Verification: [command]
    - **E2E tests:** only if specified for critical user flows
 5. Run the verification command and fix any failures.
 6. Run the project's lint and typecheck commands.
-7. Spawn a security-reviewer subagent to review your changes.
-8. Spawn an architecture-reviewer subagent to review your changes.
+7. Spawn a security-reviewer subagent to review your changes (use `model: "opus"` — security is critical).
+8. Spawn an architecture-reviewer subagent to review your changes (use `model: "sonnet"`).
 9. Fix any HIGH severity findings.
 10. Commit with conventional commit messages, split by logical concern.
 11. Push the branch.

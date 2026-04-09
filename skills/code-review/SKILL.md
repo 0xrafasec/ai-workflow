@@ -65,7 +65,9 @@ Also read the base agent files:
 
 Spawn **3 parallel subagents** using the Agent tool. Each gets the diff/file list, the base agent prompt, AND the language-specific guide content.
 
-### Agent 1: Security Review (stack-aware)
+### Agent 1: Security Review (stack-aware) — model: opus
+
+Spawn this agent with `model: "opus"`. Security review is critical and must use the highest-quality model.
 
 ```
 You are a senior security engineer reviewing code for vulnerabilities.
@@ -87,7 +89,9 @@ For each finding, note which guide criterion it violates.
 Follow the output format from the base security-reviewer.
 ```
 
-### Agent 2: Architecture Review (stack-aware)
+### Agent 2: Architecture Review (stack-aware) — model: sonnet
+
+Spawn this agent with `model: "sonnet"`. Architecture review follows structured criteria and doesn't require the most expensive model.
 
 ```
 You are a senior software architect reviewing code for quality and consistency.
@@ -109,7 +113,9 @@ For each finding, note which guide criterion it violates.
 Follow the output format from the base architecture-reviewer.
 ```
 
-### Agent 3: Stack-Specific Patterns
+### Agent 3: Stack-Specific Patterns — model: sonnet
+
+Spawn this agent with `model: "sonnet"`. Stack-specific pattern checks are checklist-driven against loaded review guides.
 
 ```
 You are a [stack] expert reviewing code for idiomatic patterns and common pitfalls.
