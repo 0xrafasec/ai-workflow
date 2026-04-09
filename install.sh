@@ -68,7 +68,7 @@ link "agents/architecture-reviewer.md"   "agents/architecture-reviewer.md"
 link "commands/sec-review.md"   "commands/sec-review.md"
 
 # Skills
-for skill in feature spec review new-project prd autopilot code-review roadmap; do
+for skill in feature spec review new-project prd autopilot code-review roadmap architecture tdd security adr rfc; do
     mkdir -p "$CLAUDE_DIR/skills/$skill"
     link "skills/$skill/SKILL.md" "skills/$skill/SKILL.md"
 done

@@ -22,7 +22,7 @@
 This toolkit implements the workflow described in [WORKFLOW.md](./WORKFLOW.md). It provides:
 
 - **Agents** — specialized reviewers that can be spawned as subagents
-- **Skills** — reusable slash-command workflows (`/prd`, `/spec`, `/feature`, `/review`, `/autopilot`, `/new-project`)
+- **Skills** — reusable slash-command workflows (`/prd`, `/architecture`, `/tdd`, `/security`, `/adr`, `/rfc`, `/spec`, `/roadmap`, `/feature`, `/fix`, `/review`, `/autopilot`, `/code-review`, `/new-project`)
 - **Settings** — notification hooks for parallel work
 - **CLAUDE.md** — global defaults applied to every project
 
@@ -152,18 +152,14 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
 
 ---
 
-### /spec
+### /architecture
 
-**File:** `~/.claude/skills/spec/SKILL.md`
+**File:** `~/.claude/skills/architecture/SKILL.md`
 
-**Purpose:** Create a specification document. Has three modes depending on the argument.
-
-#### /spec architecture
-
-Creates a system architecture document.
+**Purpose:** Create or update the system architecture document.
 
 ```
-/spec architecture
+/architecture
 ```
 
 **Interview focus:** Components, data flow, technology choices, deployment model, scaling, integration points, key decisions and tradeoffs.
@@ -179,14 +175,48 @@ Creates a system architecture document.
 - Key decisions table (decision, choice, alternatives, rationale)
 - Constraints and limitations
 
+**Context awareness:** Reads existing PRD, docs, and codebase before interviewing. For inherited projects, explores the codebase first and summarizes what it found.
+
 ---
 
-#### /spec security
+### /tdd
 
-Creates a threat model and security specification.
+**File:** `~/.claude/skills/tdd/SKILL.md`
+
+**Purpose:** Create or update the Technical Design Document — testing strategy, dev environment, CI/CD, coding standards, tooling.
 
 ```
-/spec security
+/tdd
+```
+
+**Interview focus:** Test frameworks and layers (unit/integration/e2e), dev environment setup, CI/CD pipeline, coding standards, tooling decisions, observability, dependency management.
+
+**Writes to:** `docs/specs/TDD.md`
+
+**Document structure:**
+- Testing Strategy (source of truth for `/feature`, `/fix`, `/roadmap`, `/autopilot`)
+  - Test layers table (scope, framework, run command, when to write)
+  - Test conventions (location, naming, fixtures, CI behavior)
+  - Coverage expectations per layer
+- Dev environment (setup, external dependencies)
+- CI/CD pipeline (PR checks, deployment)
+- Coding standards (linter, formatter, type checker)
+- Tooling table with rationale
+- Error handling & observability
+- Dependency management
+
+**Context awareness:** Explores existing test directories, CI config, linter config, and package files before interviewing.
+
+---
+
+### /security
+
+**File:** `~/.claude/skills/security/SKILL.md`
+
+**Purpose:** Create or update the threat model and security spec.
+
+```
+/security
 ```
 
 **Interview focus:** Trust boundaries, auth/authz, sensitive data inventory, attack surface, threat actors, compliance requirements, existing security measures.
@@ -202,11 +232,67 @@ Creates a threat model and security specification.
 - Security controls (implemented vs required)
 - Compliance requirements
 
+**Context awareness:** Explores auth middleware, input validation, database queries, secrets management, and exposed endpoints before interviewing.
+
 ---
 
-#### /spec \<feature-name\>
+### /adr
 
-Creates an implementation spec for a specific feature. This is the most common mode.
+**File:** `~/.claude/skills/adr/SKILL.md`
+
+**Purpose:** Create an Architecture Decision Record. Lightweight, numbered, captures one decision.
+
+```
+/adr use-postgresql-over-mongodb
+/adr switch-to-grpc
+```
+
+**Interview focus:** What's the decision, context/constraints, options considered with tradeoffs, the choice and why, consequences.
+
+**Writes to:** `docs/adr/NNNN-<slug>.md` (auto-numbered)
+
+**Document structure:**
+- Status (Proposed/Accepted/Deprecated/Superseded)
+- Context
+- Decision
+- Options considered (pros/cons for each)
+- Consequences (positive, negative, neutral)
+- Related links
+
+---
+
+### /rfc
+
+**File:** `~/.claude/skills/rfc/SKILL.md`
+
+**Purpose:** Create a Request for Comments for significant changes needing team discussion.
+
+```
+/rfc migrate-to-event-sourcing
+/rfc new-auth-system
+```
+
+**Interview focus:** Proposal, motivation, scope, high-level design, alternatives, migration plan, risks, open questions.
+
+**Writes to:** `docs/rfc/NNNN-<slug>.md` (auto-numbered)
+
+**Document structure:**
+- Summary (elevator pitch)
+- Motivation
+- Proposal with key design decisions
+- Alternatives considered
+- Migration plan
+- Risks and open questions
+- Feedback requested
+- References
+
+---
+
+### /spec
+
+**File:** `~/.claude/skills/spec/SKILL.md`
+
+**Purpose:** Create a feature implementation spec. Focused on a single feature — the actionable document that `/feature` reads and implements.
 
 ```
 /spec user-authentication
@@ -223,21 +309,13 @@ Creates an implementation spec for a specific feature. This is the most common m
 - Solution
 - Technical design (API changes, data model, architecture)
 - Security considerations
-- Verification criteria (checkboxes with input -> expected output)
+- Verification criteria by test layer:
+  - Unit tests (function/module level)
+  - Integration tests (API, database, service boundaries)
+  - E2E tests (critical user flows, if applicable)
 - Out of scope
 
----
-
-#### Context awareness (all modes)
-
-Before interviewing, `/spec` reads what already exists:
-- Existing PRD, specs, README, CLAUDE.md
-- **For inherited projects with no docs:** explores the codebase — directory structure, entry points, config files, `git log`, dependencies — then tells you "here's what I understand so far" before starting questions
-
-After writing, it suggests the next logical step:
-- No architecture spec? -> "Consider `/spec architecture`"
-- Security concerns but no threat model? -> "Consider `/spec security`"
-- Specs done? -> "Ready for `/roadmap` or `/feature`"
+**Context awareness:** Reads existing architecture, TDD, and security docs to build on them rather than repeat them. For inherited projects, explores the codebase first.
 
 ---
 
@@ -342,10 +420,11 @@ After writing, it suggests the next logical step:
 1. `cd <project-name>`
 2. `pre-commit install`
 3. `/prd <project-name>` — write the product requirements
-4. `/spec architecture` — define the system architecture
-5. `/spec security` — define the threat model (if applicable)
-6. `/spec <first-feature>` — write your first feature spec
-7. `/feature docs/specs/<first-feature>.md` — implement it
+4. `/architecture` — define the system structure
+5. `/tdd` — define testing strategy, dev environment, CI/CD
+6. `/security` — define the threat model (if applicable)
+7. `/spec <first-feature>` — write your first feature spec
+8. `/feature docs/specs/<first-feature>.md` — implement it
 
 ---
 
@@ -532,10 +611,24 @@ These defaults apply to **every project** unless overridden by a project-level C
   skills/
     prd/
       SKILL.md                           # /prd — product requirements document
+    architecture/
+      SKILL.md                           # /architecture — system structure
+    tdd/
+      SKILL.md                           # /tdd — testing, dev env, CI/CD
+    security/
+      SKILL.md                           # /security — threat model
+    adr/
+      SKILL.md                           # /adr — architecture decision records
+    rfc/
+      SKILL.md                           # /rfc — request for comments
     spec/
-      SKILL.md                           # /spec — architecture, security, or feature spec
+      SKILL.md                           # /spec — feature implementation spec
+    roadmap/
+      SKILL.md                           # /roadmap — phased task breakdown
     feature/
       SKILL.md                           # /feature — implement from spec
+    fix/
+      SKILL.md                           # /fix — diagnose and fix bugs
     review/
       SKILL.md                           # /review — PR/branch review
     code-review/
@@ -556,8 +649,9 @@ cd ~/Projects
 /new-project my-app python/fastapi     # Scaffold structure
 cd my-app
 /prd my-app                            # Define what we're building
-/spec architecture                     # Define how it's structured
-/spec security                         # Define the threat model
+/architecture                          # Define how it's structured
+/tdd                                   # Define testing, dev env, CI/CD
+/security                              # Define the threat model
 /spec user-authentication              # First feature spec
 /feature docs/specs/user-authentication.md  # Implement it
 ```
@@ -565,8 +659,9 @@ cd my-app
 ### Joining an inherited project
 ```
 cd ~/Projects/existing-app
-/spec architecture                     # It reads the codebase first, then interviews you
-/spec security                         # Same — explores before asking
+/architecture                          # It reads the codebase first, then interviews you
+/tdd                                   # Discovers existing test setup, fills gaps
+/security                              # Same — explores before asking
 /spec new-feature                      # Feature spec, building on what exists
 ```
 
@@ -617,14 +712,15 @@ The typical flow from idea to code:
 /prd                    "What are we building and why?"
   |
   v
-/spec architecture      "How is the system structured?"
-/spec security          "What are the threats and defenses?"
+/architecture           "How is the system structured?"
+/tdd                    "How do we build, test, and ship?"
+/security               "What are the threats and defenses?"
   |
   v
 /spec <feature>         "Exact implementation details for this feature"
-  |                     (one per feature, references architecture + security)
+  |                     (references architecture, TDD, security docs)
   v
- ROADMAP.md             "Phase breakdown with tasks, deps, parallelism"
+/roadmap                "Phase breakdown with tasks, deps, parallelism"
   |
   +--→ /autopilot       "Execute the whole roadmap automatically"
   |      (dispatches worktree agents, pauses between phases)
@@ -633,6 +729,9 @@ The typical flow from idea to code:
        |
        v
      /review             "Independent review in a fresh session"
+
+/adr <title>            "Capture a decision (anytime)"
+/rfc <title>            "Propose a significant change (anytime)"
 ```
 
 Not every project needs every step. A small feature on an existing project might just need `/spec <feature>` and `/feature`. A greenfield project with a full roadmap can use `/autopilot` to execute it all.

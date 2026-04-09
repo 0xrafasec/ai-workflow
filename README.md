@@ -34,10 +34,15 @@ Reusable multi-step workflows invoked as slash commands.
 | Command | Purpose |
 |---------|---------|
 | `/prd` | Interview and create a Product Requirements Document |
-| `/spec architecture` | Create a system architecture document |
-| `/spec security` | Create a threat model |
+| `/architecture` | Create or update the system architecture document |
+| `/tdd` | Create or update the Technical Design Document (testing, dev env, CI/CD) |
+| `/security` | Create or update the threat model |
+| `/adr <title>` | Create an Architecture Decision Record |
+| `/rfc <title>` | Create a Request for Comments for significant changes |
 | `/spec <feature>` | Create a feature implementation spec |
+| `/roadmap` | Create a phased task breakdown from specs |
 | `/feature <spec-path>` | Implement a feature end-to-end from a spec |
+| `/fix <description>` | Diagnose and fix a bug |
 | `/review` | Review a branch/PR using the writer/reviewer pattern |
 | `/new-project <name> [stack]` | Scaffold a new project with the full workflow |
 | `/autopilot <roadmap-path>` | Execute a full roadmap phase by phase with parallel worktree agents |
@@ -72,18 +77,22 @@ The typical flow from idea to shipped code:
 ```
 /prd                       Define what we're building and why
   |
-/spec architecture         Define system structure
-/spec security             Define threats and defenses
+/architecture              Define system structure
+/tdd                       Define testing, dev env, CI/CD
+/security                  Define threats and defenses
   |
 /spec <feature>            Exact implementation details per feature
   |
-ROADMAP.md                 Phase breakdown with tasks and dependencies
+/roadmap                   Phase breakdown with tasks and dependencies
   |
   +---> /autopilot         Execute the whole roadmap automatically
   |
   +---> /feature <spec>    Or implement one feature at a time
           |
         /review            Independent review in a fresh session
+
+/adr <title>               Capture a decision (anytime)
+/rfc <title>               Propose a significant change (anytime)
 ```
 
 ## Workflow Principles
