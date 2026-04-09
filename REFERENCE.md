@@ -337,15 +337,65 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
 **What it does:**
 1. Reads the spec thoroughly
 2. Checks for a matching roadmap task in `docs/roadmap/`
-3. Plans the implementation (enters Plan Mode if complex)
-4. Implements the feature with tests covering all verification criteria
-5. Runs lint, typecheck, and tests
-6. Runs **`/sec-review`** — the full 4-agent parallel security audit (not just the lighter security-reviewer agent)
-7. Spawns **architecture-reviewer** subagent
-8. Fixes HIGH severity findings from both reviews
+3. Discovers test strategy — reads `docs/specs/TDD.md` or infers from codebase (test directories, frameworks, patterns)
+4. Plans the implementation (enters Plan Mode if complex)
+5. Implements with tests at the right layers (unit, integration, e2e) based on the test strategy
+6. Runs lint, typecheck, and all test layers
+7. Runs **`/code-review`** — stack-aware review with security, architecture, and idiomatic checks
+8. Fixes HIGH severity findings
 9. Commits with conventional commit messages, split by logical concern
-10. **If `--pr`:** pushes and creates a PR with summary, spec link, security verdict, architecture summary, and test plan
+10. **If `--pr`:** pushes and creates a PR with summary, spec link, security verdict, architecture summary, and test plan (which layers, what they cover)
 11. **If no `--pr`:** stops and tells you the feature is ready to ship when you are
+
+---
+
+### /fix
+
+**File:** `~/.claude/skills/fix/SKILL.md`
+
+**Purpose:** Diagnose and fix a bug with proper regression tests.
+
+**Usage:**
+```
+/fix users can't login with special chars         # fix + commit
+/fix https://github.com/org/repo/issues/42        # fix from issue
+/fix login bug --pr                                # fix + commit + push + PR
+/fix login bug --pr develop                        # PR targets develop
+```
+
+**Default is commit only, no PR.**
+
+**What it does:**
+1. Understands the bug (from description or GitHub issue)
+2. Searches the codebase to locate the relevant code paths
+3. Diagnoses root cause — traces data flow, checks git history
+4. Discovers test strategy from `docs/specs/TDD.md` or codebase
+5. Fixes with minimal change + regression tests at the right layer(s)
+6. Runs quality checks and `/code-review`
+7. Commits with `fix:` message describing what was broken
+
+---
+
+### /roadmap
+
+**File:** `~/.claude/skills/roadmap/SKILL.md`
+
+**Purpose:** Create a phased task breakdown from specs.
+
+**Usage:**
+```
+/roadmap                              # scan all specs, create full roadmap
+/roadmap auth-system                  # single phase
+/roadmap docs/specs/feature_x.md      # roadmap for one spec
+```
+
+**What it does:**
+1. Reads project context (PRD, architecture, TDD, existing specs)
+2. Interviews about priorities, dependencies, parallelization, team context
+3. Creates `docs/roadmap/` with phased tasks — each with spec path, files, dependencies, test layers, verification command
+4. Identifies parallel vs sequential tasks, critical path
+
+**Each task specifies:** which test layers are needed (unit/integration/e2e) based on the TDD.
 
 ---
 
@@ -406,15 +456,14 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
     agents/
       security-reviewer.md           # Tailored to project language
       architecture-reviewer.md       # Tailored to project language
-    skills/
-      feature/
-        SKILL.md                     # Feature implementation workflow
-      spec/
-        SKILL.md                     # Spec creation workflow
   docs/
     specs/                           # Feature specifications go here
     roadmap/                         # Phase/task breakdowns go here
+    adr/                             # Architecture decision records
+    rfc/                             # Requests for comments
 ```
+
+Skills are installed globally — no project-level copies needed.
 
 **After scaffolding, the suggested next steps are:**
 1. `cd <project-name>`

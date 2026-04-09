@@ -42,12 +42,14 @@ Create these directories:
 ```
 .claude/
 .claude/agents/
-.claude/skills/feature/
-.claude/skills/spec/
 docs/
 docs/specs/
 docs/roadmap/
+docs/adr/
+docs/rfc/
 ```
+
+**Note:** Skills are installed globally at `~/.claude/skills/`. Do NOT create project-level skill copies — they'd duplicate and drift from the global versions. The global skills (`/architecture`, `/tdd`, `/security`, `/adr`, `/rfc`, `/spec`, `/roadmap`, `/feature`, `/fix`, `/review`, `/autopilot`, `/code-review`) are already available. Only create project-level agents and settings.
 
 ### 4. Create CLAUDE.md
 
@@ -81,11 +83,7 @@ Adapt the build commands and style section to the chosen language/framework.
 
 Copy the security-reviewer and architecture-reviewer into `.claude/agents/`, tailored to the project's language if needed.
 
-### 6. Create project-level feature skill
-
-Create `.claude/skills/feature/SKILL.md` — copy from the global one but adjust if the project has specific patterns.
-
-### 7. Create project-level settings
+### 6. Create project-level settings
 
 Create `.claude/settings.json` with hooks appropriate to the language:
 
@@ -103,7 +101,7 @@ Create `.claude/settings.json` with hooks appropriate to the language:
 }
 ```
 
-### 8. Create Makefile
+### 7. Create Makefile
 
 Create a `Makefile` with standard targets for the chosen language/framework:
 - `test` — run tests
@@ -113,7 +111,7 @@ Create a `Makefile` with standard targets for the chosen language/framework:
 - `lint-changed` — lint only changed files
 - `security-scan` — run security scanner (gitleaks, bandit, gosec, etc.)
 
-### 9. Create .pre-commit-config.yaml
+### 8. Create .pre-commit-config.yaml
 
 Set up pre-commit hooks:
 - Language-appropriate linter
@@ -121,20 +119,29 @@ Set up pre-commit hooks:
 - Test runner
 - gitleaks for secret detection
 
-### 10. Create .gitignore
+### 9. Create .gitignore
 
 Appropriate for the language/framework. Always include:
 - `.claude/` local files
 - `.env`
 - Language-specific build artifacts
 
-### 11. Create initial docs
+### 10. Create initial docs
 
-Create `docs/specs/.gitkeep` and `docs/roadmap/.gitkeep` to preserve directory structure.
+Create `.gitkeep` files to preserve directory structure:
+- `docs/specs/.gitkeep`
+- `docs/roadmap/.gitkeep`
+- `docs/adr/.gitkeep`
+- `docs/rfc/.gitkeep`
 
-### 12. Summary
+### 11. Summary
 
 Tell the user what was created and suggest next steps:
-- Install pre-commit: `pre-commit install`
-- Create their first spec: `/spec <feature-name>`
-- Start implementing: `/feature docs/specs/<feature-name>.md`
+1. `cd <project-name>`
+2. `pre-commit install`
+3. `/prd <project-name>` — define what we're building
+4. `/architecture` — define system structure
+5. `/tdd` — define testing strategy, dev environment, CI/CD
+6. `/security` — define the threat model (if applicable)
+7. `/spec <first-feature>` — write your first feature spec
+8. `/feature docs/specs/<first-feature>.md` — implement it
