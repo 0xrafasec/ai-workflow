@@ -49,7 +49,9 @@ If the roadmap marks a phase as complete (e.g., with a checkmark), skip it and a
 
 #### c. Dispatch parallel tasks
 
-For tasks that can run in parallel (no dependencies between them, no file overlap), spawn them **all at once** using the Agent tool with `isolation: "worktree"`. Each agent gets this prompt:
+For tasks that can run in parallel (no dependencies between them, no file overlap), spawn them **all at once in a single message** using the Agent tool with `isolation: "worktree"` and `run_in_background: true`. This is critical — all parallel agents must be dispatched in the same response so they run concurrently. You will be notified as each completes. Do NOT wait for one to finish before dispatching the next.
+
+Each agent gets this prompt:
 
 ```
 ## Project Context
@@ -167,8 +169,9 @@ After all phases complete (or the user stops), present:
 ## Rules
 
 1. **Stay thin.** You are the orchestrator. Do not read implementation files, do not write code, do not review PRs yourself. Delegate everything.
-2. **Never skip checkpoints.** Always wait for user confirmation between phases.
-3. **Pass context, not files.** Give subagents the spec path and project summary. Let them read the files themselves in their own context.
-4. **Track everything.** After each subagent completes, record its result. If context gets heavy, use `/compact`.
-5. **Respect dependencies.** If task B depends on task A, never dispatch B until A's PR is merged (not just completed — merged, so the code is on main).
-6. **Fail gracefully.** If a subagent fails, report it and let the user decide. Don't retry automatically — the user might want to fix the spec or roadmap first.
+2. **Parallel = background.** Always dispatch parallel tasks using `run_in_background: true` in a single message. Never dispatch one agent and wait for it before dispatching the next parallel agent. Sequential tasks (with dependencies) are the only ones that wait.
+3. **Never skip checkpoints.** Always wait for user confirmation between phases.
+4. **Pass context, not files.** Give subagents the spec path and project summary. Let them read the files themselves in their own context.
+5. **Track everything.** After each subagent completes, record its result. If context gets heavy, use `/compact`.
+6. **Respect dependencies.** If task B depends on task A, never dispatch B until A's PR is merged (not just completed — merged, so the code is on main).
+7. **Fail gracefully.** If a subagent fails, report it and let the user decide. Don't retry automatically — the user might want to fix the spec or roadmap first.
