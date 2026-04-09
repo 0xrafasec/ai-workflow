@@ -29,9 +29,9 @@ Default behavior is **commit only, no PR**. The user controls when to ship.
 
 3. **Discover test strategy** — Before writing any code, determine how to test this feature:
 
-   a. **Check for architecture spec:** Read `docs/specs/ARCHITECTURE.md` — if it has a Testing Strategy section, follow it (frameworks, file locations, naming conventions, coverage expectations).
+   a. **Check for TDD:** Read `docs/specs/TDD.md` — if it has a Testing Strategy section, follow it (frameworks, file locations, naming conventions, coverage expectations).
 
-   b. **If no architecture spec:** Infer from the codebase:
+   b. **If no TDD:** Infer from the codebase:
       - Look for existing test directories (`tests/`, `__tests__/`, `*_test.go`, `*.test.ts`, `test_*.py`, `spec/`)
       - Check `package.json`, `pyproject.toml`, `Cargo.toml`, `Makefile` for test commands and frameworks
       - Read 1-2 existing test files to understand the patterns (fixtures, helpers, naming)

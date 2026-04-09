@@ -18,7 +18,7 @@ Before anything, read what exists:
 1. **Project context:**
    - Read `CLAUDE.md` for build commands and conventions
    - Read `docs/PRD.md` or `docs/prd/` if they exist
-   - Read `docs/specs/ARCHITECTURE.md` if it exists
+   - Read `docs/specs/TDD.md` if it exists
    - Read `README.md` for project overview
 
 2. **Existing specs:**
@@ -142,7 +142,7 @@ Then create each `docs/roadmap/<phase-name>.md` using the single-phase format ab
 3. **Mark dependencies explicitly** — if Task B needs Task A's output, say so and explain what specifically it needs.
 4. **Keep tasks small** — if a task would fill Claude's context window, split it. A task should be completable in one worktree session.
 5. **Include verification commands** — every task needs a concrete way to prove it works.
-6. **Specify test layers per task** — based on the Testing Strategy in `docs/specs/ARCHITECTURE.md` (or inferred from the codebase), mark which test layers each task needs: Unit, Integration, E2E. A task that touches APIs needs integration tests. A task that implements a critical user flow needs e2e. Pure logic only needs unit.
+6. **Specify test layers per task** — based on the Testing Strategy in `docs/specs/TDD.md` (or inferred from the codebase), mark which test layers each task needs: Unit, Integration, E2E. A task that touches APIs needs integration tests. A task that implements a critical user flow needs e2e. Pure logic only needs unit.
 7. **Foundation first** — shared types, interfaces, data models, and config go in Phase 1. Implementation builds on top.
 8. **File overlap = sequential** — if two tasks modify the same file, they cannot run in parallel. Call this out explicitly.
 

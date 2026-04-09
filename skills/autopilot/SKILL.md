@@ -25,10 +25,11 @@ If the roadmap doesn't have enough detail (missing spec paths, unclear dependenc
 Read these files to understand the project — this is the only heavy reading you do:
 - `CLAUDE.md` — build commands, conventions
 - `docs/PRD.md` or equivalent — what the project is
-- `docs/specs/ARCHITECTURE.md` — system structure and **Testing Strategy** (if exists)
+- `docs/specs/ARCHITECTURE.md` — system structure (if exists)
+- `docs/specs/TDD.md` — **Testing Strategy**, dev environment, CI/CD (if exists)
 - `docs/specs/THREAT_MODEL.md` — security model (if exists)
 
-Summarize what you learned in 3-5 lines, **including the test strategy** (frameworks, test layers, run commands, file locations). This summary will be passed to every subagent so they have project context without reading everything themselves. If no Testing Strategy exists, note that subagents should discover test patterns from the codebase.
+Summarize what you learned in 3-5 lines, **including the test strategy from TDD.md** (frameworks, test layers, run commands, file locations). This summary will be passed to every subagent so they have project context without reading everything themselves. If no TDD.md exists, note that subagents should discover test patterns from the codebase.
 
 ### 3. Execute Phase by Phase
 
@@ -58,7 +59,7 @@ For tasks that can run in parallel (no dependencies between them, no file overla
 [From CLAUDE.md]
 
 ## Test Strategy
-[From ARCHITECTURE.md Testing Strategy, or "Discover from codebase — check test directories, frameworks, patterns"]
+[From TDD.md Testing Strategy, or "Discover from codebase — check test directories, frameworks, patterns"]
 
 ## Your Task
 Phase: [phase name]
