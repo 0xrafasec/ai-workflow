@@ -19,6 +19,7 @@ Before anything, read what exists:
    - Read `docs/PRD.md` or `docs/prd/` — the source of *what* needs to be built
    - Read `docs/specs/ARCHITECTURE.md` — the source of *how* the system is structured
    - Read `docs/specs/TDD.md` — testing strategy, dev environment, CI/CD
+   - Read `docs/specs/THREAT_MODEL.md` — security constraints, trust boundaries
    - Read `CLAUDE.md` for build commands and conventions
    - Read `README.md` for project overview
 

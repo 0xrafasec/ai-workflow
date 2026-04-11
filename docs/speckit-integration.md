@@ -48,8 +48,9 @@ flowchart TD
     end
 
     subgraph Planning ["Roadmap & Task Breakdown"]
-        F --> R["/roadmap<br/>(from PRD + architecture)"]
+        F --> R["/roadmap<br/>(from all design docs)"]
         G --> R
+        H --> R
         R --> TASKS["Phases with tasks"]
     end
 
@@ -125,7 +126,7 @@ flowchart LR
 
 1. `/prd` — interview and capture requirements
 2. `/architecture` + `/tdd` + `/security` — design the system (architecture, technical design, threat model)
-3. `/roadmap` — break the design into phased tasks from PRD + architecture
+3. `/roadmap` — break the design into phased tasks from all available design docs
 4. `/speckit.constitution` — encode architecture decisions and coding standards as constitutional articles
 5. `/speckit.specify` — create detailed, traceable specs for each task in the roadmap
 6. `/speckit.plan` — technical implementation plan per spec
@@ -189,7 +190,7 @@ Pick the tool that fits each phase:
 | Principles | `/speckit.constitution` (Spec Kit) | Constitutional articles are more enforceable than CLAUDE.md conventions |
 | Architecture | `/architecture` (ai-workflow) | Dedicated doc is easier to reference than embedded plan sections |
 | Technical design | `/tdd` (ai-workflow) | Separate doc covers testing, dev env, CI/CD, and coding standards |
-| Roadmap | `/roadmap` (ai-workflow) | Generates phased tasks from PRD + architecture before detailed specs exist |
+| Roadmap | `/roadmap` (ai-workflow) | Generates phased tasks from all available design docs before detailed specs exist |
 | Feature spec | Either — depends on the feature | Use `/spec` for complex features needing deep context; `/speckit.specify` for well-understood features needing traceability |
 | Task breakdown | `/speckit.tasks` (Spec Kit) | Better traceability with `[P]` markers and spec references |
 | Implementation | `/autopilot` (ai-workflow) | Parallel worktree execution is faster for multi-task phases |
@@ -268,7 +269,7 @@ The most natural integration point: use ai-workflow for the high-level phases, t
 
 ```mermaid
 flowchart TD
-    PRD["/prd<br/>Product Requirements"] --> ROAD["/roadmap<br/>Phase breakdown"]
+    DOCS["Design docs<br/>(PRD, Architecture, TDD, Security)"] --> ROAD["/roadmap<br/>Phase breakdown"]
 
     ROAD --> P1["Phase 1"]
     ROAD --> P2["Phase 2"]
