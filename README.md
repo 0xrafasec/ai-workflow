@@ -1,7 +1,8 @@
 <p align="center">
   <h1 align="center">ai-workflow</h1>
   <p align="center">
-    A spec-driven development workflow toolkit for <a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a>.<br/>
+    Full SDLC (Software Development Life Cycle) for <a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a> — from idea to production.<br/>
+    Built on SDD (Spec-Driven Development): specs are the source of truth, AI agents execute them.<br/>
     Skills, agents, review guides, and conventions — installed globally, applied everywhere.
   </p>
 </p>
@@ -16,31 +17,38 @@
 
 ## What is this?
 
-ai-workflow gives you a complete development lifecycle inside Claude Code — from product requirements to shipped code. It installs as a set of global [skills](https://docs.anthropic.com/en/docs/claude-code/skills), [agents](https://docs.anthropic.com/en/docs/claude-code/sub-agents), and conventions that symlink into `~/.claude/` and apply to every project you work on.
+ai-workflow covers the entire software development lifecycle inside Claude Code — from the initial idea through design, implementation, review, and delivery. It installs as a set of global [skills](https://docs.anthropic.com/en/docs/claude-code/skills), [agents](https://docs.anthropic.com/en/docs/claude-code/sub-agents), and conventions that symlink into `~/.claude/` and apply to every project you work on.
 
-**The core idea:** specs define what to build, skills automate how to build it, agents review the output, and conventions keep everything consistent.
+Each phase of development has dedicated tooling:
+
+- **Discovery** — interview-driven requirements gathering (`/prd`)
+- **Design** — architecture, testing strategy, and threat modeling (`/architecture`, `/tdd`, `/security`)
+- **Specification** — detailed feature specs with verification criteria (`/spec`)
+- **Planning** — phased roadmaps with dependency tracking (`/roadmap`)
+- **Implementation** — parallel execution across isolated worktrees (`/feature`, `/autopilot`)
+- **Review** — independent, language-aware review with specialized agents (`/review`, `/code-review`, `/sec-review`)
+- **Governance** — decision records and change proposals at any point (`/adr`, `/rfc`)
 
 ## Features
 
-- **15 slash-command skills** — `/prd`, `/spec`, `/feature`, `/review`, `/autopilot`, and more
+- **15 slash-command skills** covering every phase from idea to merged PR
 - **Specialized review agents** — architecture and security reviewers spawned as subagents
 - **Language-aware code review** — auto-detects Go, Rust, TypeScript, or Python and loads stack-specific best practices
 - **Parallel execution** — worktree-based development with `/autopilot` for full roadmap execution
 - **Writer/reviewer separation** — never review code in the same session that wrote it
 - **Notification hooks** — desktop notifications when Claude needs attention
 - **Custom status line** — model, context usage, cost, git branch at a glance
+- **Composable with other tools** — works alongside [GitHub Spec Kit](https://github.com/github/spec-kit) and other SDD toolkits ([integration guide](docs/speckit-integration.md))
 
-## Spec-Driven Development
+## Development Lifecycle
 
-This toolkit implements **Spec-Driven Development (SDD)** — a methodology where specifications are the source of truth for all implementation, testing, and review. AI agents execute specs, not vague instructions.
-
-The core idea: humans decide *what* to build through structured interviews and specs; AI agents decide *how* to build it by following those specs with full context. Every feature flows through a layered document pipeline:
+The toolkit implements a layered document pipeline where each phase builds on the ones above it. Humans decide *what* to build through structured interviews and specs; AI agents decide *how* to build it by following those specs with full context.
 
 ```
-PRD (why) → Architecture + TDD + Security (how) → Specs (what) → Roadmap (when) → Implementation → Review
+Idea → PRD (why) → Architecture + TDD + Security (how) → Specs (what) → Roadmap (when) → Implementation → Review → Ship
 ```
 
-Each layer builds on the ones above it. A feature spec references the architecture, testing strategy, and threat model — so implementation agents have complete context without repetition.
+A feature spec references the architecture, testing strategy, and threat model — so implementation agents have complete context without repetition.
 
 For a detailed explanation with diagrams, see [docs/spec-driven-development.md](docs/spec-driven-development.md).
 
@@ -254,6 +262,7 @@ The bundled `statusline-command.sh` shows model name, context usage percentage, 
 | Document | Description |
 |----------|-------------|
 | [Spec-Driven Development](docs/spec-driven-development.md) | Detailed explanation of the SDD methodology with Mermaid diagrams |
+| [Spec Kit Integration](docs/speckit-integration.md) | How to combine ai-workflow with GitHub Spec Kit |
 | [WORKFLOW.md](WORKFLOW.md) | Full workflow guide — phases, conventions, CI/CD integration, team practices |
 | [REFERENCE.md](REFERENCE.md) | Quick reference for all agents, skills, settings, and daily patterns |
 
