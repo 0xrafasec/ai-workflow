@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "notify-send 'Claude Code' '$CLAUDE_NOTIFICATION'"
+            "command": "notify-send 'Claude Code' \"$(jq -r '.message // \"Claude Code notification\"')\""
           }
         ]
       }
