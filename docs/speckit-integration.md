@@ -47,32 +47,28 @@ flowchart TD
         I --> J["Constitution<br/>(informed by ai-workflow design docs)"]
     end
 
-    subgraph Specification ["Feature Specification"]
-        B --> K{Choose spec tool}
+    subgraph Planning ["Roadmap & Task Breakdown"]
+        F --> R["/roadmap<br/>(from PRD + architecture)"]
+        G --> R
+        R --> TASKS["Phases with tasks"]
+    end
+
+    subgraph Specification ["Spec Per Task"]
+        TASKS --> K{Choose spec tool}
         K -->|"Deep context needed"| L["/spec — ai-workflow"]
         K -->|"Template traceability needed"| M["/speckit.specify — Spec Kit"]
-        L --> N["Feature spec"]
+        L --> N["Detailed feature specs"]
         M --> N
     end
 
-    subgraph Planning ["Planning & Task Breakdown"]
-        N --> O["/speckit.plan"]
-        O --> P["Implementation plan<br/>(constitutional compliance)"]
-        P --> Q{Choose task tool}
-        Q -->|"Phased execution"| R["/roadmap — ai-workflow"]
-        Q -->|"Flat task list"| S["/speckit.tasks — Spec Kit"]
-    end
-
     subgraph Execution ["Implementation"]
-        R --> T["/autopilot<br/>Parallel worktree agents"]
-        S --> U["/speckit.implement<br/>or /feature per task"]
-        R --> V["/feature per spec"]
+        N --> T["/autopilot<br/>Parallel worktree agents"]
+        N --> U["/speckit.implement<br/>or /feature per task"]
     end
 
     subgraph Review ["Review & Quality"]
         T --> W["/review + /code-review"]
         U --> W
-        V --> W
         W --> X["/sec-review"]
         X --> Y["Merge"]
     end
@@ -80,8 +76,8 @@ flowchart TD
     style Discovery fill:#e8f4f8,stroke:#2196F3
     style Design fill:#e8f4f8,stroke:#2196F3
     style Constitution fill:#fff3e0,stroke:#FF9800
-    style Specification fill:#f3e5f5,stroke:#9C27B0
     style Planning fill:#f3e5f5,stroke:#9C27B0
+    style Specification fill:#f3e5f5,stroke:#9C27B0
     style Execution fill:#e8f5e9,stroke:#4CAF50
     style Review fill:#e8f4f8,stroke:#2196F3
 ```
@@ -101,22 +97,23 @@ flowchart LR
         A1["/prd"] --> A2["/architecture"]
         A2 --> A3["/tdd"]
         A3 --> A4["/security"]
-        A4 --> A5["/spec"]
+        A4 --> A5["/roadmap"]
     end
 
-    subgraph SK ["Spec Kit"]
+    subgraph SK ["Spec Kit — Specify & Execute"]
         direction TB
-        B1["/speckit.constitution"] --> B2["/speckit.plan"]
-        B2 --> B3["/speckit.tasks"]
-        B3 --> B4["/speckit.implement"]
+        B1["/speckit.constitution"] --> B2["/speckit.specify<br/>per task"]
+        B2 --> B3["/speckit.plan"]
+        B3 --> B4["/speckit.tasks"]
+        B4 --> B5["/speckit.implement"]
     end
 
-    subgraph AW2 ["ai-workflow"]
+    subgraph AW2 ["ai-workflow — Review"]
         direction TB
         C1["/code-review"] --> C2["/sec-review"]
     end
 
-    AW -->|"Specs + design docs"| SK
+    AW -->|"Roadmap + design docs"| SK
     SK -->|"PRs ready"| AW2
 
     style AW fill:#e8f4f8,stroke:#2196F3
@@ -128,31 +125,31 @@ flowchart LR
 
 1. `/prd` — interview and capture requirements
 2. `/architecture` + `/tdd` + `/security` — design the system (architecture, technical design, threat model)
-3. `/spec <feature>` — write detailed feature specs
-4. `/speckit.constitution` — encode your architecture decisions and coding standards as constitutional articles (reference the ai-workflow design docs)
-5. `/speckit.plan` — create the technical implementation plan
-6. `/speckit.tasks` — break into traceable tasks
-7. `/speckit.implement` — execute each task
+3. `/roadmap` — break the design into phased tasks from PRD + architecture
+4. `/speckit.constitution` — encode architecture decisions and coding standards as constitutional articles
+5. `/speckit.specify` — create detailed, traceable specs for each task in the roadmap
+6. `/speckit.plan` — technical implementation plan per spec
+7. `/speckit.tasks` + `/speckit.implement` — execute
 8. `/code-review` + `/sec-review` — review with language-aware agents
 
-**Why this works:** ai-workflow's interview-driven design phase produces richer context than going straight to Spec Kit templates. Spec Kit's constitutional compliance and task traceability then keep implementation disciplined. ai-workflow's review agents catch what CI can't.
+**Why this works:** ai-workflow's interview-driven design phase produces richer context than going straight to Spec Kit templates. The roadmap gives structure *before* detailed specs exist. Then Spec Kit's constitutional compliance and task traceability keep specification and implementation disciplined. ai-workflow's review agents catch what CI can't.
 
 ---
 
 ### Pattern 2: Spec Kit for structure, ai-workflow for power
 
-Best for: teams that like Spec Kit's template discipline but need ai-workflow's parallel execution and deep review.
+Best for: teams that like Spec Kit's template discipline but need ai-workflow's parallel execution and deep review. In this pattern, Spec Kit leads the design and specification — ai-workflow takes over for phased execution and review.
 
 ```mermaid
 flowchart LR
-    subgraph SK ["Spec Kit"]
+    subgraph SK ["Spec Kit — Design & Specify"]
         direction TB
         A1["/speckit.constitution"] --> A2["/speckit.specify"]
         A2 --> A3["/speckit.plan"]
         A3 --> A4["/speckit.tasks"]
     end
 
-    subgraph AW ["ai-workflow"]
+    subgraph AW ["ai-workflow — Execute & Review"]
         direction TB
         B1["/roadmap<br/>(from Spec Kit tasks)"] --> B2["/autopilot<br/>Parallel worktrees"]
         B2 --> B3["/review"]
@@ -169,14 +166,14 @@ flowchart LR
 **Steps:**
 
 1. `/speckit.constitution` — establish project principles
-2. `/speckit.specify` — create structured feature specs
+2. `/speckit.specify` — create structured feature specs (Spec Kit leads here)
 3. `/speckit.plan` — technical implementation plan
 4. `/speckit.tasks` — generate task list with `[P]` parallelization markers
 5. `/roadmap` — convert Spec Kit tasks into phased roadmap with dependencies
 6. `/autopilot` — execute the roadmap with parallel worktree agents
 7. `/review` + `/code-review` + `/sec-review` — full review pipeline
 
-**Why this works:** Spec Kit's templates enforce structure that prevents vague specs. ai-workflow's `/autopilot` can then run multiple tasks in parallel across isolated worktrees — something Spec Kit's `/speckit.implement` does sequentially.
+**Why this works:** Spec Kit's templates enforce structure that prevents vague specs. ai-workflow's `/roadmap` then phases those tasks with dependency ordering, and `/autopilot` runs them in parallel across isolated worktrees — something Spec Kit's `/speckit.implement` does sequentially.
 
 ---
 
@@ -192,6 +189,7 @@ Pick the tool that fits each phase:
 | Principles | `/speckit.constitution` (Spec Kit) | Constitutional articles are more enforceable than CLAUDE.md conventions |
 | Architecture | `/architecture` (ai-workflow) | Dedicated doc is easier to reference than embedded plan sections |
 | Technical design | `/tdd` (ai-workflow) | Separate doc covers testing, dev env, CI/CD, and coding standards |
+| Roadmap | `/roadmap` (ai-workflow) | Generates phased tasks from PRD + architecture before detailed specs exist |
 | Feature spec | Either — depends on the feature | Use `/spec` for complex features needing deep context; `/speckit.specify` for well-understood features needing traceability |
 | Task breakdown | `/speckit.tasks` (Spec Kit) | Better traceability with `[P]` markers and spec references |
 | Implementation | `/autopilot` (ai-workflow) | Parallel worktree execution is faster for multi-task phases |

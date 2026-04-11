@@ -32,13 +32,12 @@ graph TD
     PRD --> ARCH
     PRD --> TDD
     PRD --> SEC
-    ARCH --> SPEC
-    TDD --> SPEC
-    SEC --> SPEC
-    SPEC --> ROAD
-    ROAD --> IMPL
-    IMPL --> REV
+    ARCH --> ROAD
+    TDD --> ROAD
+    SEC --> ROAD
+    ROAD --> SPEC
     SPEC --> IMPL
+    IMPL --> REV
 
     style PRD fill:#4a90d9,stroke:#2c5f8a,color:#fff
     style ARCH fill:#7b68ee,stroke:#5a4fcf,color:#fff
@@ -56,10 +55,10 @@ graph TD
 | **How (system)** | Architecture | System structure, components, data flow | `/architecture` |
 | **How (process)** | TDD | Technical Design — testing, dev env, CI/CD, coding standards | `/tdd` |
 | **How (security)** | Threat Model | Trust boundaries, attack surface, defenses | `/security` |
-| **What (feature)** | Feature Spec | Exact implementation details, verification criteria | `/spec` |
-| **When** | Roadmap | Phased tasks with dependencies and parallelism | `/roadmap` |
+| **When** | Roadmap | Phased tasks from design docs, with dependencies and parallelism | `/roadmap` |
+| **What (feature)** | Feature Spec | Detailed implementation spec per task in the roadmap | `/spec` |
 
-Each spec references the documents above it. A feature spec for "user authentication" references the architecture (where auth sits), the TDD (testing frameworks, dev environment, CI/CD pipeline, coding standards), and the threat model (what attacks to defend against). This means implementation agents have full context without needing everything repeated.
+The roadmap is generated from the design docs (PRD, architecture, TDD, threat model) — it breaks the project into phased tasks before detailed specs exist. Then each task gets a detailed feature spec (`/spec`) that references the architecture, technical design, and threat model. This means implementation agents have full context without needing everything repeated.
 
 ---
 

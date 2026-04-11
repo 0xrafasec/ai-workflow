@@ -1,6 +1,6 @@
 ---
 name: roadmap
-description: "Create a phased roadmap from specs: /roadmap <phase-name> or /roadmap (to create from all specs)"
+description: "Create a phased roadmap from design docs: /roadmap <phase-name> or /roadmap (full roadmap)"
 ---
 Create a phased roadmap for: $ARGUMENTS
 
@@ -8,23 +8,24 @@ Create a phased roadmap for: $ARGUMENTS
 
 The argument can be:
 - **Phase name:** `/roadmap auth-system` — creates `docs/roadmap/auth-system.md`
-- **No argument:** `/roadmap` — scans all specs in `docs/specs/` and creates a full roadmap
-- **Spec path:** `/roadmap docs/specs/feature_x.md` — creates a roadmap for a single spec
+- **No argument:** `/roadmap` — reads PRD, architecture, and any existing specs to create a full roadmap
+- **Doc path:** `/roadmap docs/specs/feature_x.md` — creates a roadmap for a single spec or feature area
 
 ## Context Gathering
 
 Before anything, read what exists:
 
-1. **Project context:**
+1. **Design docs (primary input for the roadmap):**
+   - Read `docs/PRD.md` or `docs/prd/` — the source of *what* needs to be built
+   - Read `docs/specs/ARCHITECTURE.md` — the source of *how* the system is structured
+   - Read `docs/specs/TDD.md` — testing strategy, dev environment, CI/CD
    - Read `CLAUDE.md` for build commands and conventions
-   - Read `docs/PRD.md` or `docs/prd/` if they exist
-   - Read `docs/specs/TDD.md` if it exists
    - Read `README.md` for project overview
 
-2. **Existing specs:**
+2. **Existing specs (optional — specs may not exist yet):**
    - List all files in `docs/specs/`
-   - Read each spec to understand what features are planned
-   - Note dependencies between specs (one spec referencing another)
+   - If feature specs exist, read them — they add detail to the roadmap
+   - If no feature specs exist, that's fine — the roadmap will define *what* needs to be specified
 
 3. **Existing roadmap:**
    - Check `docs/roadmap/` — if roadmaps already exist, read them to avoid duplication
@@ -33,14 +34,14 @@ Before anything, read what exists:
 4. **Codebase state:**
    - Explore the directory structure to understand what already exists
    - Check `git log --oneline -20` for recent work direction
-   - Identify which specs (if any) are already partially implemented
+   - Identify what (if anything) is already implemented
 
-If critical context is missing (no specs, no PRD), stop and tell the user:
-"No specs found in `docs/specs/`. Create specs first with `/spec <feature-name>`, then come back to build the roadmap."
+**Minimum required context:** A PRD or architecture doc. The roadmap breaks down *what the design docs describe* into phased, executable work. If neither exists, stop and tell the user:
+"No PRD or architecture doc found. Create one first with `/prd` or `/architecture`, then come back to build the roadmap."
 
 ## Interview
 
-Use AskUserQuestion to refine the roadmap. Adapt questions based on what you learned from the specs and codebase.
+Use AskUserQuestion to refine the roadmap. Adapt questions based on what you learned from the design docs and codebase.
 
 1. **Priorities** — Which features are most important? What must ship first? Are there external deadlines?
 2. **Dependencies** — Are there features that must be done before others? Shared interfaces or data models that need to exist first?
@@ -50,10 +51,10 @@ Use AskUserQuestion to refine the roadmap. Adapt questions based on what you lea
 6. **Phase boundaries** — Where are the natural checkpoints? What needs human review before continuing?
 
 **Interview rules:**
-- If specs are clear and dependencies are obvious, keep the interview short (2-3 questions)
-- If specs are vague or there are many features, dig deeper
+- If design docs are clear and dependencies are obvious, keep the interview short (2-3 questions)
+- If the PRD is broad or there are many features, dig deeper
 - Push back on unrealistic parallelization — if two tasks touch the same files, they must be sequential
-- Don't ask what's already answered in the specs
+- Don't ask what's already answered in the design docs
 
 ## Generate the Roadmap
 
@@ -61,7 +62,7 @@ Create `docs/roadmap/` directory if it doesn't exist.
 
 ### Single Phase
 
-If the user gave a phase name or single spec, write to `docs/roadmap/<phase-name>.md`:
+If the user gave a phase name or single feature area, write to `docs/roadmap/<phase-name>.md`:
 
 ```markdown
 # Phase: [Name]
@@ -72,7 +73,7 @@ If the user gave a phase name or single spec, write to `docs/roadmap/<phase-name
 ## Tasks
 
 ### Task 1: [Name]
-- **Spec:** docs/specs/[name].md
+- **Spec:** docs/specs/[name].md (exists | needs creation)
 - **Files:** [list of files to create or modify]
 - **Dependencies:** None
 - **Tests:** Unit + Integration (sets up data models and API layer)
@@ -80,7 +81,7 @@ If the user gave a phase name or single spec, write to `docs/roadmap/<phase-name
 - **Estimated complexity:** Low/Medium/High
 
 ### Task 2: [Name]
-- **Spec:** docs/specs/[name].md
+- **Spec:** docs/specs/[name].md (exists | needs creation)
 - **Files:** [list of files to create or modify]
 - **Dependencies:** Task 1 (needs [specific thing])
 - **Tests:** Unit + Integration (service interactions)
@@ -88,7 +89,7 @@ If the user gave a phase name or single spec, write to `docs/roadmap/<phase-name
 - **Estimated complexity:** Medium
 
 ### Task 3: [Name] (can parallelize with Task 2)
-- **Spec:** docs/specs/[name].md
+- **Spec:** docs/specs/[name].md (exists | needs creation)
 - **Files:** [list — no overlap with Task 2]
 - **Dependencies:** Task 1
 - **Tests:** Unit only (pure UI logic, no service boundary)
@@ -101,6 +102,7 @@ If the user gave a phase name or single spec, write to `docs/roadmap/<phase-name
 2. **Parallel:** Task 2 + Task 3 (no file overlap, both depend only on Task 1)
 
 ## Phase Checklist
+- [ ] All tasks have detailed specs
 - [ ] All tasks completed
 - [ ] All verification commands pass
 - [ ] PRs reviewed and merged
@@ -109,7 +111,7 @@ If the user gave a phase name or single spec, write to `docs/roadmap/<phase-name
 
 ### Full Roadmap
 
-If the user gave no argument (scan all specs), write an index at `docs/roadmap/README.md` plus one file per phase:
+If the user gave no argument (build from design docs), write an index at `docs/roadmap/README.md` plus one file per phase:
 
 **`docs/roadmap/README.md`:**
 
@@ -145,23 +147,19 @@ Then create each `docs/roadmap/<phase-name>.md` using the single-phase format ab
 6. **Specify test layers per task** — based on the Testing Strategy in `docs/specs/TDD.md` (or inferred from the codebase), mark which test layers each task needs: Unit, Integration, E2E. A task that touches APIs needs integration tests. A task that implements a critical user flow needs e2e. Pure logic only needs unit.
 7. **Foundation first** — shared types, interfaces, data models, and config go in Phase 1. Implementation builds on top.
 8. **File overlap = sequential** — if two tasks modify the same file, they cannot run in parallel. Call this out explicitly.
+9. **Mark spec status per task** — for each task, indicate whether a detailed spec exists or needs to be created. Tasks without specs need `/spec` or `/speckit.specify` before execution.
 
 ## After Writing
 
 1. Present the roadmap to the user for review. Highlight:
    - The critical path (longest sequential chain)
    - Parallelization opportunities
-   - Any specs that seem incomplete or ambiguous
+   - Which tasks already have specs and which need them
 
 2. Iterate until the user is satisfied.
 
-3. Identify tasks that lack detailed specs:
-   - If any task references a spec that doesn't exist yet, flag it
-   - Suggest creating specs before execution: "These tasks need specs first — run `/spec <feature-name>` for each, or `/speckit.specify` if using GitHub Spec Kit"
-   - Tasks with existing, complete specs are ready to execute immediately
-
-4. Suggest next steps:
-   - **Specs needed?** → "Create specs for unspecified tasks: `/spec <feature-name>` (or `/speckit.specify` with Spec Kit)"
-   - **All specs ready?** → "Run `/autopilot docs/roadmap/README.md` to execute the full roadmap"
+3. Suggest next steps based on spec coverage:
+   - **Tasks need specs?** → "Create detailed specs before executing: `/spec <feature-name>` for each task (or `/speckit.specify` with GitHub Spec Kit)"
+   - **All tasks have specs?** → "Run `/autopilot docs/roadmap/README.md` to execute the full roadmap"
    - **Start one phase?** → "Run `/autopilot docs/roadmap/<phase-name>.md`"
    - **Single task?** → "Run `/feature docs/specs/<name>.md`"

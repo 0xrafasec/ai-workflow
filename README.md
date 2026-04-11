@@ -45,7 +45,7 @@ Each phase of development has dedicated tooling:
 The toolkit implements a layered document pipeline where each phase builds on the ones above it. Humans decide *what* to build through structured interviews and specs; AI agents decide *how* to build it by following those specs with full context.
 
 ```
-Idea → PRD (why) → Architecture + TDD + Security (how) → Specs (what) → Roadmap (when) → Implementation → Review → Ship
+Idea → PRD (why) → Architecture + TDD + Security (how) → Roadmap (when) → Specs (what, per task) → Implementation → Review → Ship
 ```
 
 A feature spec references the architecture, technical design, and threat model — so implementation agents have complete context without repetition.
@@ -166,9 +166,9 @@ The typical flow from idea to shipped code:
 /architecture              System structure
 /tdd                       Technical design (testing, dev env, CI/CD, standards)
   │
-/spec <feature>            Implementation details per feature
+/roadmap                   Phase breakdown from design docs
   │
-/roadmap                   Phase breakdown with dependencies
+/spec <feature>            Detail each task in the roadmap
   │
   ├── /autopilot           Execute the roadmap automatically
   │
