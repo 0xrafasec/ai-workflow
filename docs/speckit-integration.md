@@ -299,27 +299,27 @@ flowchart TD
     E2 --> R2["/code-review + /sec-review"]
     E3 --> R3["/code-review + /sec-review"]
 
-    style PRD fill:#e8f4f8,stroke:#2196F3
-    style ROAD fill:#f3e5f5,stroke:#9C27B0
-    style P1 fill:#f3e5f5,stroke:#9C27B0
-    style P2 fill:#f3e5f5,stroke:#9C27B0
-    style P3 fill:#f3e5f5,stroke:#9C27B0
-    style T1A fill:#fff3e0,stroke:#FF9800
-    style T1B fill:#fff3e0,stroke:#FF9800
-    style T2A fill:#fff3e0,stroke:#FF9800
-    style T2B fill:#fff3e0,stroke:#FF9800
-    style T3A fill:#fff3e0,stroke:#FF9800
-    style S1A fill:#e8f5e9,stroke:#4CAF50
-    style S1B fill:#e8f5e9,stroke:#4CAF50
-    style S2A fill:#e8f5e9,stroke:#4CAF50
-    style S2B fill:#e8f5e9,stroke:#4CAF50
-    style S3A fill:#e8f5e9,stroke:#4CAF50
-    style E1 fill:#e8f5e9,stroke:#4CAF50
-    style E2 fill:#e8f5e9,stroke:#4CAF50
-    style E3 fill:#e8f5e9,stroke:#4CAF50
-    style R1 fill:#e8f4f8,stroke:#2196F3
-    style R2 fill:#e8f4f8,stroke:#2196F3
-    style R3 fill:#e8f4f8,stroke:#2196F3
+    style DOCS fill:#1976D2,stroke:#0D47A1,color:#fff
+    style ROAD fill:#7B1FA2,stroke:#4A148C,color:#fff
+    style P1 fill:#9C27B0,stroke:#6A1B9A,color:#fff
+    style P2 fill:#9C27B0,stroke:#6A1B9A,color:#fff
+    style P3 fill:#9C27B0,stroke:#6A1B9A,color:#fff
+    style T1A fill:#F57C00,stroke:#E65100,color:#fff
+    style T1B fill:#F57C00,stroke:#E65100,color:#fff
+    style T2A fill:#F57C00,stroke:#E65100,color:#fff
+    style T2B fill:#F57C00,stroke:#E65100,color:#fff
+    style T3A fill:#F57C00,stroke:#E65100,color:#fff
+    style S1A fill:#388E3C,stroke:#1B5E20,color:#fff
+    style S1B fill:#388E3C,stroke:#1B5E20,color:#fff
+    style S2A fill:#388E3C,stroke:#1B5E20,color:#fff
+    style S2B fill:#388E3C,stroke:#1B5E20,color:#fff
+    style S3A fill:#388E3C,stroke:#1B5E20,color:#fff
+    style E1 fill:#2E7D32,stroke:#1B5E20,color:#fff
+    style E2 fill:#2E7D32,stroke:#1B5E20,color:#fff
+    style E3 fill:#2E7D32,stroke:#1B5E20,color:#fff
+    style R1 fill:#1976D2,stroke:#0D47A1,color:#fff
+    style R2 fill:#1976D2,stroke:#0D47A1,color:#fff
+    style R3 fill:#1976D2,stroke:#0D47A1,color:#fff
 ```
 
 **The flow:**
