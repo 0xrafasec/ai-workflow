@@ -54,12 +54,12 @@ graph TD
 |-------|----------|---------|------------|
 | **Why** | PRD | What we're building and why | `/prd` |
 | **How (system)** | Architecture | System structure, components, data flow | `/architecture` |
-| **How (process)** | TDD | Testing strategy, dev env, CI/CD, tooling | `/tdd` |
+| **How (process)** | TDD | Technical Design — testing, dev env, CI/CD, coding standards | `/tdd` |
 | **How (security)** | Threat Model | Trust boundaries, attack surface, defenses | `/security` |
 | **What (feature)** | Feature Spec | Exact implementation details, verification criteria | `/spec` |
 | **When** | Roadmap | Phased tasks with dependencies and parallelism | `/roadmap` |
 
-Each spec references the documents above it. A feature spec for "user authentication" references the architecture (where auth sits), the TDD (which test frameworks to use), and the threat model (what attacks to defend against). This means implementation agents have full context without needing everything repeated.
+Each spec references the documents above it. A feature spec for "user authentication" references the architecture (where auth sits), the TDD (testing frameworks, dev environment, CI/CD pipeline, coding standards), and the threat model (what attacks to defend against). This means implementation agents have full context without needing everything repeated.
 
 ---
 

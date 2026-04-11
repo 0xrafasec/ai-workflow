@@ -155,7 +155,13 @@ Then create each `docs/roadmap/<phase-name>.md` using the single-phase format ab
 
 2. Iterate until the user is satisfied.
 
-3. Suggest next steps:
-   - "Ready to start? Run `/autopilot docs/roadmap/README.md` to execute the full roadmap"
-   - "Want to start one phase? Run `/autopilot docs/roadmap/<phase-name>.md`"
-   - "Want to implement a single task manually? Run `/feature docs/specs/<name>.md`"
+3. Identify tasks that lack detailed specs:
+   - If any task references a spec that doesn't exist yet, flag it
+   - Suggest creating specs before execution: "These tasks need specs first — run `/spec <feature-name>` for each, or `/speckit.specify` if using GitHub Spec Kit"
+   - Tasks with existing, complete specs are ready to execute immediately
+
+4. Suggest next steps:
+   - **Specs needed?** → "Create specs for unspecified tasks: `/spec <feature-name>` (or `/speckit.specify` with Spec Kit)"
+   - **All specs ready?** → "Run `/autopilot docs/roadmap/README.md` to execute the full roadmap"
+   - **Start one phase?** → "Run `/autopilot docs/roadmap/<phase-name>.md`"
+   - **Single task?** → "Run `/feature docs/specs/<name>.md`"

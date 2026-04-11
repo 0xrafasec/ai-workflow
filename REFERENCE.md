@@ -470,7 +470,7 @@ Skills are installed globally — no project-level copies needed.
 2. `pre-commit install`
 3. `/prd <project-name>` — write the product requirements
 4. `/architecture` — define the system structure
-5. `/tdd` — define testing strategy, dev environment, CI/CD
+5. `/tdd` — Technical Design Document (testing, dev environment, CI/CD, coding standards)
 6. `/security` — define the threat model (if applicable)
 7. `/spec <first-feature>` — write your first feature spec
 8. `/feature docs/specs/<first-feature>.md` — implement it

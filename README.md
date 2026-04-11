@@ -22,7 +22,7 @@ ai-workflow covers the entire software development lifecycle inside Claude Code 
 Each phase of development has dedicated tooling:
 
 - **Discovery** — interview-driven requirements gathering (`/prd`)
-- **Design** — architecture, testing strategy, and threat modeling (`/architecture`, `/tdd`, `/security`)
+- **Design** — architecture, technical design, and threat modeling (`/architecture`, `/tdd`, `/security`)
 - **Specification** — detailed feature specs with verification criteria (`/spec`)
 - **Planning** — phased roadmaps with dependency tracking (`/roadmap`)
 - **Implementation** — parallel execution across isolated worktrees (`/feature`, `/autopilot`)
@@ -48,7 +48,7 @@ The toolkit implements a layered document pipeline where each phase builds on th
 Idea → PRD (why) → Architecture + TDD + Security (how) → Specs (what) → Roadmap (when) → Implementation → Review → Ship
 ```
 
-A feature spec references the architecture, testing strategy, and threat model — so implementation agents have complete context without repetition.
+A feature spec references the architecture, technical design, and threat model — so implementation agents have complete context without repetition.
 
 For a detailed explanation with diagrams, see [docs/spec-driven-development.md](docs/spec-driven-development.md).
 
@@ -164,7 +164,7 @@ The typical flow from idea to shipped code:
 /prd                       Define what to build and why
   │
 /architecture              System structure
-/tdd                       Testing, dev env, CI/CD
+/tdd                       Technical design (testing, dev env, CI/CD, standards)
   │
 /spec <feature>            Implementation details per feature
   │

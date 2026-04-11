@@ -9,7 +9,7 @@ ai-workflow and [GitHub Spec Kit](https://github.com/github/spec-kit) solve over
 | **Requirements** | Deep interview-driven PRDs (`/prd`) | Structured spec templates (`/speckit.specify`) |
 | **Principles** | Global conventions via `CLAUDE.md` | Project constitution (`/speckit.constitution`) |
 | **Architecture** | Dedicated architecture docs (`/architecture`) | Embedded in implementation plan (`/speckit.plan`) |
-| **Testing strategy** | Dedicated TDD docs (`/tdd`) | Test-first enforcement via constitution articles |
+| **Technical design** | Dedicated TDD docs — testing, dev env, CI/CD, standards (`/tdd`) | Test-first enforcement via constitution articles |
 | **Threat modeling** | Dedicated security docs + agents (`/security`) | Available via community extensions |
 | **Feature specs** | `/spec` with verification criteria | `/speckit.specify` with acceptance criteria |
 | **Task breakdown** | `/roadmap` with phase dependencies | `/speckit.tasks` with parallelization markers |
@@ -36,7 +36,7 @@ flowchart TD
         B --> D["/tdd"]
         B --> E["/security"]
         C --> F["Architecture doc"]
-        D --> G["Testing strategy"]
+        D --> G["Technical Design Doc"]
         E --> H["Threat model"]
     end
 
@@ -127,7 +127,7 @@ flowchart LR
 **Steps:**
 
 1. `/prd` — interview and capture requirements
-2. `/architecture` + `/tdd` + `/security` — design the system
+2. `/architecture` + `/tdd` + `/security` — design the system (architecture, technical design, threat model)
 3. `/spec <feature>` — write detailed feature specs
 4. `/speckit.constitution` — encode your architecture decisions and coding standards as constitutional articles (reference the ai-workflow design docs)
 5. `/speckit.plan` — create the technical implementation plan
@@ -191,7 +191,7 @@ Pick the tool that fits each phase:
 | Requirements | `/prd` (ai-workflow) | Interactive interview surfaces edge cases better than filling templates |
 | Principles | `/speckit.constitution` (Spec Kit) | Constitutional articles are more enforceable than CLAUDE.md conventions |
 | Architecture | `/architecture` (ai-workflow) | Dedicated doc is easier to reference than embedded plan sections |
-| Testing strategy | `/tdd` (ai-workflow) | Separate doc keeps concerns clean |
+| Technical design | `/tdd` (ai-workflow) | Separate doc covers testing, dev env, CI/CD, and coding standards |
 | Feature spec | Either — depends on the feature | Use `/spec` for complex features needing deep context; `/speckit.specify` for well-understood features needing traceability |
 | Task breakdown | `/speckit.tasks` (Spec Kit) | Better traceability with `[P]` markers and spec references |
 | Implementation | `/autopilot` (ai-workflow) | Parallel worktree execution is faster for multi-task phases |
@@ -231,7 +231,7 @@ When running `/speckit.constitution`, reference the ai-workflow design docs:
 ```
 Create the project constitution. Use these documents as input:
 - Architecture: docs/architecture.md
-- Testing strategy: docs/tdd.md
+- Technical design: docs/tdd.md
 - Security: docs/security.md
 
 Encode the key decisions from these documents as constitutional articles.
@@ -264,6 +264,83 @@ Then execute:
 /autopilot docs/roadmap/feature-name.md
 ```
 
+### Roadmap → Specify Per Feature
+
+The most natural integration point: use ai-workflow for the high-level phases, then Spec Kit (or `/spec`) to detail each feature before execution.
+
+```mermaid
+flowchart TD
+    PRD["/prd<br/>Product Requirements"] --> ROAD["/roadmap<br/>Phase breakdown"]
+
+    ROAD --> P1["Phase 1"]
+    ROAD --> P2["Phase 2"]
+    ROAD --> P3["Phase 3"]
+
+    P1 --> T1A["Task: Auth system"]
+    P1 --> T1B["Task: Database schema"]
+
+    P2 --> T2A["Task: API endpoints"]
+    P2 --> T2B["Task: Background jobs"]
+
+    P3 --> T3A["Task: Dashboard UI"]
+
+    T1A --> S1A["/speckit.specify or /spec<br/>Detailed spec for auth"]
+    T1B --> S1B["/speckit.specify or /spec<br/>Detailed spec for schema"]
+    T2A --> S2A["/speckit.specify or /spec<br/>Detailed spec for API"]
+    T2B --> S2B["/speckit.specify or /spec<br/>Detailed spec for jobs"]
+    T3A --> S3A["/speckit.specify or /spec<br/>Detailed spec for UI"]
+
+    S1A --> E1["/feature or /autopilot<br/>Execute Phase 1"]
+    S1B --> E1
+    S2A --> E2["/feature or /autopilot<br/>Execute Phase 2"]
+    S2B --> E2
+    S3A --> E3["/feature or /autopilot<br/>Execute Phase 3"]
+
+    E1 --> R1["/code-review + /sec-review"]
+    E2 --> R2["/code-review + /sec-review"]
+    E3 --> R3["/code-review + /sec-review"]
+
+    style PRD fill:#e8f4f8,stroke:#2196F3
+    style ROAD fill:#f3e5f5,stroke:#9C27B0
+    style P1 fill:#f3e5f5,stroke:#9C27B0
+    style P2 fill:#f3e5f5,stroke:#9C27B0
+    style P3 fill:#f3e5f5,stroke:#9C27B0
+    style T1A fill:#fff3e0,stroke:#FF9800
+    style T1B fill:#fff3e0,stroke:#FF9800
+    style T2A fill:#fff3e0,stroke:#FF9800
+    style T2B fill:#fff3e0,stroke:#FF9800
+    style T3A fill:#fff3e0,stroke:#FF9800
+    style S1A fill:#e8f5e9,stroke:#4CAF50
+    style S1B fill:#e8f5e9,stroke:#4CAF50
+    style S2A fill:#e8f5e9,stroke:#4CAF50
+    style S2B fill:#e8f5e9,stroke:#4CAF50
+    style S3A fill:#e8f5e9,stroke:#4CAF50
+    style E1 fill:#e8f5e9,stroke:#4CAF50
+    style E2 fill:#e8f5e9,stroke:#4CAF50
+    style E3 fill:#e8f5e9,stroke:#4CAF50
+    style R1 fill:#e8f4f8,stroke:#2196F3
+    style R2 fill:#e8f4f8,stroke:#2196F3
+    style R3 fill:#e8f4f8,stroke:#2196F3
+```
+
+**The flow:**
+
+1. `/prd` — capture product requirements through an interview
+2. `/roadmap` — break the PRD into phased work (even without detailed specs yet)
+3. **Per task in each phase:** run `/spec <task-name>` or `/speckit.specify` to create a detailed, traceable spec
+4. `/autopilot` (or `/feature`) — execute the phase, now that every task has a spec
+5. `/code-review` + `/sec-review` — review before merging
+
+**Why this matters:** You don't always have detailed specs upfront. Often you have a PRD and a rough idea of phases. The roadmap gives you structure and ordering; then you specify each task *just before* implementing it, with the full roadmap context available. This avoids specifying tasks that might change as earlier phases are completed.
+
+**When to specify all upfront vs. per-phase:**
+
+| Approach | When to use |
+|----------|-------------|
+| Specify all tasks before starting | Small project, well-understood domain, stable requirements |
+| Specify per phase (just-in-time) | Large project, evolving requirements, later phases depend on learnings from earlier ones |
+| Mix — specify Phase 1 fully, others loosely | Most common — get started fast, refine as you learn |
+
 ## Lifecycle Overview
 
 ```mermaid
@@ -290,18 +367,17 @@ graph TB
         RFC["/rfc — proposals"] -.->|"anytime"| CONST
     end
 
-    subgraph Specification ["Specification"]
-        PRD --> SPEC["/spec or /speckit.specify"]
+    subgraph Planning ["Planning"]
+        PRD --> ROAD["/roadmap<br/>Phase breakdown"]
     end
 
-    subgraph Planning ["Planning"]
-        SPEC --> PLAN["/speckit.plan"]
-        CONST --> PLAN
-        PLAN --> TASKS["/speckit.tasks or /roadmap"]
+    subgraph Specification ["Specify Per Feature"]
+        ROAD --> SPEC["/spec or /speckit.specify<br/>per task in each phase"]
+        CONST --> SPEC
     end
 
     subgraph Implementation ["Implementation"]
-        TASKS --> AUTO["/autopilot<br/>Parallel worktrees"]
+        SPEC --> AUTO["/autopilot<br/>Parallel worktrees"]
         TASKS --> FEAT["/feature<br/>One at a time"]
         TASKS --> IMPL["/speckit.implement"]
     end
