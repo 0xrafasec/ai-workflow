@@ -74,7 +74,36 @@ The workflow uses a tiered model strategy — Opus for decisions, Sonnet for exe
 - `jq` (for the status line script)
 - `notify-send` (Linux) or equivalent (for desktop notifications)
 
-### Install
+### Install (recommended — one-liner)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/0xrafasec/ai-workflow/main/bootstrap.sh | bash
+```
+
+This clones the repo into `~/.local/share/ai-workflow`, runs `install.sh` to symlink everything into `~/.claude/` (existing config is backed up), and installs a small `aiwf` command into `~/.local/bin` for future updates. Pin to a specific release with `AIWF_REF=v1.0.0 bash`.
+
+Prefer to read the script before running it? [bootstrap.sh](bootstrap.sh) is short and auditable — the whole toolkit is bash + markdown by design, so it stays hackable: you can edit any skill, agent, or the `aiwf` script itself in place.
+
+### Manage the install
+
+Once `aiwf` is on your PATH:
+
+```bash
+aiwf status       # install dir, version, symlink health
+aiwf update       # git pull + re-link (refuses dirty trees; --force stashes)
+aiwf reinstall    # repair broken links
+aiwf uninstall    # remove symlinks (add --purge to delete the clone too)
+aiwf version      # git describe
+aiwf help         # all commands
+```
+
+**Update conflict handling.** `aiwf update` fast-forwards `main` by default and refuses to proceed if:
+- the working tree is dirty (uncommitted or untracked files), **or**
+- your local branch is ahead of `origin/main` (you have local commits that haven't been pushed).
+
+Both cases suggest you've edited the clone directly — which is supported and encouraged. Resolve by committing/pushing your changes, or re-run with `--force` to auto-stash dirty files and hard-reset ahead commits to `origin/main`. Your stashed work stays recoverable via `git stash list` in the install dir.
+
+### Install from a git clone (no curl)
 
 ```bash
 git clone https://github.com/0xrafasec/ai-workflow.git
@@ -82,12 +111,12 @@ cd ai-workflow
 ./install.sh
 ```
 
-This symlinks everything into `~/.claude/`. Your existing config is backed up automatically.
+`install.sh` stays single-purpose (just symlinks); `aiwf` is the lifecycle wrapper around it.
 
 ### Uninstall
 
 ```bash
-./uninstall.sh
+./uninstall.sh   # or: aiwf uninstall
 ```
 
 Removes symlinks and restores any previous backups.
@@ -98,6 +127,7 @@ Removes symlinks and restores any previous backups.
 # Install only specific files
 ./install.sh settings.json
 ./install.sh skills/feature/SKILL.md CLAUDE.md
+# or: aiwf install settings.json
 ```
 
 The filter matches on path, destination, or basename.
