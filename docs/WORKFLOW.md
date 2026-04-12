@@ -224,7 +224,7 @@ Start each in a new Claude session with clean context. The spec is the source of
 
 ### Roadmap Structure
 
-Create `docs/roadmap/PHASE_NAME.md` per phase:
+Create `docs/roadmap/NNN_phase-name.md` per phase — the zero-padded prefix (`001_`, `002_`, ...) makes phase order obvious and keeps files sorted on disk:
 
 ```markdown
 # Phase: [Name]
@@ -295,7 +295,7 @@ claude --worktree feature-auth --tmux
 # In each worktree session:
 
 Read the spec at docs/specs/FEATURE_NAME.md and the roadmap task at
-docs/roadmap/PHASE_NAME.md#task-N.
+docs/roadmap/NNN_phase-name.md#task-N.
 
 Implement the feature following the spec exactly.
 Write tests that cover all verification criteria from the spec.

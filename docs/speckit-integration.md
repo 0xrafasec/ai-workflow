@@ -260,7 +260,7 @@ Tasks marked [P] can run in parallel within the same phase.
 Then execute:
 
 ```
-/autopilot docs/roadmap/feature-name.md
+/autopilot docs/roadmap/001_feature-name.md
 ```
 
 ### Roadmap → Specify Per Feature

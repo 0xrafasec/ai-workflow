@@ -7,9 +7,19 @@ Create a phased roadmap for: $ARGUMENTS
 ## Parse Arguments
 
 The argument can be:
-- **Phase name:** `/roadmap auth-system` — creates `docs/roadmap/auth-system.md`
-- **No argument:** `/roadmap` — reads PRD, architecture, and any existing specs to create a full roadmap
+- **Phase name:** `/roadmap auth-system` — creates `docs/roadmap/NNN_auth-system.md` where `NNN` is the next available 3-digit prefix
+- **No argument:** `/roadmap` — reads PRD, architecture, and any existing specs to create a full roadmap with numbered phase files
 - **Doc path:** `/roadmap docs/specs/feature_x.md` — creates a roadmap for a single spec or feature area
+
+## Phase Numbering
+
+All phase files get a zero-padded 3-digit prefix so phase order is obvious at a glance and files sort correctly: `001_foundations.md`, `002_api-layer.md`, `003_frontend.md`, etc. The index file `docs/roadmap/README.md` stays **unnumbered** — it's the table of contents, not a phase.
+
+**Rules:**
+- **Scan, don't renumber.** Before creating a phase, list `docs/roadmap/` and extract existing `NNN_*.md` prefixes. Use `max(existing) + 1`, zero-padded to 3 digits. Never renumber existing files — commits, PRs, and specs may reference them by name.
+- **Full roadmap from scratch:** first phase is `001_`, numbered in dependency order.
+- **Adding to an existing roadmap:** continue from the next available number.
+- **Separator is underscore** (`001_auth-system.md`), not dash, to keep the numeric prefix visually distinct from the kebab-case phase slug.
 
 ## Context Gathering
 
@@ -63,7 +73,7 @@ Create `docs/roadmap/` directory if it doesn't exist.
 
 ### Single Phase
 
-If the user gave a phase name or single feature area, write to `docs/roadmap/<phase-name>.md`:
+If the user gave a phase name or single feature area, compute the next prefix (see Phase Numbering above) and write to `docs/roadmap/NNN_<phase-name>.md`:
 
 ```markdown
 # Phase: [Name]
@@ -126,9 +136,9 @@ If the user gave no argument (build from design docs), write an index at `docs/r
 
 | # | Phase | Tasks | Dependencies | Status |
 |---|-------|-------|-------------|--------|
-| 1 | [phase-name](phase-name.md) | [count] | None | Not started |
-| 2 | [phase-name](phase-name.md) | [count] | Phase 1 | Not started |
-| 3 | [phase-name](phase-name.md) | [count] | Phase 2 | Not started |
+| 001 | [phase-name](001_phase-name.md) | [count] | None | Not started |
+| 002 | [phase-name](002_phase-name.md) | [count] | 001 | Not started |
+| 003 | [phase-name](003_phase-name.md) | [count] | 002 | Not started |
 
 ## Execution Notes
 - [Key parallelization opportunities]
@@ -136,7 +146,7 @@ If the user gave no argument (build from design docs), write an index at `docs/r
 - [Known risks or blockers]
 ```
 
-Then create each `docs/roadmap/<phase-name>.md` using the single-phase format above.
+Then create each `docs/roadmap/NNN_<phase-name>.md` using the single-phase format above, numbering phases in dependency order starting at `001_`.
 
 ## Key Rules for Task Breakdown
 
@@ -162,5 +172,5 @@ Then create each `docs/roadmap/<phase-name>.md` using the single-phase format ab
 3. Suggest next steps based on spec coverage:
    - **Tasks need specs?** → "Create detailed specs before executing: `/spec <feature-name>` for each task (or `/speckit.specify` with GitHub Spec Kit)"
    - **All tasks have specs?** → "Run `/autopilot docs/roadmap/README.md` to execute the full roadmap"
-   - **Start one phase?** → "Run `/autopilot docs/roadmap/<phase-name>.md`"
+   - **Start one phase?** → "Run `/autopilot docs/roadmap/NNN_<phase-name>.md`" (use the actual numbered filename)
    - **Single task?** → "Run `/feature docs/specs/<name>.md`"
