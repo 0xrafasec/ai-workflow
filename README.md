@@ -264,8 +264,9 @@ ai-workflow/
 │   ├── autopilot/
 │   ├── new-project/
 │   └── security/
-├── WORKFLOW.md                # Full workflow documentation
-└── REFERENCE.md               # Quick reference for all components
+└── docs/
+    ├── WORKFLOW.md            # Full workflow documentation
+    └── REFERENCE.md           # Quick reference for all components
 ```
 
 ## Configuration
@@ -293,8 +294,8 @@ The bundled `statusline-command.sh` shows model name, context usage percentage, 
 |----------|-------------|
 | [Spec-Driven Development](docs/spec-driven-development.md) | Detailed explanation of the SDD methodology with Mermaid diagrams |
 | [Spec Kit Integration](docs/speckit-integration.md) | How to combine ai-workflow with GitHub Spec Kit |
-| [WORKFLOW.md](WORKFLOW.md) | Full workflow guide — phases, conventions, CI/CD integration, team practices |
-| [REFERENCE.md](REFERENCE.md) | Quick reference for all agents, skills, settings, and daily patterns |
+| [Workflow Guide](docs/WORKFLOW.md) | Full workflow guide — phases, conventions, CI/CD integration, team practices |
+| [Reference](docs/REFERENCE.md) | Quick reference for all agents, skills, settings, and daily patterns |
 
 ## Modifying the Toolkit
 
