@@ -78,6 +78,7 @@ Use AskUserQuestion to gather key design decisions. Keep it focused — ask only
    - References inform but don't dictate — blend inspiration with the project's own identity
 
 **Interview rules:**
+- **Always use AskUserQuestion** for every choice point — interview questions, approval gates, option selection. Never present options as plain text that requires the user to type their answer. The user should be able to click/select, not type.
 - If the PRD already specifies brand direction or colors, skip those questions
 - If the user provides brand assets or hex codes, build on them — don't override
 - 4-5 questions max. The goal is direction, not exhaustive specification
@@ -99,6 +100,8 @@ Write to `docs/design/DESIGN_SYSTEM.md`:
 
 ## Color Palette
 
+**Color harmony:** [method used — e.g., split-complementary, triadic, analogous]
+
 ### Primary
 | Token | Hex | Usage |
 |-------|-----|-------|
@@ -107,6 +110,24 @@ Write to `docs/design/DESIGN_SYSTEM.md`:
 | `color-primary-500` | #[main] | Primary buttons, links |
 | `color-primary-700` | #[dark] | Hover states, emphasis |
 | `color-primary-900` | #[darkest] | Text on light backgrounds |
+
+### Secondary
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `color-secondary-50` | #[lightest] | Subtle backgrounds, hover |
+| `color-secondary-100` | #[...] | Selected backgrounds, badges |
+| `color-secondary-500` | #[main] | Secondary buttons, links, chart accents |
+| `color-secondary-700` | #[dark] | Hover states, emphasis |
+| `color-secondary-900` | #[darkest] | Text on light backgrounds |
+
+### Accent
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `color-accent-50` | #[lightest] | Highlight backgrounds |
+| `color-accent-100` | #[...] | Subtle highlights |
+| `color-accent-500` | #[main] | Highlights, premium badges, warm touches |
+| `color-accent-700` | #[dark] | Hover states |
+| `color-accent-900` | #[darkest] | Strong emphasis |
 
 ### Neutral
 | Token | Hex | Usage |
@@ -148,6 +169,11 @@ Write to `docs/design/DESIGN_SYSTEM.md`:
 
 ### Application Rule
 60% neutral backgrounds / 30% surface & secondary / 10% accent & CTA
+
+**Multi-hue distribution within the 10% accent slice:**
+- Primary color: ~60% of accent usage (buttons, active states, key CTAs)
+- Secondary color: ~30% of accent usage (secondary actions, charts, category indicators, badges)
+- Accent color: ~10% of accent usage (highlights, premium badges, warm touches — used sparingly for maximum impact)
 
 ## Typography
 
@@ -231,13 +257,52 @@ Write to `docs/design/DESIGN_SYSTEM.md`:
 
 ### Tables / Data Display
 - [defined when first data screen is created]
+
+## Accessibility
+
+### Contrast Ratios (WCAG AA)
+| Pairing | Ratio | Pass? |
+|---------|-------|-------|
+| Primary text on page bg | [calculated] | [Yes/No] |
+| Secondary text on page bg | [calculated] | [Yes/No] |
+| Muted text on page bg | [calculated] | [Yes/No] |
+| Primary button text on primary bg | [calculated] | [Yes/No] |
+| Error text on error-bg | [calculated] | [Yes/No] |
+| Success text on success-bg | [calculated] | [Yes/No] |
+
+### Minimum Sizes
+- Smallest text: 12px (captions only)
+- Body text: 16px
+- Touch targets: 44x44px minimum
+- Interactive element spacing: 8px gap minimum
+
+### Color Independence
+- All status indicators use icon + color (never color alone)
+- P&L values use +/- prefix alongside green/red
+- Form errors use icon + colored border + text message
 ```
 
 **Palette generation rules:**
+- **Always generate at least 3 hue families** — Primary, Secondary, and Accent — plus Neutral and Semantic. A single-hue palette with shade variations is insufficient; design systems need color depth across multiple hues for hierarchy, differentiation, and visual interest.
+- **Use color harmony to derive Secondary and Accent from Primary:**
+  - Identify the primary hue angle on the HSL color wheel
+  - Choose a harmony strategy based on the brand direction:
+    - **Split-complementary** (±150° from primary): High contrast but less tension than direct complementary. Best for professional/fintech apps.
+    - **Triadic** (±120° from primary): Balanced, vibrant. Best for energetic/creative apps.
+    - **Analogous** (±30-60° from primary): Harmonious, subtle. Best for minimal/sophisticated apps.
+    - **Complementary** (180° from primary): Maximum contrast. Use carefully — one hue dominates, the other accents.
+  - **Collision check:** Ensure Secondary and Accent don't overlap with Semantic colors (success green ~142°, warning amber ~38°, error red ~0°, info blue ~217°). If a harmony-derived hue is within 20° of a semantic color, shift it or choose a different harmony strategy.
 - Start from the user's seed color(s)
-- Generate a full scale (50-900) using HSL: fix hue, vary saturation (-5 to +5) and lightness (95 to 10)
-- Ensure WCAG AA contrast ratios: text on backgrounds must be >= 4.5:1
+- Generate a full scale (50-900) for each hue: fix hue, vary saturation (-5 to +5) and lightness (95 to 10)
+- Ensure WCAG AA contrast ratios: text on backgrounds must be >= 4.5:1, large text (18px+ bold or 24px+) must be >= 3:1
 - Avoid pure black/white: use near-black (#18181b) and near-white (#fafafa)
+- **Accessibility validation:** After generating the palette, verify these critical pairings pass WCAG AA:
+  - Primary text color on page background (light and dark)
+  - Secondary text color on page background (light and dark)
+  - Muted/placeholder text on input backgrounds (light and dark)
+  - Primary button text on primary button background
+  - Semantic colors (success, warning, error) on their respective background tints
+  - Badge/tag text on badge/tag backgrounds
 
 ### 2b. Create Design System Artboard in Paper
 
@@ -277,6 +342,8 @@ Create a separate artboard named "Component Library" that shows every reusable c
 For each component, show a label above it with the component name and state.
 Group related states horizontally, component types vertically.
 
+**Toggle/Switch rendering note:** Paper.design renders HTML statically — CSS tricks like `justify-content: flex-end` for toggle "on" state may not render the knob position correctly. Build toggle states as separate explicit layouts: "off" state with knob on the left (using a spacer or fixed positioning), "on" state with knob on the right. Use two side-by-side frames inside the track rather than relying on flex-end alignment. Test with a screenshot after creating toggles.
+
 Create a **dark mode variant** of the component library:
 - Duplicate the Component Library artboard
 - Rename to "Component Library / Dark"
@@ -286,17 +353,20 @@ Take screenshots of both light and dark component libraries.
 
 ### 2c. Checkpoint: Design System Review
 
-Present the design system to the user:
+Present the design system summary to the user, then use **AskUserQuestion** to get approval:
+
 ```
 ## Design System Ready
 
-Palette: [primary color] + [neutral scale] + [semantic colors]
+Palette: [primary color] + [secondary color] + [accent color] + [neutral scale] + [semantic colors]
+Color harmony: [method used]
 Typography: [font pairing]
 Density: [spacious/balanced/dense]
 
 Screenshot saved. Review the design system artboard in Paper.design.
-Say "approved" to proceed to layouts, or give feedback to refine.
 ```
+
+Use AskUserQuestion with options: "Approved — proceed to layouts", "Needs changes — I'll give feedback"
 
 **Wait for user approval before proceeding to layouts.**
 
@@ -325,7 +395,7 @@ Dashboard (horizontal group, next to Auth)
   └── ...
 ```
 
-Present the screen inventory to the user for confirmation before building.
+Use **AskUserQuestion** to present the screen inventory for confirmation, with options: "Approved — start building", "Needs changes — I'll give feedback"
 
 ## Phase 4: Layout Creation
 
@@ -346,7 +416,7 @@ Example: `Auth / Login / Default / Desktop`, `Auth / Login / Error / Mobile`
 
 For each screen, follow this process:
 
-1. **Create the artboard** with proper name and size
+1. **Create the artboard** with proper name and size. **CRITICAL: After creating the artboard, immediately reposition it** using `update_styles` with `top` and `left` to match the Canvas Organization Rules above. Paper auto-places artboards in arbitrary positions — you MUST move them into the correct flow group column (horizontal) and state row (vertical). Verify positions with `get_basic_info` after repositioning a batch of artboards.
 2. **Build incrementally** — one visual group per `write_html` call:
    - Navigation/header first
    - Hero/main content area
@@ -386,9 +456,11 @@ Every screen must follow these principles. The goal is designs that feel **genui
 - High-contrast font pairings: display + monospace, serif + geometric sans — avoid pairing similar fonts
 
 **Color:**
-- 60-30-10 rule: 60% neutral, 30% surface/secondary, 10% accent
+- 60-30-10 rule: 60% neutral, 30% surface/secondary, 10% accent (primary + secondary + accent hues)
+- **Never use a single-hue palette** — always have at least Primary, Secondary, and Accent hues derived from color harmony (split-complementary, triadic, or analogous). A monochrome primary with only shade variations looks flat and undifferentiated.
 - Never pure black (#000) or pure white (#fff) — use near-black/near-white
 - **Bold dominant colors with sharp accents** — avoid timid, evenly-distributed palettes
+- Use the secondary hue for charts, data visualizations, category badges, and secondary CTAs to create clear visual hierarchy between primary and secondary actions
 - Subtle background differentiation between sections (neutral-50 vs white)
 - High contrast for primary actions, muted for secondary
 - Draw from cultural aesthetics for inspiration: IDE themes, design movements, editorial design
@@ -406,6 +478,16 @@ Every screen must follow these principles. The goal is designs that feel **genui
 - Inline SVG (24x24 viewBox, 1.5px stroke, round linecap) for custom icons
 - Consistent 20-24px icon sizing
 
+**Accessibility (CRITICAL — not optional):**
+- **WCAG AA minimum for all text.** Every text element must pass contrast ratio >= 4.5:1 against its direct background. Large text (18px+ bold or 24px+) needs >= 3:1. When in doubt, calculate: relative luminance of foreground vs background.
+- **Don't rely on color alone.** Pair color with icons, text, or shape. A red badge needs an icon or label, not just red. P&L values need +/- or arrows, not just green/red. Status indicators need text labels alongside colored dots.
+- **Minimum touch targets of 44x44px.** Buttons, links, toggles, checkboxes — all interactive elements need at least 44px in both dimensions (including padding). If the visible element is smaller, add invisible padding.
+- **Visible focus states.** Every interactive element needs a distinct focus indicator: outline, ring, or border change. Never remove focus rings. Design them to be visible on both light and dark backgrounds.
+- **Text sizing floors:** 12px absolute minimum for any text. 14px minimum for anything users need to read (not just decorative labels). 16px for body text.
+- **Don't disable text selection** or use images of text where real text would work.
+- **Semantic heading order:** Use h1 → h2 → h3 in logical order. The visual hierarchy should match the semantic hierarchy.
+- **Sufficient spacing between interactive elements:** At least 8px gap between clickable/tappable items to prevent mis-taps.
+
 **Modern craft touches:**
 - Subtle mesh gradients on hero sections or CTAs — not flat solid color buttons
 - Rounded corners consistently (radius-lg for cards, radius-md for buttons)
@@ -418,11 +500,18 @@ Every screen must follow these principles. The goal is designs that feel **genui
 
 After every 2-3 screens (or after completing a flow group), take screenshots and evaluate:
 - **Spacing:** Uneven gaps, cramped groups, or unintentionally empty areas?
-- **Typography:** Text readable? Clear hierarchy between heading/body/caption?
+- **Typography:** Text readable? Clear hierarchy between heading/body/caption? Minimum 12px for any text, 14px+ preferred for body.
 - **Contrast:** Low contrast text? Elements blending into background?
 - **Alignment:** Elements sharing a visual lane? Icons aligned across rows?
 - **Clipping:** Content cut off at container or artboard edges?
 - **Consistency:** Does this screen match the design system? Same tokens everywhere?
+- **Accessibility:** Run through these checks:
+  - **Color contrast (WCAG AA):** All text must have >= 4.5:1 contrast ratio against its background. Large text (18px+ bold, 24px+) must have >= 3:1. Calculate contrast ratio: `(L1 + 0.05) / (L2 + 0.05)` where L1 is the lighter relative luminance.
+  - **Touch/click targets:** Interactive elements (buttons, links, form controls) must be at least 44x44px (or have at least 44px of combined target + padding). Small icon buttons need sufficient tap area.
+  - **Focus indicators:** Ensure focus states are visually distinct — not just color change. Use ring/outline patterns (e.g., `box-shadow: 0 0 0 3px rgba(primary, 0.3)`).
+  - **Color independence:** Information must not be conveyed by color alone. Use icons, text labels, or patterns alongside color (e.g., error states should have an icon + red, not just red).
+  - **Text sizing:** No text smaller than 12px. Body text at 16px minimum. Labels at 12-14px.
+  - **Semantic structure:** Heading hierarchy should be logical (h1 > h2 > h3) — no skipped levels.
 
 Fix issues before moving to the next group. Use `update_styles` for targeted fixes.
 
@@ -523,3 +612,4 @@ Dark mode is generated per flow group, not as a separate pass. This keeps relate
 10. **Group by flow, not by component.** Auth screens together, Dashboard screens together — organized for stakeholder review.
 11. **Dark mode is not optional.** Every screen gets a dark variant. Generated per flow group, placed below light variants.
 12. **Fight the generic.** Every layout should feel deliberately designed for its context. Vary approaches across flows — not every page should use the same card grid. Avoid predictable, safe, "AI-generated" aesthetics.
+13. **Accessibility is not negotiable.** WCAG AA contrast on all text, 44px minimum touch targets, color-independent status indicators, visible focus states. Check every screen. Accessibility failures are design bugs — fix them before moving on.
