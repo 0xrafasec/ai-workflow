@@ -47,6 +47,12 @@ Before anything, read what exists:
    - Check `git log --oneline -20` for recent work direction
    - Identify what (if anything) is already implemented
 
+5. **Visual design references (for UI work):**
+   - Check for a connected **Figma MCP** — if available, list frames/pages so tasks can reference them by node ID
+   - Check for a connected **Paper MCP** (`mcp__paper__get_basic_info`) — if available, list artboards so tasks can reference them by node ID
+   - If neither MCP is connected, look for local image references: `design/assets/`, `docs/design/`, `design/`, or any PNG/JPG mockups in the repo
+   - When writing UI tasks, include a **Design reference** field pointing to the specific frame/artboard/image the task implements. If nothing is found, flag it and ask the user to provide a reference before the task is executable.
+
 **Minimum required context:** A PRD or architecture doc. The roadmap breaks down *what the design docs describe* into phased, executable work. If neither exists, stop and tell the user:
 "No PRD or architecture doc found. Create one first with `/prd` or `/architecture`, then come back to build the roadmap."
 
@@ -60,6 +66,7 @@ Use AskUserQuestion to refine the roadmap. Adapt questions based on what you lea
 4. **Team context** — Is this a solo developer or a team? How many streams of parallel work are practical?
 5. **Verification** — What are the build/test/lint commands? Are there integration tests that span features?
 6. **Phase boundaries** — Where are the natural checkpoints? What needs human review before continuing?
+7. **MVP boundary** — Which phase is the last one required to ship the MVP? Everything after that phase is post-MVP polish/expansion. If the answer isn't obvious from the PRD's "in scope (v1)" section and the first-slice priority, ask explicitly. Every full roadmap MUST identify this boundary.
 
 **Interview rules:**
 - If design docs are clear and dependencies are obvious, keep the interview short (2-3 questions)
@@ -85,6 +92,7 @@ If the user gave a phase name or single feature area, compute the next prefix (s
 
 ### Task 1: [Name]
 - **Spec:** docs/specs/[name].md (exists | needs creation)
+- **Design reference:** [Figma node | Paper artboard id | path to image | N/A for non-UI]
 - **Files:** [list of files to create or modify]
 - **Dependencies:** None
 - **Tests:** Unit + Integration (sets up data models and API layer)
@@ -93,6 +101,7 @@ If the user gave a phase name or single feature area, compute the next prefix (s
 
 ### Task 2: [Name]
 - **Spec:** docs/specs/[name].md (exists | needs creation)
+- **Design reference:** [Figma node | Paper artboard id | path to image | N/A for non-UI]
 - **Files:** [list of files to create or modify]
 - **Dependencies:** Task 1 (needs [specific thing])
 - **Tests:** Unit + Integration (service interactions)
@@ -132,19 +141,25 @@ If the user gave no argument (build from design docs), write an index at `docs/r
 ## Overview
 [What the full roadmap accomplishes. High-level project goal.]
 
+## MVP Boundary
+**The MVP ends at Phase NNN ([phase-name]).** [One sentence describing what the user has at that point and why that slice is shippable on its own.] Phases after NNN are post-MVP — [one sentence describing what they add].
+
 ## Phases
 
-| # | Phase | Tasks | Dependencies | Status |
-|---|-------|-------|-------------|--------|
-| 001 | [phase-name](001_phase-name.md) | [count] | None | Not started |
-| 002 | [phase-name](002_phase-name.md) | [count] | 001 | Not started |
-| 003 | [phase-name](003_phase-name.md) | [count] | 002 | Not started |
+| # | Phase | Tasks | Dependencies | MVP | Status |
+|---|-------|-------|--------------|-----|--------|
+| 001 | [phase-name](001_phase-name.md) | [count] | None | ✓ | Not started |
+| 002 | [phase-name](002_phase-name.md) | [count] | 001 | ✓ | Not started |
+| 003 | [phase-name](003_phase-name.md) | [count] | 002 | ✓ **(MVP ends here)** | Not started |
+| 004 | [phase-name](004_phase-name.md) | [count] | 003 | — | Not started |
 
 ## Execution Notes
 - [Key parallelization opportunities]
 - [Critical path — the longest sequential chain]
 - [Known risks or blockers]
 ```
+
+**MVP boundary is required.** Mark the last MVP phase with `✓ **(MVP ends here)**` in the table and call it out in a dedicated `## MVP Boundary` section above the table. Post-MVP phases get `—` in the MVP column. If the user hasn't indicated a boundary and it isn't obvious from the PRD, ask before writing the README.
 
 Then create each `docs/roadmap/NNN_<phase-name>.md` using the single-phase format above, numbering phases in dependency order starting at `001_`.
 
