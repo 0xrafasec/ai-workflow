@@ -685,8 +685,8 @@ With AI generating more code, review becomes the bottleneck. Address this by:
 claude --worktree feature-x          # Start isolated work
 /feature docs/specs/feature_x.md     # Implement from spec
 /sec-review                          # Security check
-/commit                              # Commit changes
-# → Push + PR
+/commit                              # Stage + commit by logical concern
+/pr                                  # Push + open PR (add --draft for WIP)
 
 # Parallel work
 claude --worktree task-a --tmux      # Terminal 1

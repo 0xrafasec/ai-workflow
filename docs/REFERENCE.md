@@ -22,7 +22,7 @@
 This toolkit implements the workflow described in [WORKFLOW.md](./WORKFLOW.md). It provides:
 
 - **Agents** — specialized reviewers that can be spawned as subagents
-- **Skills** — reusable slash-command workflows (`/prd`, `/architecture`, `/tdd`, `/security`, `/adr`, `/rfc`, `/spec`, `/roadmap`, `/feature`, `/fix`, `/review`, `/autopilot`, `/code-review`, `/new-project`)
+- **Skills** — reusable slash-command workflows (`/prd`, `/architecture`, `/tdd`, `/security`, `/adr`, `/rfc`, `/spec`, `/roadmap`, `/feature`, `/fix`, `/commit`, `/pr`, `/review`, `/autopilot`, `/code-review`, `/new-project`)
 - **Settings** — notification hooks for parallel work
 - **CLAUDE.md** — global defaults applied to every project
 
@@ -373,6 +373,58 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
 5. Fixes with minimal change + regression tests at the right layer(s)
 6. Runs quality checks and `/code-review`
 7. Commits with `fix:` message describing what was broken
+
+---
+
+### /commit
+
+**File:** `~/.claude/skills/commit/SKILL.md`
+
+**Purpose:** Stage and commit the working tree as one or more logical conventional commits — never a single bundled "update everything" commit.
+
+**Usage:**
+```
+/commit
+```
+
+**Default and only behavior:** local-only. Never pushes, force-pushes, amends, or touches the remote.
+
+**What it does:**
+1. Surveys the tree (`git status`, `git diff --stat`, `git log --oneline -10`) to match existing commit style
+2. Reads the actual diffs for any files whose change isn't obvious from the path
+3. Groups changes by logical concern — a bug fix and an unrelated refactor become separate commits
+4. Drafts conventional-commit messages (feat/fix/refactor/docs/test/chore/perf/security/build/ci), imperative mood, under 72 chars, body only when the *why* is non-obvious
+5. **Presents the full commit plan** (files + messages) and waits for approval. Accepts targeted edits ("merge 2 and 3", "reword commit 1 as...")
+6. Stages explicit paths (`git add <file>`, never `git add .` or `-A`) and commits each group sequentially with a HEREDOC message
+7. Never uses `--no-verify`. On pre-commit hook failure: stops, shows the error, asks how to proceed — never `--amend` to hide a failure
+8. Reports final `git status` + `git log --oneline -N`
+
+Pushing and PR creation are `/pr`'s job.
+
+---
+
+### /pr
+
+**File:** `~/.claude/skills/pr/SKILL.md`
+
+**Purpose:** Open a pull request for the current branch. Assumes commits already exist.
+
+**Usage:**
+```
+/pr                    # normal, review-ready PR
+/pr --draft            # draft PR (WIP, early CI feedback, review conversation)
+```
+
+**What it does:**
+1. Checks preconditions: working tree clean (otherwise tells you to run `/commit` first), not on `main`/`master`, there are commits ahead of the base branch
+2. Pushes the current branch if it has no upstream or is ahead — never force-pushes without explicit confirmation, never force-pushes to `main`/`master`
+3. Analyzes **all** commits in `<base>..HEAD` (not just the tip) to draft the PR
+4. Drafts a title under 70 chars, **no type prefix** (`feat:` / `fix:` belong in commits, not PR titles)
+5. Drafts a body with Summary → Spec (if one exists in `docs/specs/`) → Security checklist (only if the diff touches auth / crypto / input validation / secrets / external APIs) → Test plan
+6. Presents the draft for approval, accepts edits, then creates the PR via `gh pr create --title ... --body ...` with HEREDOC, adding `--draft` only if requested
+7. Returns the PR URL
+
+Does not merge, request reviewers, add labels, or close issues — those are explicit follow-ups.
 
 ---
 

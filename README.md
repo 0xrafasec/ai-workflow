@@ -164,6 +164,13 @@ Skills are multi-step workflows invoked as slash commands inside Claude Code.
 | `/code-review` | Stack-aware review with language-specific best practices |
 | `/sec-review` | Full security audit with parallel analysis agents |
 
+### Delivery
+
+| Skill | Description |
+|-------|-------------|
+| `/commit` | Stage and commit the working tree as one or more logical conventional commits (local-only, never pushes) |
+| `/pr [--draft]` | Open a pull request for the current branch — analyzes all commits in the range, drafts title + body, pushes if needed. `--draft` opens as a draft PR. |
+
 ## Agents
 
 Agents are specialized reviewers spawned as subagents during implementation or review.

@@ -26,5 +26,5 @@
 - All global config (CLAUDE.md, settings.json, agents, skills, commands, reviews) is symlinked from ~/Projects/AI/ai-workflow into ~/.claude/
 - NEVER edit files directly in ~/.claude/ — changes will be lost or cause symlink conflicts
 - To modify any skill, agent, command, or config: edit the source in ~/Projects/AI/ai-workflow/, then commit and push
-- Available skills: /prd, /architecture, /tdd, /security, /adr, /rfc, /spec, /roadmap, /feature, /fix, /review, /autopilot, /code-review, /new-project, /sec-review
+- Available skills: /prd, /architecture, /tdd, /security, /adr, /rfc, /spec, /roadmap, /feature, /fix, /commit, /pr, /review, /autopilot, /code-review, /new-project, /sec-review
 - Run `install.sh` after adding new skills or agents to re-symlink
