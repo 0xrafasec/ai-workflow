@@ -1,0 +1,228 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# aiwf — AI Workflow toolkit manager.
+#
+# Thin lifecycle wrapper around install.sh and uninstall.sh. Those two scripts
+# stay single-purpose; this script adds update / reinstall / status / version
+# on top, and is the command that ships in ~/.local/bin after bootstrap.
+#
+# Design notes:
+#   - Bash, not a compiled binary: the whole toolkit is bash + markdown, so a
+#     binary would add a release pipeline for no real user benefit. A shell
+#     script is also auditable before `curl | bash` and hackable in place —
+#     users can edit ~/.local/share/ai-workflow/aiwf to add their own commands.
+#   - Wraps install.sh/uninstall.sh rather than duplicating their logic, so
+#     there is still a single source of truth for the symlink set.
+
+CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
+BIN_DIR="${AIWF_BIN_DIR:-$HOME/.local/bin}"
+
+resolve_self() {
+    local src="${BASH_SOURCE[0]}"
+    while [ -L "$src" ]; do
+        local dir
+        dir=$(cd -P "$(dirname "$src")" && pwd)
+        src=$(readlink "$src")
+        [[ $src != /* ]] && src="$dir/$src"
+    done
+    cd -P "$(dirname "$src")" && pwd
+}
+INSTALL_DIR="${AIWF_INSTALL_DIR:-$(resolve_self)}"
+
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
+info()  { echo -e "${GREEN}[+]${NC} $1"; }
+warn()  { echo -e "${YELLOW}[!]${NC} $1"; }
+error() { echo -e "${RED}[x]${NC} $1" >&2; }
+
+require_clone() {
+    if [ ! -d "$INSTALL_DIR/.git" ]; then
+        error "Not a git clone: $INSTALL_DIR"
+        error "Re-bootstrap via bootstrap.sh."
+        exit 1
+    fi
+}
+
+version_string() {
+    if [ -d "$INSTALL_DIR/.git" ]; then
+        git -C "$INSTALL_DIR" describe --tags --always --dirty 2>/dev/null || echo "unknown"
+    else
+        echo "unknown"
+    fi
+}
+
+cmd_install() {
+    if [ ! -x "$INSTALL_DIR/install.sh" ]; then
+        error "install.sh not found or not executable at $INSTALL_DIR"
+        exit 1
+    fi
+    "$INSTALL_DIR/install.sh" "$@"
+}
+
+cmd_uninstall() {
+    local purge=0
+    local passthru=()
+    local arg
+    for arg in "$@"; do
+        case "$arg" in
+            --purge) purge=1 ;;
+            *) passthru+=("$arg") ;;
+        esac
+    done
+
+    if [ ! -x "$INSTALL_DIR/uninstall.sh" ]; then
+        error "uninstall.sh not found or not executable at $INSTALL_DIR"
+        exit 1
+    fi
+    "$INSTALL_DIR/uninstall.sh" "${passthru[@]}"
+
+    if [ -L "$BIN_DIR/aiwf" ]; then
+        rm "$BIN_DIR/aiwf"
+        info "Removed $BIN_DIR/aiwf"
+    fi
+
+    if [ $purge -eq 1 ]; then
+        if [ -d "$INSTALL_DIR/.git" ]; then
+            warn "Purging clone at $INSTALL_DIR"
+            rm -rf "$INSTALL_DIR"
+        else
+            warn "$INSTALL_DIR is not a git clone — refusing to purge"
+        fi
+    else
+        info "Clone preserved at $INSTALL_DIR (use --purge to delete)"
+    fi
+}
+
+cmd_update() {
+    require_clone
+    local force=0
+    local arg
+    for arg in "$@"; do
+        case "$arg" in
+            --force|-f) force=1 ;;
+            *) error "Unknown flag for update: $arg"; exit 1 ;;
+        esac
+    done
+
+    info "Fetching origin"
+    git -C "$INSTALL_DIR" fetch --quiet origin
+
+    local branch upstream
+    branch=$(git -C "$INSTALL_DIR" rev-parse --abbrev-ref HEAD)
+    upstream="origin/$branch"
+
+    # Dirty working tree — refuse unless --force.
+    if ! git -C "$INSTALL_DIR" diff-index --quiet HEAD -- \
+       || [ -n "$(git -C "$INSTALL_DIR" ls-files --others --exclude-standard)" ]; then
+        if [ $force -eq 1 ]; then
+            warn "Stashing local changes (aiwf update $(date +%s))"
+            git -C "$INSTALL_DIR" stash push -u -m "aiwf update $(date +%s)" >/dev/null
+        else
+            error "Working tree is dirty in $INSTALL_DIR"
+            error "Commit, stash, or re-run with --force to auto-stash."
+            exit 1
+        fi
+    fi
+
+    local ahead behind
+    ahead=$(git -C "$INSTALL_DIR" rev-list --count "$upstream..HEAD" 2>/dev/null || echo 0)
+    behind=$(git -C "$INSTALL_DIR" rev-list --count "HEAD..$upstream" 2>/dev/null || echo 0)
+
+    if [ "$ahead" -gt 0 ] && [ $force -eq 0 ]; then
+        error "Local $branch is $ahead commit(s) ahead of $upstream."
+        error "Push your work, or re-run with --force to hard-reset to $upstream."
+        exit 1
+    fi
+
+    if [ "$behind" = "0" ] && [ "$ahead" = "0" ]; then
+        info "Already up to date ($(version_string))"
+    elif [ $force -eq 1 ] && [ "$ahead" -gt 0 ]; then
+        warn "Hard-resetting $branch to $upstream"
+        git -C "$INSTALL_DIR" reset --hard --quiet "$upstream"
+    else
+        info "Fast-forwarding $branch ($behind commit(s) behind)"
+        git -C "$INSTALL_DIR" merge --ff-only --quiet "$upstream"
+    fi
+
+    cmd_install
+    info "Update complete — $(version_string)"
+}
+
+cmd_reinstall() {
+    cmd_uninstall
+    cmd_install
+}
+
+cmd_status() {
+    echo "Install dir: $INSTALL_DIR"
+    if [ -d "$INSTALL_DIR/.git" ]; then
+        echo "Version:     $(version_string)"
+        echo "Branch:      $(git -C "$INSTALL_DIR" rev-parse --abbrev-ref HEAD)"
+        echo "Remote:      $(git -C "$INSTALL_DIR" config --get remote.origin.url 2>/dev/null || echo '(none)')"
+    else
+        warn "Install dir is not a git clone"
+    fi
+    echo "Claude dir:  $CLAUDE_DIR"
+    if [ -L "$BIN_DIR/aiwf" ]; then
+        echo "aiwf bin:    $BIN_DIR/aiwf -> $(readlink "$BIN_DIR/aiwf")"
+    else
+        echo "aiwf bin:    (not linked in $BIN_DIR)"
+    fi
+    echo ""
+
+    local total=0 broken=0
+    while IFS= read -r -d '' link; do
+        local target
+        target=$(readlink "$link")
+        case "$target" in
+            "$INSTALL_DIR"/*)
+                total=$((total + 1))
+                [ ! -e "$link" ] && { echo "  BROKEN $link"; broken=$((broken + 1)); }
+                ;;
+        esac
+    done < <(find "$CLAUDE_DIR" -type l -print0 2>/dev/null)
+
+    echo "Symlinks:    $total total, $broken broken"
+    if [ "$broken" -gt 0 ]; then
+        warn "Run 'aiwf reinstall' to repair broken links."
+    fi
+}
+
+cmd_version() { version_string; }
+cmd_path()    { echo "$INSTALL_DIR"; }
+
+usage() {
+cat <<EOF
+aiwf — AI Workflow toolkit manager
+
+Usage:
+  aiwf install [FILTER...]  Symlink config into ~/.claude (delegates to install.sh).
+                            Optional basename filters for selective installs.
+  aiwf update [--force]     git pull + re-link. Refuses dirty trees or local
+                            commits ahead of upstream; --force stashes /
+                            hard-resets to recover.
+  aiwf reinstall            Uninstall then install (repair broken links).
+  aiwf uninstall [--purge]  Remove symlinks. --purge also deletes the clone.
+  aiwf status               Show install dir, version, symlink health.
+  aiwf version              Print version (git describe --tags --always --dirty).
+  aiwf path                 Print install directory.
+  aiwf help                 Show this message.
+
+Environment:
+  AIWF_INSTALL_DIR          Override install directory.
+  AIWF_BIN_DIR              Override bin directory (default: ~/.local/bin).
+  CLAUDE_DIR                Override Claude config dir (default: ~/.claude).
+EOF
+}
+
+case "${1:-help}" in
+    install)        shift; cmd_install "$@" ;;
+    update|upgrade) shift; cmd_update "$@" ;;
+    reinstall)      shift; cmd_reinstall "$@" ;;
+    uninstall)      shift; cmd_uninstall "$@" ;;
+    status)         shift; cmd_status "$@" ;;
+    version|--version|-v) cmd_version ;;
+    path)           cmd_path ;;
+    help|-h|--help) usage ;;
+    *) error "Unknown command: $1"; echo ""; usage; exit 1 ;;
+esac
