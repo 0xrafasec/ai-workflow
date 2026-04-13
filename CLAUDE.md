@@ -28,3 +28,4 @@
 - To modify any skill, agent, command, or config: edit the source in ~/Projects/AI/ai-workflow/, then commit and push
 - Available skills: /prd, /architecture, /tdd, /security, /adr, /rfc, /spec, /roadmap, /feature, /fix, /commit, /pr, /review, /autopilot, /code-review, /new-project, /sec-review
 - Run `install.sh` after adding new skills or agents to re-symlink
+- When adding, removing, or renaming skills/agents/commands: always update install.sh, uninstall.sh, and the "Available skills" list above to stay in sync
