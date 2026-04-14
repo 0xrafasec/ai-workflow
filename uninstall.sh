@@ -58,6 +58,8 @@ FILES=(
     "skills/commit/SKILL.md"
     "skills/pr/SKILL.md"
     "skills/design/SKILL.md"
+    "skills/verify-design/SKILL.md"
+    "skills/factory/SKILL.md"
     "reviews/go.md"
     "reviews/rust.md"
     "reviews/typescript.md"
