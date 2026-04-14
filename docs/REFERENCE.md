@@ -33,7 +33,7 @@ The toolkit supports three platforms. Each installs everything from the same sou
 |----------|-------------|------------|
 | Claude Code | `~/.claude/` (symlinks) | `/skill-name` slash commands |
 | Cursor | `~/.cursor/rules/aiwf-*.mdc` (generated) | `"follow the /spec workflow for X"` |
-| Codex CLI | `~/.codex/instructions.md` (compiled) | `"run the /feature workflow for X"` |
+| Codex CLI | `~/.codex/AGENTS.md` (compiled) | `"run the /feature workflow for X"` |
 
 ---
 
@@ -50,7 +50,7 @@ curl -fsSL https://raw.githubusercontent.com/0xrafasec/ai-workflow/main/bootstra
 ```bash
 aiwf install           # Claude Code — symlinks into ~/.claude/
 aiwf install-cursor    # Cursor — generates ~/.cursor/rules/aiwf-*.mdc
-aiwf install-codex     # Codex CLI — compiles ~/.codex/instructions.md
+aiwf install-codex     # Codex CLI — compiles ~/.codex/AGENTS.md
 aiwf install-all       # all three at once
 ```
 
@@ -754,7 +754,7 @@ ai-workflow/
       install.sh                         # Generates ~/.cursor/rules/aiwf-*.mdc
       uninstall.sh
     codex/
-      install.sh                         # Compiles ~/.codex/instructions.md
+      install.sh                         # Compiles ~/.codex/AGENTS.md
       uninstall.sh
   agents/
     security-reviewer.md
@@ -837,7 +837,7 @@ ai-workflow/
 
 ```
 ~/.codex/
-  instructions.md                        # Compiled: global conventions + all skills
+  AGENTS.md                        # Compiled: global conventions + all skills
 ```
 
 ---

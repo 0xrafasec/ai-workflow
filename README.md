@@ -48,7 +48,7 @@ Each phase of development has dedicated tooling:
 |----------|----------------|------------------------|
 | **Claude Code** | Symlinks into `~/.claude/` — skills, agents, CLAUDE.md, settings | `/skill-name` slash commands |
 | **Cursor** | Generates `~/.cursor/rules/aiwf-*.mdc` — one MDC rule per skill | Reference by name: `"follow the /spec workflow for X"` |
-| **Codex CLI** | Compiles everything into `~/.codex/instructions.md` | Reference by name: `"run the /feature workflow for X"` |
+| **Codex CLI** | Compiles everything into `~/.codex/AGENTS.md` | Reference by name: `"run the /feature workflow for X"` |
 
 The bootstrap script auto-detects which tools are installed and sets up all of them. You can also install for each platform independently.
 
@@ -115,7 +115,7 @@ aiwf install-all
 ```bash
 aiwf install           # Claude Code — symlinks into ~/.claude/
 aiwf install-cursor    # Cursor — generates ~/.cursor/rules/aiwf-*.mdc
-aiwf install-codex     # Codex CLI — compiles ~/.codex/instructions.md
+aiwf install-codex     # Codex CLI — compiles ~/.codex/AGENTS.md
 aiwf install-all       # all three at once
 ```
 
@@ -286,8 +286,8 @@ ai-workflow/
 │   │   ├── install.sh         # Generates ~/.cursor/rules/aiwf-*.mdc
 │   │   └── uninstall.sh       # Removes ~/.cursor/rules/aiwf-*.mdc
 │   └── codex/
-│       ├── install.sh         # Compiles ~/.codex/instructions.md
-│       └── uninstall.sh       # Removes ~/.codex/instructions.md
+│       ├── install.sh         # Compiles ~/.codex/AGENTS.md
+│       └── uninstall.sh       # Removes ~/.codex/AGENTS.md
 ├── agents/
 │   ├── architecture-reviewer.md
 │   └── security-reviewer.md
@@ -351,7 +351,7 @@ The bundled `statusline-command.sh` shows model name, context usage percentage, 
 
 ## Modifying the Toolkit
 
-All config lives in this repo. **Never edit platform config files directly** (`~/.claude/`, `~/.cursor/rules/aiwf-*.mdc`, `~/.codex/instructions.md`) — changes will be lost on the next install or symlink conflict.
+All config lives in this repo. **Never edit platform config files directly** (`~/.claude/`, `~/.cursor/rules/aiwf-*.mdc`, `~/.codex/AGENTS.md`) — changes will be lost on the next install or symlink conflict.
 
 To modify anything:
 
@@ -364,7 +364,7 @@ To modify anything:
 
 ```bash
 aiwf install-cursor   # regenerate ~/.cursor/rules/aiwf-*.mdc
-aiwf install-codex    # recompile ~/.codex/instructions.md
+aiwf install-codex    # recompile ~/.codex/AGENTS.md
 # or both:
 aiwf install-all
 ```

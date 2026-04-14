@@ -10,7 +10,7 @@ set -euo pipefail
 # Supported platforms:
 #   Claude Code  — install / reinstall / uninstall (default, symlinks to ~/.claude)
 #   Cursor       — install-cursor / uninstall-cursor (generates ~/.cursor/rules/aiwf-*.mdc)
-#   Codex CLI    — install-codex  / uninstall-codex  (compiles ~/.codex/instructions.md)
+#   Codex CLI    — install-codex  / uninstall-codex  (compiles ~/.codex/AGENTS.md)
 #   All          — install-all    / uninstall-all     (runs all three)
 #
 # Design notes:
@@ -230,7 +230,7 @@ cmd_status() {
     echo "Cursor rules: $cursor_count file(s) in $cursor_rules_dir"
 
     # Codex status
-    local codex_file="${CODEX_DIR:-$HOME/.codex}/instructions.md"
+    local codex_file="${CODEX_DIR:-$HOME/.codex}/AGENTS.md"
     if [ -f "$codex_file" ] && grep -q "aiwf — AI Workflow" "$codex_file" 2>/dev/null; then
         echo "Codex:        $codex_file ($(wc -l < "$codex_file") lines)"
     else
@@ -256,8 +256,8 @@ Usage:
     aiwf uninstall-cursor      Remove ~/.cursor/rules/aiwf-*.mdc files.
 
   Codex CLI:
-    aiwf install-codex         Compile skills into ~/.codex/instructions.md.
-    aiwf uninstall-codex       Remove ~/.codex/instructions.md (if ours).
+    aiwf install-codex         Compile skills into ~/.codex/AGENTS.md.
+    aiwf uninstall-codex       Remove ~/.codex/AGENTS.md (if ours).
 
   All platforms at once:
     aiwf install-all           Install for Claude Code + Cursor + Codex.
