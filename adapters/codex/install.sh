@@ -6,9 +6,11 @@ set -euo pipefail
 # Installs aiwf for OpenAI Codex CLI in two parts:
 #
 #   1. Skills — each skills/<name>/ is symlinked as a native Codex skill at
-#      ~/.agents/skills/aiwf-<name>/. Codex auto-discovers these and lets
-#      users invoke them as `$aiwf-<name>` (or by implicit description match).
-#      Reference: https://developers.openai.com/codex/skills
+#      ~/.agents/skills/aiwf-<name>/. The directory uses an aiwf- prefix to
+#      avoid colliding with other skill sources, but Codex invokes by the
+#      `name:` field inside SKILL.md, so users type `$<name>` at the prompt
+#      (e.g. `$spec`, `$roadmap`). Codex also matches implicitly on the
+#      description. Reference: https://developers.openai.com/codex/skills
 #
 #   2. Global context — ~/.codex/AGENTS.md is compiled with the small bits
 #      that aren't skills (global workflow conventions + agent definitions +
@@ -80,7 +82,7 @@ for skill_src in "$REPO_DIR"/skills/*/; do
     ln -sfn "$skill_src" "$link"
     skill_count=$((skill_count + 1))
 done
-info "Linked $skill_count skills as ${SKILL_PREFIX}* — invoke via \$${SKILL_PREFIX}<name>"
+info "Linked $skill_count skills under ${SKILL_PREFIX}* — invoke via \$<name> (e.g. \$spec, \$roadmap)"
 
 # --- 2. Drop legacy compiled file if it was ours -----------------------------
 
@@ -116,15 +118,16 @@ fi
     # The skill bodies themselves live in ~/.agents/skills/, not here.
     printf '%s\n\n# Available Workflow Skills\n\n' "---"
     printf 'These workflows are installed as native Codex skills under\n'
-    printf '`~/.agents/skills/%s<name>/`. Invoke them with `$%s<name>` or\n' "$SKILL_PREFIX" "$SKILL_PREFIX"
-    printf 'by describing the task (Codex will match on description).\n\n'
+    printf '`~/.agents/skills/%s<name>/` (the directory uses an %s prefix\n' "$SKILL_PREFIX" "$SKILL_PREFIX"
+    printf 'to avoid collisions; Codex invokes by the skill `name` field).\n'
+    printf 'Invoke with `$<name>` or by describing the task.\n\n'
 
     for skill_file in "$REPO_DIR"/skills/*/SKILL.md; do
         [ -f "$skill_file" ] || continue
         name="$(frontmatter_field "$skill_file" name)"
         description="$(frontmatter_field "$skill_file" description)"
         [ -z "$name" ] && continue
-        echo "- **\$${SKILL_PREFIX}${name}** — ${description}"
+        echo "- **\$${name}** — ${description}"
     done
     printf '\n'
 
@@ -184,6 +187,6 @@ fi
 
 echo ""
 info "Codex install complete."
-info "Skills: $SKILLS_DIR/${SKILL_PREFIX}* (invoke as \$${SKILL_PREFIX}<name>)"
+info "Skills: $SKILLS_DIR/${SKILL_PREFIX}* (invoke as \$<name>, e.g. \$spec)"
 info "Global context: $OUT_FILE"
 echo ""

@@ -48,7 +48,7 @@ Each phase of development has dedicated tooling:
 |----------|----------------|------------------------|
 | **Claude Code** | Symlinks into `~/.claude/` — skills, agents, CLAUDE.md, settings | `/skill-name` slash commands |
 | **Cursor** | Generates `~/.cursor/rules/aiwf-*.mdc` — one MDC rule per skill | Reference by name: `"follow the /spec workflow for X"` |
-| **Codex CLI** | Compiles everything into `~/.codex/AGENTS.md` | Reference by name: `"run the /feature workflow for X"` |
+| **Codex CLI** | Symlinks each skill into `~/.agents/skills/aiwf-*/` (native Codex skills) + writes `~/.codex/AGENTS.md` with global conventions | `$skill-name` at the prompt (e.g. `$spec`, `$roadmap`) or describe the task and Codex matches by description |
 
 The bootstrap script auto-detects which tools are installed and sets up all of them. You can also install for each platform independently.
 
@@ -103,7 +103,7 @@ Prefer to read the script before running it? [bootstrap.sh](bootstrap.sh) is sho
 ```bash
 git clone https://github.com/0xrafasec/ai-workflow.git
 cd ai-workflow
-./install.sh          # Claude Code only
+./install.sh          # Claude Code + install the aiwf launcher in ~/.local/bin
 aiwf install-cursor   # add Cursor
 aiwf install-codex    # add Codex CLI
 # or all at once:
@@ -115,7 +115,7 @@ aiwf install-all
 ```bash
 aiwf install           # Claude Code — symlinks into ~/.claude/
 aiwf install-cursor    # Cursor — generates ~/.cursor/rules/aiwf-*.mdc
-aiwf install-codex     # Codex CLI — compiles ~/.codex/AGENTS.md
+aiwf install-codex     # Codex CLI — symlinks skills into ~/.agents/skills/ + writes ~/.codex/AGENTS.md
 aiwf install-all       # all three at once
 ```
 
@@ -286,8 +286,8 @@ ai-workflow/
 │   │   ├── install.sh         # Generates ~/.cursor/rules/aiwf-*.mdc
 │   │   └── uninstall.sh       # Removes ~/.cursor/rules/aiwf-*.mdc
 │   └── codex/
-│       ├── install.sh         # Compiles ~/.codex/AGENTS.md
-│       └── uninstall.sh       # Removes ~/.codex/AGENTS.md
+│       ├── install.sh         # Symlinks skills into ~/.agents/skills/aiwf-* + writes ~/.codex/AGENTS.md
+│       └── uninstall.sh       # Removes skill symlinks and AGENTS.md
 ├── agents/
 │   ├── architecture-reviewer.md
 │   └── security-reviewer.md
@@ -351,20 +351,20 @@ The bundled `statusline-command.sh` shows model name, context usage percentage, 
 
 ## Modifying the Toolkit
 
-All config lives in this repo. **Never edit platform config files directly** (`~/.claude/`, `~/.cursor/rules/aiwf-*.mdc`, `~/.codex/AGENTS.md`) — changes will be lost on the next install or symlink conflict.
+All config lives in this repo. **Never edit platform config files directly** (`~/.claude/`, `~/.cursor/rules/aiwf-*.mdc`, `~/.codex/AGENTS.md`, `~/.agents/skills/aiwf-*/`) — changes will be lost on the next install or symlink conflict.
 
 To modify anything:
 
 1. Edit the source file in this repo (skills, agents, CLAUDE.md, reviews, etc.)
 2. Commit and push
 
-**Claude Code** — changes to existing symlinked files take effect immediately (the symlink already points here). Run `./install.sh` only when adding new files.
+**Claude Code / Codex** — skills are symlinked (`~/.claude/skills/`, `~/.agents/skills/aiwf-*/`), so edits to SKILL.md files in this repo take effect immediately. Re-run `aiwf install-codex` only when adding new skills or changing global conventions/agents/reviews (the AGENTS.md file is compiled, not symlinked).
 
-**Cursor / Codex** — these use generated files, so regenerate after any change:
+**Cursor** — uses generated MDC files; regenerate after any change:
 
 ```bash
 aiwf install-cursor   # regenerate ~/.cursor/rules/aiwf-*.mdc
-aiwf install-codex    # recompile ~/.codex/AGENTS.md
+aiwf install-codex    # re-link skills + recompile ~/.codex/AGENTS.md
 # or both:
 aiwf install-all
 ```
