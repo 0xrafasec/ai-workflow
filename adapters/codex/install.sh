@@ -129,7 +129,38 @@ fi
 
 } > "$OUT_FILE"
 
-info "Written $OUT_FILE ($(wc -l < "$OUT_FILE") lines)"
+bytes=$(wc -c < "$OUT_FILE")
+info "Written $OUT_FILE ($(wc -l < "$OUT_FILE") lines, $bytes bytes)"
+
+# Codex truncates AGENTS.md at project_doc_max_bytes (default 32 KiB). Our
+# compiled file is much larger, so skills get silently cut off. Bump the
+# limit in ~/.codex/config.toml with headroom over the current size.
+CONFIG_FILE="$CODEX_DIR/config.toml"
+# Round up to next 64 KiB and add a 64 KiB cushion, min 256 KiB.
+needed=$(( ((bytes + 65535) / 65536) * 65536 + 65536 ))
+[ "$needed" -lt 262144 ] && needed=262144
+
+touch "$CONFIG_FILE"
+if grep -qE '^[[:space:]]*project_doc_max_bytes[[:space:]]*=' "$CONFIG_FILE"; then
+    current=$(grep -E '^[[:space:]]*project_doc_max_bytes[[:space:]]*=' "$CONFIG_FILE" \
+              | head -1 | sed -E 's/.*=[[:space:]]*([0-9]+).*/\1/')
+    if [ "${current:-0}" -lt "$needed" ]; then
+        sed -i -E "s|^[[:space:]]*project_doc_max_bytes[[:space:]]*=.*|project_doc_max_bytes = $needed|" "$CONFIG_FILE"
+        info "Raised project_doc_max_bytes: $current -> $needed in $CONFIG_FILE"
+    else
+        info "project_doc_max_bytes already $current (>= $needed) in $CONFIG_FILE"
+    fi
+else
+    # Prepend the key so it sits at the top-level (not inside an existing [section]).
+    tmp="$(mktemp)"
+    {
+        echo "project_doc_max_bytes = $needed"
+        cat "$CONFIG_FILE"
+    } > "$tmp"
+    mv "$tmp" "$CONFIG_FILE"
+    info "Set project_doc_max_bytes = $needed in $CONFIG_FILE"
+fi
+
 echo ""
 info "Codex install complete."
 info "All skills and conventions are compiled into $OUT_FILE"
