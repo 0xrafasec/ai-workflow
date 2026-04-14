@@ -55,14 +55,38 @@ else
     git -C "$INSTALL_DIR" checkout --quiet "$REF"
 fi
 
-chmod +x "$INSTALL_DIR/aiwf" "$INSTALL_DIR/install.sh" "$INSTALL_DIR/uninstall.sh"
+chmod +x \
+    "$INSTALL_DIR/aiwf" \
+    "$INSTALL_DIR/install.sh" \
+    "$INSTALL_DIR/uninstall.sh" \
+    "$INSTALL_DIR/adapters/cursor/install.sh" \
+    "$INSTALL_DIR/adapters/cursor/uninstall.sh" \
+    "$INSTALL_DIR/adapters/codex/install.sh" \
+    "$INSTALL_DIR/adapters/codex/uninstall.sh"
 
 info "Linking aiwf into $BIN_DIR"
 mkdir -p "$BIN_DIR"
 ln -sf "$INSTALL_DIR/aiwf" "$BIN_DIR/aiwf"
 
-info "Running 'aiwf install'"
+# --- Claude Code (always) ----------------------------------------------------
+info "Running 'aiwf install' (Claude Code)"
 AIWF_INSTALL_DIR="$INSTALL_DIR" "$INSTALL_DIR/aiwf" install
+
+# --- Cursor (if detected) ----------------------------------------------------
+if command -v cursor >/dev/null 2>&1 || [ -d "$HOME/.cursor" ]; then
+    info "Cursor detected — running 'aiwf install-cursor'"
+    AIWF_INSTALL_DIR="$INSTALL_DIR" "$INSTALL_DIR/aiwf" install-cursor
+else
+    warn "Cursor not detected — skipping (run 'aiwf install-cursor' manually if needed)"
+fi
+
+# --- Codex CLI (if detected) -------------------------------------------------
+if command -v codex >/dev/null 2>&1 || [ -d "$HOME/.codex" ]; then
+    info "Codex CLI detected — running 'aiwf install-codex'"
+    AIWF_INSTALL_DIR="$INSTALL_DIR" "$INSTALL_DIR/aiwf" install-codex
+else
+    warn "Codex CLI not detected — skipping (run 'aiwf install-codex' manually if needed)"
+fi
 
 echo ""
 case ":$PATH:" in
@@ -73,7 +97,8 @@ esac
 
 echo ""
 info "Done. Try:"
-echo "  aiwf status       # verify install"
-echo "  aiwf update       # pull latest"
-echo "  aiwf help         # see all commands"
+echo "  aiwf status           # verify install across all platforms"
+echo "  aiwf update           # pull latest (then re-run install-all to refresh)"
+echo "  aiwf install-all      # install/refresh for Claude + Cursor + Codex"
+echo "  aiwf help             # see all commands"
 echo ""

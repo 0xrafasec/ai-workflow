@@ -3,9 +3,15 @@ set -euo pipefail
 
 # aiwf — AI Workflow toolkit manager.
 #
-# Thin lifecycle wrapper around install.sh and uninstall.sh. Those two scripts
-# stay single-purpose; this script adds update / reinstall / status / version
-# on top, and is the command that ships in ~/.local/bin after bootstrap.
+# Thin lifecycle wrapper around install.sh and the platform adapters. Those
+# scripts stay single-purpose; this script adds update / reinstall / status /
+# version on top, and is the command that ships in ~/.local/bin after bootstrap.
+#
+# Supported platforms:
+#   Claude Code  — install / reinstall / uninstall (default, symlinks to ~/.claude)
+#   Cursor       — install-cursor / uninstall-cursor (generates ~/.cursor/rules/aiwf-*.mdc)
+#   Codex CLI    — install-codex  / uninstall-codex  (compiles ~/.codex/instructions.md)
+#   All          — install-all    / uninstall-all     (runs all three)
 #
 # Design notes:
 #   - Bash, not a compiled binary: the whole toolkit is bash + markdown, so a
@@ -13,7 +19,7 @@ set -euo pipefail
 #     script is also auditable before `curl | bash` and hackable in place —
 #     users can edit ~/.local/share/ai-workflow/aiwf to add their own commands.
 #   - Wraps install.sh/uninstall.sh rather than duplicating their logic, so
-#     there is still a single source of truth for the symlink set.
+#     there is still a single source of truth for each platform's symlink set.
 
 CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
 BIN_DIR="${AIWF_BIN_DIR:-$HOME/.local/bin}"
@@ -153,6 +159,36 @@ cmd_reinstall() {
     cmd_install
 }
 
+# --- Platform adapters -------------------------------------------------------
+
+run_adapter() {
+    local script="$1"
+    shift
+    local full="$INSTALL_DIR/$script"
+    if [ ! -x "$full" ]; then
+        error "Adapter not found or not executable: $full"
+        exit 1
+    fi
+    INSTALL_DIR="$INSTALL_DIR" "$full" "$@"
+}
+
+cmd_install_cursor()   { run_adapter "adapters/cursor/install.sh" "$@"; }
+cmd_uninstall_cursor() { run_adapter "adapters/cursor/uninstall.sh" "$@"; }
+cmd_install_codex()    { run_adapter "adapters/codex/install.sh" "$@"; }
+cmd_uninstall_codex()  { run_adapter "adapters/codex/uninstall.sh" "$@"; }
+
+cmd_install_all() {
+    cmd_install "$@"
+    cmd_install_cursor
+    cmd_install_codex
+}
+
+cmd_uninstall_all() {
+    cmd_uninstall "$@"
+    cmd_uninstall_cursor
+    cmd_uninstall_codex
+}
+
 cmd_status() {
     echo "Install dir: $INSTALL_DIR"
     if [ -d "$INSTALL_DIR/.git" ]; then
@@ -186,6 +222,20 @@ cmd_status() {
     if [ "$broken" -gt 0 ]; then
         warn "Run 'aiwf reinstall' to repair broken links."
     fi
+
+    # Cursor status
+    local cursor_rules_dir="${CURSOR_RULES_DIR:-$HOME/.cursor/rules}"
+    local cursor_count
+    cursor_count=$(ls "$cursor_rules_dir"/aiwf-*.mdc 2>/dev/null | wc -l || echo 0)
+    echo "Cursor rules: $cursor_count file(s) in $cursor_rules_dir"
+
+    # Codex status
+    local codex_file="${CODEX_DIR:-$HOME/.codex}/instructions.md"
+    if [ -f "$codex_file" ] && grep -q "aiwf — AI Workflow" "$codex_file" 2>/dev/null; then
+        echo "Codex:        $codex_file ($(wc -l < "$codex_file") lines)"
+    else
+        echo "Codex:        not installed ($codex_file)"
+    fi
 }
 
 cmd_version() { version_string; }
@@ -196,33 +246,54 @@ cat <<EOF
 aiwf — AI Workflow toolkit manager
 
 Usage:
-  aiwf install [FILTER...]  Symlink config into ~/.claude (delegates to install.sh).
-                            Optional basename filters for selective installs.
-  aiwf update [--force]     git pull + re-link. Refuses dirty trees or local
-                            commits ahead of upstream; --force stashes /
-                            hard-resets to recover.
-  aiwf reinstall            Uninstall then install (repair broken links).
-  aiwf uninstall [--purge]  Remove symlinks. --purge also deletes the clone.
-  aiwf status               Show install dir, version, symlink health.
-  aiwf version              Print version (git describe --tags --always --dirty).
-  aiwf path                 Print install directory.
-  aiwf help                 Show this message.
+  Claude Code (default):
+    aiwf install [FILTER...]   Symlink config into ~/.claude.
+    aiwf reinstall             Uninstall then re-install (repair broken links).
+    aiwf uninstall [--purge]   Remove symlinks. --purge also deletes the clone.
+
+  Cursor:
+    aiwf install-cursor        Generate ~/.cursor/rules/aiwf-*.mdc rules.
+    aiwf uninstall-cursor      Remove ~/.cursor/rules/aiwf-*.mdc files.
+
+  Codex CLI:
+    aiwf install-codex         Compile skills into ~/.codex/instructions.md.
+    aiwf uninstall-codex       Remove ~/.codex/instructions.md (if ours).
+
+  All platforms at once:
+    aiwf install-all           Install for Claude Code + Cursor + Codex.
+    aiwf uninstall-all         Uninstall from all platforms.
+
+  Lifecycle:
+    aiwf update [--force]      git pull + re-link Claude (use install-all to
+                               also refresh Cursor/Codex after updating).
+    aiwf status                Show install dir, version, and per-platform health.
+    aiwf version               Print version (git describe --tags --always --dirty).
+    aiwf path                  Print install directory.
+    aiwf help                  Show this message.
 
 Environment:
-  AIWF_INSTALL_DIR          Override install directory.
-  AIWF_BIN_DIR              Override bin directory (default: ~/.local/bin).
-  CLAUDE_DIR                Override Claude config dir (default: ~/.claude).
+  AIWF_INSTALL_DIR             Override install directory.
+  AIWF_BIN_DIR                 Override bin directory (default: ~/.local/bin).
+  CLAUDE_DIR                   Override Claude config dir (default: ~/.claude).
+  CURSOR_RULES_DIR             Override Cursor rules dir (default: ~/.cursor/rules).
+  CODEX_DIR                    Override Codex config dir (default: ~/.codex).
 EOF
 }
 
 case "${1:-help}" in
-    install)        shift; cmd_install "$@" ;;
-    update|upgrade) shift; cmd_update "$@" ;;
-    reinstall)      shift; cmd_reinstall "$@" ;;
-    uninstall)      shift; cmd_uninstall "$@" ;;
-    status)         shift; cmd_status "$@" ;;
+    install)           shift; cmd_install "$@" ;;
+    reinstall)         shift; cmd_reinstall "$@" ;;
+    uninstall)         shift; cmd_uninstall "$@" ;;
+    install-cursor)    shift; cmd_install_cursor "$@" ;;
+    uninstall-cursor)  shift; cmd_uninstall_cursor "$@" ;;
+    install-codex)     shift; cmd_install_codex "$@" ;;
+    uninstall-codex)   shift; cmd_uninstall_codex "$@" ;;
+    install-all)       shift; cmd_install_all "$@" ;;
+    uninstall-all)     shift; cmd_uninstall_all "$@" ;;
+    update|upgrade)    shift; cmd_update "$@" ;;
+    status)            shift; cmd_status "$@" ;;
     version|--version|-v) cmd_version ;;
-    path)           cmd_path ;;
-    help|-h|--help) usage ;;
+    path)              cmd_path ;;
+    help|-h|--help)    usage ;;
     *) error "Unknown command: $1"; echo ""; usage; exit 1 ;;
 esac

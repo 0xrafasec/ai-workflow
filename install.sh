@@ -127,6 +127,14 @@ for guide in go rust typescript python; do
     link "reviews/$guide.md" "reviews/$guide.md"
 done
 
+# Ensure adapter scripts are executable (important after a fresh clone)
+chmod +x \
+    "$SCRIPT_DIR/adapters/cursor/install.sh" \
+    "$SCRIPT_DIR/adapters/cursor/uninstall.sh" \
+    "$SCRIPT_DIR/adapters/codex/install.sh" \
+    "$SCRIPT_DIR/adapters/codex/uninstall.sh" \
+    2>/dev/null || true
+
 echo ""
 if [ ${#FILTERS[@]} -gt 0 ] && [ "$MATCHED" -eq 0 ]; then
     error "No targets matched filter(s): ${FILTERS[*]}"
@@ -134,4 +142,5 @@ if [ ${#FILTERS[@]} -gt 0 ] && [ "$MATCHED" -eq 0 ]; then
 fi
 info "Done! $MATCHED target(s) linked."
 info "Edit files in $SCRIPT_DIR and changes apply to ~/.claude/ automatically."
+info "For Cursor: aiwf install-cursor | For Codex: aiwf install-codex | For all: aiwf install-all"
 echo ""

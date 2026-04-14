@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# AI Workflow — Codex Adapter Installer
+#
+# Compiles global config + all skills into ~/.codex/instructions.md.
+# Codex CLI loads this file for every session as global context.
+#
+# Usage:
+#   ./adapters/codex/install.sh
+#   CODEX_DIR=<path> ./adapters/codex/install.sh   # override target dir
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+CODEX_DIR="${CODEX_DIR:-$HOME/.codex}"
+OUT_FILE="$CODEX_DIR/instructions.md"
+
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
+info()  { echo -e "${GREEN}[+]${NC} $1"; }
+warn()  { echo -e "${YELLOW}[!]${NC} $1"; }
+error() { echo -e "${RED}[x]${NC} $1" >&2; }
+
+# Extract a frontmatter field value from a SKILL.md file.
+frontmatter_field() {
+    local file="$1" field="$2"
+    awk -v field="$field" '
+        /^---/ { count++; next }
+        count == 1 && $0 ~ "^"field": " {
+            sub("^"field": *", "")
+            print
+        }
+        count >= 2 { exit }
+    ' "$file"
+}
+
+# Extract everything after the closing --- of YAML frontmatter.
+skill_body() {
+    awk '/^---/{count++; if(count==2){found=1; next}} found{print}' "$1"
+}
+
+echo ""
+echo "=== AI Workflow — Codex Installer ==="
+echo ""
+info "Output: $OUT_FILE"
+echo ""
+
+mkdir -p "$CODEX_DIR"
+
+# Back up existing instructions if present and not ours.
+if [ -f "$OUT_FILE" ] && ! grep -q "aiwf — AI Workflow" "$OUT_FILE" 2>/dev/null; then
+    backup="${OUT_FILE}.bak.$(date +%s)"
+    warn "Backing up existing $OUT_FILE -> $backup"
+    cp "$OUT_FILE" "$backup"
+fi
+
+# --- Build the compiled instructions file ------------------------------------
+{
+    # Header
+    printf '<!-- aiwf — AI Workflow compiled instructions — do not edit by hand -->\n'
+    printf '<!-- Regenerate with: aiwf install-codex  or  ./adapters/codex/install.sh -->\n\n'
+
+    # 1. Global workflow conventions from CLAUDE.md (strip the Toolkit meta-section)
+    printf '# Global Workflow Conventions\n\n'
+    if [ -f "$REPO_DIR/CLAUDE.md" ]; then
+        # Strip the "## Toolkit (ai-workflow repo)" meta-section — it's Claude-specific
+        awk '
+            /^## Toolkit \(ai-workflow repo\)/ { skip=1; next }
+            skip && /^## / { skip=0 }
+            !skip { print }
+        ' "$REPO_DIR/CLAUDE.md"
+    fi
+    printf '\n'
+
+    # 2. Skills index
+    printf '%s\n\n# Available Workflow Skills\n\n' "---"
+    printf 'These workflows are available. Invoke them by name in your prompt, e.g.\n'
+    printf '"follow the /spec workflow for feature X" or "run /commit".\n\n'
+
+    for skill_file in "$REPO_DIR"/skills/*/SKILL.md; do
+        [ -f "$skill_file" ] || continue
+        name="$(frontmatter_field "$skill_file" name)"
+        description="$(frontmatter_field "$skill_file" description)"
+        [ -z "$name" ] && continue
+        echo "- **/${name}** — ${description}"
+    done
+    printf '\n'
+
+    # 3. Full skill content
+    printf '%s\n\n# Skill Definitions\n\n' "---"
+
+    for skill_file in "$REPO_DIR"/skills/*/SKILL.md; do
+        [ -f "$skill_file" ] || continue
+        name="$(frontmatter_field "$skill_file" name)"
+        description="$(frontmatter_field "$skill_file" description)"
+        [ -z "$name" ] && continue
+
+        printf '## /%s\n\n' "$name"
+        printf '> %s\n\n' "$description"
+        skill_body "$skill_file"
+        printf '\n%s\n\n' "---"
+    done
+
+    # 4. Agent definitions
+    printf '# Agent Definitions\n\n'
+    for agent_file in "$REPO_DIR"/agents/*.md; do
+        [ -f "$agent_file" ] || continue
+        base="$(basename "$agent_file" .md)"
+        printf '## %s\n\n' "${base//-/ }"
+        cat "$agent_file"
+        printf '\n%s\n\n' "---"
+    done
+
+    # 5. Language review guides (as appendix — loaded on demand by code-review skill)
+    printf '# Code Review Guides\n\n'
+    for guide_file in "$REPO_DIR"/reviews/*.md; do
+        [ -f "$guide_file" ] || continue
+        base="$(basename "$guide_file" .md)"
+        printf '## %s\n\n' "$base"
+        cat "$guide_file"
+        printf '\n%s\n\n' "---"
+    done
+
+} > "$OUT_FILE"
+
+info "Written $OUT_FILE ($(wc -l < "$OUT_FILE") lines)"
+echo ""
+info "Codex install complete."
+info "All skills and conventions are compiled into $OUT_FILE"
+echo ""
