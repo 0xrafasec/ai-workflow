@@ -1,19 +1,20 @@
 # Workflow Toolkit Reference
 
-> Quick reference for all global Claude Code agents, skills, settings, and conventions installed at `~/.claude/`.
+> Quick reference for all agents, skills, settings, and conventions — and how to install them on Claude Code, Cursor, and Codex CLI.
 
 ---
 
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Global Agents](#global-agents)
-3. [Language-Specific Review Guides](#language-specific-review-guides)
-4. [Global Skills](#global-skills)
-5. [Global Settings](#global-settings)
-6. [Global CLAUDE.md](#global-claudemd)
-7. [File Map](#file-map)
-8. [Daily Usage](#daily-usage)
+2. [Installation](#installation)
+3. [Global Agents](#global-agents)
+4. [Language-Specific Review Guides](#language-specific-review-guides)
+5. [Global Skills](#global-skills)
+6. [Global Settings](#global-settings)
+7. [Global CLAUDE.md](#global-claudemd)
+8. [File Map](#file-map)
+9. [Daily Usage](#daily-usage)
 
 ---
 
@@ -22,11 +23,55 @@
 This toolkit implements the workflow described in [WORKFLOW.md](./WORKFLOW.md). It provides:
 
 - **Agents** — specialized reviewers that can be spawned as subagents
-- **Skills** — reusable slash-command workflows (`/prd`, `/architecture`, `/tdd`, `/security`, `/adr`, `/rfc`, `/spec`, `/roadmap`, `/feature`, `/fix`, `/commit`, `/pr`, `/review`, `/autopilot`, `/code-review`, `/new-project`)
-- **Settings** — notification hooks for parallel work
+- **Skills** — reusable workflows (`/prd`, `/architecture`, `/tdd`, `/security`, `/adr`, `/rfc`, `/spec`, `/roadmap`, `/feature`, `/fix`, `/commit`, `/pr`, `/review`, `/autopilot`, `/code-review`, `/new-project`, `/design`)
+- **Settings** — notification hooks for parallel work (Claude Code)
 - **CLAUDE.md** — global defaults applied to every project
 
-Everything lives under `~/.claude/` and applies globally. Individual projects can override or extend by adding their own `.claude/` directory.
+The toolkit supports three platforms. Each installs everything from the same source:
+
+| Platform | Installed to | Invocation |
+|----------|-------------|------------|
+| Claude Code | `~/.claude/` (symlinks) | `/skill-name` slash commands |
+| Cursor | `~/.cursor/rules/aiwf-*.mdc` (generated) | `"follow the /spec workflow for X"` |
+| Codex CLI | `~/.codex/instructions.md` (compiled) | `"run the /feature workflow for X"` |
+
+---
+
+## Installation
+
+### One-liner (auto-detects all installed platforms)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/0xrafasec/ai-workflow/main/bootstrap.sh | bash
+```
+
+### Per-platform
+
+```bash
+aiwf install           # Claude Code — symlinks into ~/.claude/
+aiwf install-cursor    # Cursor — generates ~/.cursor/rules/aiwf-*.mdc
+aiwf install-codex     # Codex CLI — compiles ~/.codex/instructions.md
+aiwf install-all       # all three at once
+```
+
+### Manage
+
+```bash
+aiwf status            # health check across all platforms
+aiwf update            # git pull + re-link Claude Code
+aiwf install-all       # re-run after update to refresh Cursor and Codex
+aiwf uninstall-all     # remove from all platforms
+aiwf help              # full command reference
+```
+
+### After modifying skills or config
+
+Changes to any skill, agent, or CLAUDE.md take effect immediately for Claude Code (symlinks). For Cursor and Codex, regenerate:
+
+```bash
+aiwf install-cursor    # regenerate Cursor rules
+aiwf install-codex     # recompile Codex instructions
+```
 
 ---
 
@@ -694,50 +739,105 @@ These defaults apply to **every project** unless overridden by a project-level C
 
 ## File Map
 
+### Source repo
+
+```
+ai-workflow/
+  CLAUDE.md                              # Global conventions (source of truth)
+  settings.json                          # Hooks, permissions, model (Claude Code)
+  statusline-command.sh                  # Custom status line (Claude Code)
+  aiwf                                   # Toolkit manager CLI
+  install.sh / uninstall.sh              # Claude Code symlink installer
+  bootstrap.sh                           # Multi-platform one-liner installer
+  adapters/
+    cursor/
+      install.sh                         # Generates ~/.cursor/rules/aiwf-*.mdc
+      uninstall.sh
+    codex/
+      install.sh                         # Compiles ~/.codex/instructions.md
+      uninstall.sh
+  agents/
+    security-reviewer.md
+    architecture-reviewer.md
+  commands/
+    sec-review.md
+  reviews/
+    go.md / rust.md / typescript.md / python.md
+  skills/
+    prd / architecture / tdd / security / adr / rfc /
+    spec / roadmap / feature / fix / commit / pr /
+    review / code-review / autopilot / new-project / design
+```
+
+### Claude Code install (`~/.claude/`)
+
 ```
 ~/.claude/
   CLAUDE.md                              # Global defaults for all projects
   settings.json                          # Notification hooks, permissions, model
   statusline-command.sh                  # Custom status line script
   agents/
-    security-reviewer.md                 # Security review subagent
-    architecture-reviewer.md             # Architecture review subagent
+    security-reviewer.md
+    architecture-reviewer.md
   commands/
     sec-review.md                        # /sec-review — detailed security audit
   reviews/
-    go.md                                # Go-specific review criteria
-    rust.md                              # Rust-specific review criteria
-    typescript.md                        # TypeScript/Node/Next/Nest review criteria
-    python.md                            # Python/Django/FastAPI/Flask review criteria
+    go.md / rust.md / typescript.md / python.md
   skills/
-    prd/
-      SKILL.md                           # /prd — product requirements document
-    architecture/
-      SKILL.md                           # /architecture — system structure
-    tdd/
-      SKILL.md                           # /tdd — testing, dev env, CI/CD
-    security/
-      SKILL.md                           # /security — threat model
-    adr/
-      SKILL.md                           # /adr — architecture decision records
-    rfc/
-      SKILL.md                           # /rfc — request for comments
-    spec/
-      SKILL.md                           # /spec — feature implementation spec
-    roadmap/
-      SKILL.md                           # /roadmap — phased task breakdown
-    feature/
-      SKILL.md                           # /feature — implement from spec
-    fix/
-      SKILL.md                           # /fix — diagnose and fix bugs
-    review/
-      SKILL.md                           # /review — PR/branch review
-    code-review/
-      SKILL.md                           # /code-review — stack-aware code review
-    autopilot/
-      SKILL.md                           # /autopilot — execute roadmap automatically
-    new-project/
-      SKILL.md                           # /new-project — scaffold a project
+    prd/SKILL.md                         # /prd
+    architecture/SKILL.md                # /architecture
+    tdd/SKILL.md                         # /tdd
+    security/SKILL.md                    # /security
+    adr/SKILL.md                         # /adr
+    rfc/SKILL.md                         # /rfc
+    spec/SKILL.md                        # /spec
+    roadmap/SKILL.md                     # /roadmap
+    feature/SKILL.md                     # /feature
+    fix/SKILL.md                         # /fix
+    commit/SKILL.md                      # /commit
+    pr/SKILL.md                          # /pr
+    review/SKILL.md                      # /review
+    code-review/SKILL.md                 # /code-review
+    autopilot/SKILL.md                   # /autopilot
+    new-project/SKILL.md                 # /new-project
+    design/SKILL.md                      # /design
+```
+
+### Cursor install (`~/.cursor/rules/`)
+
+```
+~/.cursor/rules/
+  aiwf-global.mdc                        # Global conventions (alwaysApply: true)
+  aiwf-skill-prd.mdc
+  aiwf-skill-architecture.mdc
+  aiwf-skill-tdd.mdc
+  aiwf-skill-security.mdc
+  aiwf-skill-adr.mdc
+  aiwf-skill-rfc.mdc
+  aiwf-skill-spec.mdc
+  aiwf-skill-roadmap.mdc
+  aiwf-skill-feature.mdc
+  aiwf-skill-fix.mdc
+  aiwf-skill-commit.mdc
+  aiwf-skill-pr.mdc
+  aiwf-skill-review.mdc
+  aiwf-skill-code-review.mdc
+  aiwf-skill-autopilot.mdc
+  aiwf-skill-new-project.mdc
+  aiwf-skill-design.mdc
+  aiwf-agent-security-reviewer.mdc
+  aiwf-agent-architecture-reviewer.mdc
+  aiwf-review-go.mdc
+  aiwf-review-rust.mdc
+  aiwf-review-typescript.mdc
+  aiwf-review-python.mdc
+```
+
+### Codex CLI install (`~/.codex/`)
+
+```
+~/.codex/
+  instructions.md                        # Compiled: global conventions + all skills
 ```
 
 ---
