@@ -231,8 +231,13 @@ cmd_status() {
 
     # Codex status
     local codex_file="${CODEX_DIR:-$HOME/.codex}/AGENTS.md"
+    local codex_skills_dir="${AGENTS_DIR:-$HOME/.agents}/skills"
+    local codex_skill_count=0
+    if [ -d "$codex_skills_dir" ]; then
+        codex_skill_count=$(find "$codex_skills_dir" -maxdepth 1 -type l -name 'aiwf-*' 2>/dev/null | wc -l)
+    fi
     if [ -f "$codex_file" ] && grep -q "aiwf — AI Workflow" "$codex_file" 2>/dev/null; then
-        echo "Codex:        $codex_file ($(wc -l < "$codex_file") lines)"
+        echo "Codex:        $codex_file ($(wc -l < "$codex_file") lines, $codex_skill_count skills in $codex_skills_dir)"
     else
         echo "Codex:        not installed ($codex_file)"
     fi
