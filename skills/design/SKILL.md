@@ -1,6 +1,6 @@
 ---
 name: design
-description: "Create polished UI designs in Paper.design MCP — full design system + brand guide + all screens, or a single flow. Use when the user asks to mock up, wireframe, design screens, produce UI, build a visual prototype, or mentions Paper / Paper.design / design system / brand guide / screen layouts for the project. Grounds every design decision in the PRD and architecture, not guesswork."
+description: "Create distinctive, production-grade UI designs in Paper.design MCP — full design system + brand guide + all screens, or a single flow. Use when the user asks to mock up, wireframe, design screens, produce UI, build a visual prototype, or mentions Paper / Paper.design / design system / brand guide / screen layouts for the project. Commits to a bold aesthetic direction (editorial, brutalist, luxury, retro-futuristic, etc.) rather than defaulting to generic AI-SaaS looks. Grounds every design decision in the PRD and architecture, not guesswork."
 ---
 Create UI designs using Paper.design MCP for: $ARGUMENTS
 
@@ -49,41 +49,65 @@ Before anything, read what exists:
 
 Use AskUserQuestion to gather key design decisions. Keep it focused — ask only what the docs don't answer.
 
+The goal of this phase is to **commit to a distinctive aesthetic direction** before touching the canvas. Safe, middle-of-the-road choices produce forgettable UIs — the designs people remember have a clear, intentional point of view. Pick a direction and execute it with precision.
+
 ### Question Set (adapt based on what docs already reveal):
 
-1. **Brand direction** — "What feeling should the product evoke? Pick up to 2:"
-   - Options: Clean & Professional, Bold & Energetic, Warm & Approachable, Minimal & Sophisticated
-   - This drives font choices, color temperature, spacing density, and visual weight
+1. **Aesthetic direction** — "Pick an extreme. What should this product *feel* like?"
+   - Options (pick one — or combine two that reinforce each other):
+     - **Editorial / magazine** — serif display type, generous whitespace, asymmetric grids, long-form reading feel
+     - **Brutalist / raw** — mono type, hard borders, system colors, no rounded corners, deliberately unpolished
+     - **Retro-futuristic** — chromatic gradients, grid patterns, CRT textures, late-80s sci-fi
+     - **Luxury / refined** — restrained palette, precise spacing, one hero typeface, subtle shadows
+     - **Maximalist / playful** — saturated color, overlapping shapes, decorative elements, exuberant motion
+     - **Technical / developer** — mono fonts, terminal aesthetics, dense information, dark mode first
+     - **Organic / natural** — warm tones, soft curves, textured backgrounds, hand-drawn touches
+     - **Minimal / Swiss** — strict grid, one or two fonts, single accent color, ruthless reduction
+   - Why this matters: this single choice cascades into type, color, spacing, and component shape. A vague answer ("clean and modern") produces generic output. Push the user toward commitment — if they truly want middle-ground, default to Editorial or Minimal/Swiss, both of which are specific enough to execute well.
 
-2. **Color palette seed** — "Do you have brand colors or a starting palette? If so, share hex codes. Otherwise, pick a direction:"
-   - Options: Provide hex codes, Cool tones (blue/purple/teal), Warm tones (orange/amber/coral), Neutral with accent (gray + one pop color), Dark mode first
-   - This becomes the foundation for the full palette generation
+2. **Color palette seed** — "Do you have brand colors, or should I pick?"
+   - Options: Provide hex codes, Let me pick from the aesthetic direction, Dark mode first, Monochrome + one accent
+   - If the aesthetic is chosen, use it to constrain palette: Brutalist → system/web-safe + one saturated accent; Luxury → deep neutrals + metallic accent; Retro-futuristic → chromatic gradients on dark; Organic → warm earth tones.
 
-3. **Typography preference** — "Which font pairing direction? Distinctive fonts give the product character."
-   - Options:
-     - Poppins + Roboto (bold headings + clean body, versatile) (Recommended)
-     - Bricolage Grotesque + Crimson Pro (bold, editorial character)
-     - Space Grotesk + JetBrains Mono (technical, developer-focused)
-     - Newsreader + IBM Plex Sans (refined, professional)
-   - The user can always provide a custom pairing via "Other"
-   - When using Poppins + Roboto: Poppins at 600-800 for headings, Roboto 300-400 for body — leverage the extreme weight contrast
-   - Encourage distinctive choices, but respect user preference if they want a familiar pairing
+3. **Typography pairing** — "Which font direction? Distinctive fonts carry the aesthetic more than any other single choice."
+   - Options (aligned to aesthetic directions above):
+     - Bricolage Grotesque + Crimson Pro (editorial, bold display)
+     - Space Grotesk + JetBrains Mono (technical, developer)
+     - Newsreader + IBM Plex Sans (refined, editorial)
+     - Instrument Serif + Inter Tight (luxury, contemporary)
+     - DM Mono + DM Sans (brutalist, unpretentious)
+     - Fraunces + Söhne (magazine, expressive)
+     - Other (user-provided)
+   - **Do not default to Poppins, Roboto, Open Sans, or Lato** — they are the most common fonts on the web and will make the output look generic. If the user specifically asks for them, comply; otherwise push toward a more distinctive pairing.
+   - Leverage weight contrast: display at 600-800, body at 300-400.
 
-4. **Content density** — "How dense should the UI be?"
-   - Options: Spacious / airy (dashboard, marketing), Balanced (most apps) (Recommended), Dense / compact (data-heavy, admin tools)
+4. **Content density** — "How dense?"
+   - Options: Spacious (marketing, dashboards, editorial), Balanced (most apps), Dense (admin tools, data-heavy)
+   - Match to aesthetic: Editorial/Luxury → spacious; Technical/Brutalist → dense; Minimal/Swiss → spacious with tight typography.
 
-5. **Visual references** — "Do you have any visual references or inspiration? Share URLs to screenshots, Dribbble shots, landing pages, or existing products you like."
-   - Options: No references — design from scratch, Yes — I'll share URLs
-   - If the user provides URLs, use `WebFetch` to retrieve and analyze each reference image/page
-   - Extract: color palettes, typography feel, layout patterns, density, visual style
-   - Summarize what you learned from references and confirm with the user before proceeding
-   - References inform but don't dictate — blend inspiration with the project's own identity
+5. **Visual references** — "Any references? URLs to screenshots, Dribbble, Awwwards, real products?"
+   - Options: No references, Yes — I'll share URLs
+   - If provided, `WebFetch` each one. Extract: palette, type feel, layout pattern, density, distinctive moves.
+   - Summarize what you learned and confirm before proceeding. References inform, they don't dictate.
+
+### Anti-slop checklist — things to actively avoid
+
+These are the telltale signs of generic, AI-generated UI. Treat them as red flags during every phase, not just here:
+
+- **Fonts:** Inter, Roboto, Open Sans, Lato, Poppins, Arial, system-ui as the primary choice. Default to them only if the user explicitly asks.
+- **Colors:** Purple-to-blue gradient on white. "Indigo 500" as the primary brand color. Cookie-cutter Tailwind defaults with no customization.
+- **Layout:** Center-aligned hero with three-column feature grid below. Perfectly symmetric cards. No grid-breaking.
+- **Copy placeholders:** "Lorem ipsum", "Your tagline here", "Feature one / Feature two / Feature three". Write real, specific copy grounded in the PRD.
+- **Shadows / borders:** Uniform `shadow-md` on every card. 8px rounded corners by default regardless of aesthetic.
+- **Iconography:** Stock Heroicons/Lucide used without thought. Match icon style to aesthetic weight — a brutalist design needs heavier, blockier icons than a luxury one.
+
+If the design as a whole could plausibly belong to any other SaaS product, it has failed. The goal is that someone seeing a single screenshot out of context could identify *this* product.
 
 **Interview rules:**
 - **Always use AskUserQuestion** for every choice point — interview questions, approval gates, option selection. Never present options as plain text that requires the user to type their answer. The user should be able to click/select, not type.
-- If the PRD already specifies brand direction or colors, skip those questions
-- If the user provides brand assets or hex codes, build on them — don't override
-- 4-5 questions max. The goal is direction, not exhaustive specification
+- If the PRD already specifies brand direction or colors, skip those questions.
+- If the user provides brand assets or hex codes, build on them — don't override.
+- 4-5 questions max. The goal is a committed direction, not exhaustive specification.
 
 ## Phase 2: Design System + Brand Guide
 
