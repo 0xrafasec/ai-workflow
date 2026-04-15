@@ -1,6 +1,6 @@
 ---
 name: new-project
-description: Scaffold a new project with the full AI-assisted development workflow
+description: "Scaffold a new project with the full AI-assisted development workflow — Makefile targets, linter/formatter configs, pre-commit hooks, CLAUDE.md, docs skeleton, tailored to the chosen stack (python, go, typescript/nextjs, rust, etc.). Use when the user says 'start a new project', 'bootstrap a repo', 'scaffold X', 'set up a fresh codebase for Y', 'init a new service'."
 ---
 Scaffold a new project with the AI-assisted development workflow.
 
@@ -49,7 +49,7 @@ docs/adr/
 docs/rfc/
 ```
 
-**Note:** Skills are installed globally at `~/.claude/skills/`. Do NOT create project-level skill copies — they'd duplicate and drift from the global versions. The global skills (`/architecture`, `/tdd`, `/security`, `/adr`, `/rfc`, `/spec`, `/roadmap`, `/feature`, `/fix`, `/review`, `/autopilot`, `/code-review`) are already available. Only create project-level agents and settings.
+**Note:** Skills are installed globally at `~/.claude/skills/`. Do NOT create project-level skill copies — they'd duplicate and drift from the global versions. The global skills (`/architecture`, `/tdd`, `/security`, `/adr`, `/rfc`, `/spec`, `/roadmap`, `/feature`, `/fix`, `/review`, `/autopilot`) are already available. For stack-aware code review, install Anthropic's official `code-review` skill from `claude-code-plugins`. Only create project-level agents and settings.
 
 ### 4. Create CLAUDE.md
 

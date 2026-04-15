@@ -1,0 +1,9 @@
+{
+  "expectations": [
+    {"text": "Detects MD5 for password hashing as HIGH", "passed": true, "evidence": "FINDING 3 MD5 Used for Password Hashing"},
+    {"text": "Detects hardcoded master-reset token as HIGH", "passed": true, "evidence": "FINDING 1 hardcoded master-reset-2024 token"},
+    {"text": "Detects missing auth on /admin/delete-user as HIGH", "passed": true, "evidence": "FINDING 2 Admin Delete-User Endpoint Has No Authentication"},
+    {"text": "Detects timing-attack vulnerability in password comparison (== instead of hmac.compare_digest)", "passed": true, "evidence": "FINDING 4 Timing Side-Channel in Password Comparison"},
+    {"text": "Detects debug=True + host 0.0.0.0 as HIGH or MEDIUM", "passed": true, "evidence": "FINDING 7 Flask debug=True Exposed on 0.0.0.0"}
+  ]
+}

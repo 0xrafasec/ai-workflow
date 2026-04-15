@@ -1,6 +1,6 @@
 ---
 name: review
-description: Review a PR or branch using the writer/reviewer pattern
+description: "Review a PR or branch using the writer/reviewer pattern — flag issues with specific line references, never rewrite the code. Use when the user asks to review someone's PR, wants a second-opinion pass on a diff, says 'critique this', 'what's wrong with this branch', 'give me review comments', or hands a branch over for inspection rather than implementation."
 ---
 Review the changes on the current branch (or the branch/PR specified in $ARGUMENTS).
 
@@ -23,15 +23,13 @@ You are the **reviewer**, not the writer. Do NOT rewrite the implementation. Fla
 
 3. **Check spec compliance** - Find the relevant spec in `docs/specs/`. Does the implementation match?
 
-4. **Run stack-aware code review** — Run `/code-review` to auto-detect the stack and spawn parallel agents for security, architecture, and stack-specific idiomatic checks. This loads language-specific review guides (Go, Rust, TypeScript, Python) so findings are tailored to the project.
-
-    If `/code-review` is not available, fall back to spawning **security-reviewer** and **architecture-reviewer** subagents in parallel.
+4. **Run stack-aware code review** — Prefer Anthropic's official `code-review` skill (from `claude-code-plugins`) if installed. Otherwise, run `/sec-review` for security findings and spawn the **architecture-reviewer** subagent for architecture findings — in parallel. Load the matching language guide from `reviews/` (`go.md`, `rust.md`, `typescript.md`, `python.md`) and pass it to each as stack-specific criteria, so findings cite idiomatic patterns and framework pitfalls.
 
 5. **Your own review** - Focus on what subagents won't catch:
    - **Business logic correctness** - Does it solve the actual problem?
    - **Design decisions** - Are the tradeoffs right?
    - **What's missing** - What didn't the author think of?
-   - **Test layer coverage** - Check against `docs/specs/TDD.md` Testing Strategy (if it exists) or infer from codebase patterns:
+   - **Test layer coverage** - Check against `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` Testing Strategy (if it exists) or infer from codebase patterns:
      - Are unit tests present for new business logic?
      - Are integration tests present for new API endpoints, DB operations, or service boundaries?
      - Are e2e tests present for critical user flows (if applicable)?
@@ -49,13 +47,13 @@ You are the **reviewer**, not the writer. Do NOT rewrite the implementation. Fla
    ## Spec Compliance
    - [Does it match the spec? What's missing?]
 
-   ## Security (from code-review)
+   ## Security (from code review)
    - [Summary of findings]
 
-   ## Architecture (from code-review)
+   ## Architecture (from code review)
    - [Summary of findings]
 
-   ## Stack-Specific (from code-review)
+   ## Stack-Specific (from code review)
    - [Language/framework-specific findings]
 
    ## Business Logic

@@ -1,0 +1,8 @@
+{
+  "expectations": [
+    {"text": "Detects command injection in pingHandler (shell concatenation) as HIGH", "passed": true, "evidence": "Security #1 Command Injection counter.go:22 HIGH"},
+    {"text": "Detects data race on global counter variable", "passed": true, "evidence": "Architecture #1 Race Condition on Global Variable counter.go:11,31 HIGH"},
+    {"text": "Detects XSS in profileHandler (unescaped name) as HIGH", "passed": true, "evidence": "Security #2 Cross-Site Scripting counter.go:37 HIGH"},
+    {"text": "Detects unchecked json.Unmarshal / io.ReadAll errors", "passed": true, "evidence": "Architecture #2 Ignored Error Returns counter.go:18,20,27,46"}
+  ]
+}

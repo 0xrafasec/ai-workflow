@@ -27,7 +27,7 @@ Each phase of development has dedicated tooling:
 - **Specification** — detailed feature specs with verification criteria (`/spec`)
 - **Planning** — phased roadmaps with dependency tracking (`/roadmap`)
 - **Implementation** — parallel execution across isolated worktrees (`/feature`, `/autopilot`)
-- **Review** — independent, language-aware review with specialized agents (`/review`, `/code-review`, `/sec-review`)
+- **Review** — independent, language-aware review with specialized agents (`/review`, `/sec-review`; for stack-aware code review, use Anthropic's official `code-review` skill from `claude-code-plugins`)
 - **Governance** — decision records and change proposals at any point (`/adr`, `/rfc`)
 
 ## Features
@@ -194,8 +194,9 @@ Skills are multi-step workflows invoked as slash commands inside Claude Code.
 | Skill | Description |
 |-------|-------------|
 | `/review` | PR/branch review using the writer/reviewer pattern |
-| `/code-review` | Stack-aware review with language-specific best practices |
 | `/sec-review` | Full security audit with parallel analysis agents |
+
+> **Stack-aware code review:** use Anthropic's official `code-review` skill from [`claude-code-plugins`](https://github.com/anthropics/claude-code). The previous in-repo `/code-review` skill was deprecated after a benchmark (see `code-review-workspace/iteration-1/`) showed no detection lift over baseline at ~1.5× the cost. Language-specific guides in `reviews/` are still loaded on demand by `/review`, `/feature`, and `/fix`.
 
 ### Delivery
 
@@ -215,7 +216,7 @@ Agents are specialized reviewers spawned as subagents during implementation or r
 
 ## Language-Specific Review Guides
 
-`/code-review` auto-detects your stack and loads the matching guide. Polyglot projects load multiple guides.
+`/review`, `/feature`, and `/fix` load the matching guide on demand (and you can pass them to Anthropic's `code-review` skill as stack criteria). Polyglot projects load multiple guides.
 
 | Guide | Covers |
 |-------|--------|
@@ -310,7 +311,6 @@ ai-workflow/
 │   ├── feature/
 │   ├── fix/
 │   ├── review/
-│   ├── code-review/
 │   ├── autopilot/
 │   ├── new-project/
 │   ├── commit/

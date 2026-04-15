@@ -23,7 +23,7 @@
 This toolkit implements the workflow described in [WORKFLOW.md](./WORKFLOW.md). It provides:
 
 - **Agents** — specialized reviewers that can be spawned as subagents
-- **Skills** — reusable workflows (`/prd`, `/architecture`, `/tdd`, `/security`, `/adr`, `/rfc`, `/spec`, `/roadmap`, `/feature`, `/fix`, `/commit`, `/pr`, `/review`, `/autopilot`, `/code-review`, `/new-project`, `/design`)
+- **Skills** — reusable workflows (`/prd`, `/architecture`, `/tdd`, `/security`, `/adr`, `/rfc`, `/spec`, `/roadmap`, `/feature`, `/fix`, `/commit`, `/pr`, `/review`, `/autopilot`, `/new-project`, `/design`). For stack-aware code review, use Anthropic's official `code-review` skill from `claude-code-plugins`.
 - **Settings** — notification hooks for parallel work (Claude Code)
 - **CLAUDE.md** — global defaults applied to every project
 
@@ -132,7 +132,7 @@ Agents are spawned as subagents during implementation or review. They run in iso
 
 ## Language-Specific Review Guides
 
-Review guides provide language and framework-specific criteria that are loaded by the `/code-review` skill (and used by `/feature` and `/review`). They augment the base agents with stack-specific knowledge.
+Review guides provide language and framework-specific criteria. They are loaded on demand by `/review`, `/feature`, and `/fix`, and can be passed as stack criteria to Anthropic's official `code-review` skill (from `claude-code-plugins`).
 
 ### Go (`reviews/go.md`)
 
@@ -240,7 +240,7 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
 
 **Interview focus:** Test frameworks and layers (unit/integration/e2e), dev environment setup, CI/CD pipeline, coding standards, tooling decisions, observability, dependency management.
 
-**Writes to:** `docs/specs/TDD.md`
+**Writes to:** `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md`
 
 **Document structure:**
 - Testing Strategy (source of truth for `/feature`, `/fix`, `/roadmap`, `/autopilot`)
@@ -386,11 +386,11 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
 **What it does:**
 1. Reads the spec thoroughly
 2. Checks for a matching roadmap task in `docs/roadmap/`
-3. Discovers test strategy — reads `docs/specs/TDD.md` or infers from codebase (test directories, frameworks, patterns)
+3. Discovers test strategy — reads `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` or infers from codebase (test directories, frameworks, patterns)
 4. Plans the implementation (enters Plan Mode if complex)
 5. Implements with tests at the right layers (unit, integration, e2e) based on the test strategy
 6. Runs lint, typecheck, and all test layers
-7. Runs **`/code-review`** — stack-aware review with security, architecture, and idiomatic checks
+7. Runs stack-aware code review — prefers Anthropic's official `code-review` skill; falls back to `/sec-review` + architecture-reviewer agent with the matching language guide
 8. Fixes HIGH severity findings
 9. Commits with conventional commit messages, split by logical concern
 10. **If `--pr`:** pushes and creates a PR with summary, spec link, security verdict, architecture summary, and test plan (which layers, what they cover)
@@ -418,9 +418,9 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
 1. Understands the bug (from description or GitHub issue)
 2. Searches the codebase to locate the relevant code paths
 3. Diagnoses root cause — traces data flow, checks git history
-4. Discovers test strategy from `docs/specs/TDD.md` or codebase
+4. Discovers test strategy from `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` or codebase
 5. Fixes with minimal change + regression tests at the right layer(s)
-6. Runs quality checks and `/code-review`
+6. Runs quality checks and a stack-aware code review (Anthropic's `code-review` skill, or `/sec-review` + architecture-reviewer)
 7. Commits with `fix:` message describing what was broken
 
 ---
@@ -632,32 +632,11 @@ Orchestrator (you — stays thin, only tracks progress)
 
 ---
 
-### /code-review
+### /code-review (deprecated)
 
-**File:** `~/.claude/skills/code-review/SKILL.md`
+This skill was removed after a benchmark (see `code-review-workspace/iteration-1/benchmark.md`) showed no detection lift over a no-skill baseline on planted-bug fixtures at ~1.5× the cost, and its parallel-subagent architecture didn't execute as designed when nested.
 
-**Purpose:** Stack-aware code review that auto-detects the project's language/framework and runs security + architecture + idiomatic pattern checks with language-specific best practices.
-
-**Usage:**
-```
-/code-review                 # diff current branch vs main
-/code-review diff develop    # diff vs specific branch
-/code-review full            # full codebase scan
-/code-review full src/       # full scan scoped to a directory
-```
-
-**What it does:**
-1. Auto-detects the stack by checking marker files (`go.mod`, `Cargo.toml`, `package.json`, `pyproject.toml`, etc.)
-2. Loads the corresponding review guides from `reviews/`
-3. Spawns 3 parallel agents:
-   - **Security** — base security-reviewer + language-specific security criteria
-   - **Architecture** — base architecture-reviewer + language-specific architecture patterns
-   - **Stack-specific** — idiomatic patterns, common pitfalls, performance antipatterns, testing conventions
-4. Deduplicates and consolidates into a single report with verdict (PASS/REVIEW/FAIL)
-
-**Supported stacks:** Go, Rust, TypeScript (Node.js, Next.js, Nest.js), Python (FastAPI, Django, Flask). Polyglot projects load multiple guides.
-
-**Integration:** Used automatically by `/feature` (step 6) and `/review` (step 4). Can also be run standalone.
+**Replacement:** install Anthropic's official `code-review` skill from `claude-code-plugins`. Language-specific criteria remain in this repo under `reviews/` (`go.md`, `rust.md`, `typescript.md`, `python.md`) and can be passed as stack criteria, or loaded directly by `/review`, `/feature`, and `/fix`.
 
 ---
 
@@ -770,7 +749,7 @@ ai-workflow/
   skills/
     prd / architecture / tdd / security / adr / rfc /
     spec / roadmap / feature / fix / commit / pr /
-    review / code-review / autopilot / new-project / design
+    review / autopilot / new-project / design
 ```
 
 ### Claude Code install (`~/.claude/`)
@@ -801,7 +780,6 @@ ai-workflow/
     commit/SKILL.md                      # /commit
     pr/SKILL.md                          # /pr
     review/SKILL.md                      # /review
-    code-review/SKILL.md                 # /code-review
     autopilot/SKILL.md                   # /autopilot
     new-project/SKILL.md                 # /new-project
     design/SKILL.md                      # /design
@@ -825,7 +803,6 @@ ai-workflow/
   aiwf-skill-commit.mdc
   aiwf-skill-pr.mdc
   aiwf-skill-review.mdc
-  aiwf-skill-code-review.mdc
   aiwf-skill-autopilot.mdc
   aiwf-skill-new-project.mdc
   aiwf-skill-design.mdc

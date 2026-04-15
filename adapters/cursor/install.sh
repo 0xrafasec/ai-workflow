@@ -122,7 +122,7 @@ for guide_file in "$REPO_DIR"/reviews/*.md; do
     dest="$CURSOR_RULES_DIR/aiwf-review-${base}.mdc"
 
     write_rule "$dest" \
-        "AI Workflow code-review guide — ${base}" \
+        "AI Workflow language review guide — ${base}" \
         "false" \
         "$(cat "$guide_file")"
     info "Written $dest"

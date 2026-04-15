@@ -1,6 +1,6 @@
 ---
 name: feature
-description: Implement a feature from a spec file following the workflow
+description: "Implement a feature end-to-end from a spec file at docs/specs/<name>.md — code it, commit in logical chunks, optionally push + open a PR. Use when the user says 'implement the auth spec', 'build feature X', 'code up the Y spec', 'work through docs/specs/<name>.md', or points at a spec and asks to execute it."
 ---
 Implement the feature described in $ARGUMENTS.
 
@@ -29,7 +29,7 @@ Default behavior is **commit only, no PR**. The user controls when to ship.
 
 3. **Discover test strategy** — Before writing any code, determine how to test this feature:
 
-   a. **Check for TDD:** Read `docs/specs/TDD.md` — if it has a Testing Strategy section, follow it (frameworks, file locations, naming conventions, coverage expectations).
+   a. **Check for TDD:** Read `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` — if it has a Testing Strategy section, follow it (frameworks, file locations, naming conventions, coverage expectations).
 
    b. **If no TDD:** Infer from the codebase:
       - Look for existing test directories (`tests/`, `__tests__/`, `*_test.go`, `*.test.ts`, `test_*.py`, `spec/`)
@@ -55,11 +55,11 @@ Default behavior is **commit only, no PR**. The user controls when to ship.
 
 6. **Run quality checks** — Run the project's lint, typecheck, and test commands (check CLAUDE.md or Makefile for the right commands). Run ALL test layers, not just unit tests.
 
-7. **Stack-aware code review** — Run `/code-review` to perform a full stack-aware review. This auto-detects the project's language/framework and spawns 3 parallel agents: security (with language-specific checks), architecture (with language-specific patterns), and a stack-specific idiomatic review. This replaces the separate `/sec-review` + architecture-reviewer steps with a single, more thorough command.
+7. **Stack-aware code review** — Prefer Anthropic's official `code-review` skill (from `claude-code-plugins`) if installed. Otherwise, run `/sec-review` for security and spawn an **architecture-reviewer** subagent for architecture, passing the matching language guide from `reviews/` (`go.md`, `rust.md`, `typescript.md`, `python.md`) as stack-specific criteria.
 
-    If `/code-review` is not available, fall back to: run `/sec-review` for security, then spawn an architecture-reviewer subagent.
+    **Scope of this pass:** this is a pre-PR self-check. Reviewer subagents have fresh context, but *you* (the writer) are reading and acting on their findings — that's not a true writer/reviewer separation. Treat it as catching the obvious problems before anyone else sees the PR, not as the final trust boundary. Before merge, run `/review` in a **fresh session** (or have a human review the PR) so a reviewer who never watched the code being written can weigh in.
 
-8. **Address findings** — Fix any HIGH severity issues from the review. For MEDIUM issues, use your judgment. Re-run `/code-review` if you made significant changes.
+8. **Address findings** — Fix any HIGH severity issues from the review. For MEDIUM issues, use your judgment. Re-run the review if you made significant changes.
 
 9. **Commit** — Use conventional commit messages (feat:, fix:, refactor:, etc.). Split by logical concern. Each commit should leave the codebase working.
 

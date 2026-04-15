@@ -27,7 +27,7 @@ graph TD
     SPEC["/spec<br/>Feature Specs"]
     ROAD["/roadmap<br/>Task Breakdown"]
     IMPL["/feature or /autopilot<br/>Implementation"]
-    REV["/review or /code-review<br/>Review"]
+    REV["/review or code-review skill<br/>Review"]
 
     PRD --> ARCH
     PRD --> TDD
@@ -102,7 +102,7 @@ flowchart LR
     TEST_STRATEGY --> PLAN["Plan<br/>(if complex)"]
     PLAN --> IMPL["Implement<br/>+ Tests"]
     IMPL --> QUALITY["Lint<br/>Typecheck<br/>Tests"]
-    QUALITY --> REVIEW["/code-review<br/>3 agents"]
+    QUALITY --> REVIEW["code-review skill<br/>(Anthropic)"]
     REVIEW --> FIX["Fix HIGH<br/>findings"]
     FIX --> COMMIT["Commit<br/>+ PR"]
 
@@ -170,7 +170,7 @@ Every implementation goes through a multi-agent review before merge. The review 
 
 ```mermaid
 flowchart TB
-    CR["/code-review<br/>Orchestrator"]
+    CR["code-review skill<br/>(Anthropic)"]
 
     CR --> SEC["Security Review<br/>(Opus)"]
     CR --> ARCH["Architecture Review<br/>(Sonnet)"]
@@ -295,7 +295,7 @@ Not every project needs every step. Here's a decision guide:
 | Significant change needing team input | `/rfc` |
 | Bug fix | `/fix` (creates regression test, no spec needed) |
 | Security audit | `/sec-review` (standalone, 4 parallel agents on Opus) |
-| Code review | `/code-review` (standalone) or `/review` (full PR review with spec compliance) |
+| Code review | Anthropic's `code-review` skill (standalone) or `/review` (full PR review with spec compliance) |
 
 ---
 

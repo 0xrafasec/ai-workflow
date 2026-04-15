@@ -1,0 +1,7 @@
+{
+  "expectations": [
+    {"text": "Detects SQL injection in /users/search (string interpolation) as HIGH", "passed": true, "evidence": "FINDING-2 SQL Injection via String Interpolation"},
+    {"text": "Detects hardcoded Stripe API key as HIGH", "passed": true, "evidence": "FINDING-1 Hardcoded Live Stripe Secret Key"},
+    {"text": "Does NOT falsely flag /users/:id parameterized query as SQL-injection vulnerable", "passed": true, "evidence": "No SQL-injection finding against /users/:id; only over-exposure flagged"}
+  ]
+}

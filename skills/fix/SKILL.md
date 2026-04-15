@@ -1,6 +1,6 @@
 ---
 name: fix
-description: "Diagnose and fix a bug: /fix <description or issue link>"
+description: "Diagnose and fix a bug from a description, a stack trace, or a GitHub issue link — reproduce, patch, commit, optionally PR. Use when the user says 'fix this', 'debug X', 'something is broken', 'why isn't Y working', pastes an error/traceback, or links an issue expecting a patch. Covers root-cause diagnosis, not just symptom patching."
 ---
 Fix the bug described in $ARGUMENTS.
 
@@ -37,7 +37,7 @@ Default behavior is **commit only, no PR**.
 
 4. **Discover test strategy** — Before writing the fix, understand the project's test approach:
 
-   a. **Check for TDD:** Read `docs/specs/TDD.md` — if it has a Testing Strategy section, follow it.
+   a. **Check for TDD:** Read `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` — if it has a Testing Strategy section, follow it.
    b. **If no TDD:** Infer from the codebase — look for existing test directories, frameworks, patterns, and naming conventions (same discovery as `/feature` step 3b).
    c. **Determine which test layers the bug touches** — a bug in a pure function needs a unit test; a bug in an API endpoint needs an integration test; a bug in a user flow may need an e2e test.
 
@@ -53,9 +53,9 @@ Default behavior is **commit only, no PR**.
 
 6. **Run quality checks** — Run the project's lint, typecheck, and test commands (check CLAUDE.md or Makefile for the right commands). Run ALL test layers, not just unit tests.
 
-7. **Stack-aware code review** — Run `/code-review` to perform a full stack-aware review.
+7. **Stack-aware code review** — Prefer Anthropic's official `code-review` skill (from `claude-code-plugins`) if installed. Otherwise, run `/sec-review` for security and spawn an **architecture-reviewer** subagent for architecture, passing the matching language guide from `reviews/` as stack-specific criteria.
 
-   If `/code-review` is not available, fall back to: run `/sec-review` for security, then spawn an architecture-reviewer subagent.
+   **Scope of this pass:** this is a pre-PR self-check. Reviewer subagents have fresh context, but *you* (the writer) are reading and acting on their findings — not a true writer/reviewer separation. Before merge, run `/review` in a **fresh session** (or have a human review the PR) so a reviewer who never watched the code being written can weigh in.
 
 8. **Address findings** — Fix any HIGH severity issues from the review. For MEDIUM issues, use your judgment.
 

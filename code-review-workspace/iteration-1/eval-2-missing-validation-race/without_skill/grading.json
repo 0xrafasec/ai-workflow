@@ -1,0 +1,8 @@
+{
+  "expectations": [
+    {"text": "Detects command injection in pingHandler (shell concatenation) as HIGH", "passed": true, "evidence": "FINDING 1 Command Injection via unsanitised req.Host"},
+    {"text": "Detects data race on global counter variable", "passed": true, "evidence": "FINDING 3 Data Race on global counter"},
+    {"text": "Detects XSS in profileHandler (unescaped name) as HIGH", "passed": true, "evidence": "FINDING 2 Reflected Cross-Site Scripting in profileHandler"},
+    {"text": "Detects unchecked json.Unmarshal / io.ReadAll errors", "passed": true, "evidence": "FINDING 4 Errors from io.ReadAll and json.Unmarshal silently discarded"}
+  ]
+}

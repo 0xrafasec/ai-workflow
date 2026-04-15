@@ -14,7 +14,7 @@ set -euo pipefail
 #
 #   2. Global context — ~/.codex/AGENTS.md is compiled with the small bits
 #      that aren't skills (global workflow conventions + agent definitions +
-#      code-review language guides). This file is kept well under Codex's
+#      language review guides). This file is kept well under Codex's
 #      32 KiB default `project_doc_max_bytes` cap so nothing gets truncated.
 #
 # Older versions of this adapter compiled every skill into a ~174 KiB
@@ -141,8 +141,9 @@ fi
         printf '\n%s\n\n' "---"
     done
 
-    # Language review guides — appendix loaded on demand by the code-review skill.
-    printf '# Code Review Guides\n\n'
+    # Language review guides — appendix loaded on demand by /review, /feature, /fix
+    # (or passed as stack criteria to Anthropic's official code-review skill).
+    printf '# Language Review Guides\n\n'
     for guide_file in "$REPO_DIR"/reviews/*.md; do
         [ -f "$guide_file" ] || continue
         base="$(basename "$guide_file" .md)"

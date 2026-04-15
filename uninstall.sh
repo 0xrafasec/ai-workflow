@@ -5,6 +5,7 @@ set -euo pipefail
 # Removes symlinks created by install.sh and restores backups if they exist.
 
 CLAUDE_DIR="$HOME/.claude"
+BIN_DIR="${AIWF_BIN_DIR:-$HOME/.local/bin}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -48,7 +49,6 @@ FILES=(
     "skills/new-project/SKILL.md"
     "skills/prd/SKILL.md"
     "skills/autopilot/SKILL.md"
-    "skills/code-review/SKILL.md"
     "skills/roadmap/SKILL.md"
     "skills/architecture/SKILL.md"
     "skills/tdd/SKILL.md"
@@ -69,6 +69,8 @@ FILES=(
 for f in "${FILES[@]}"; do
     unlink_if_symlink "$CLAUDE_DIR/$f"
 done
+
+unlink_if_symlink "$BIN_DIR/aiwf"
 
 echo ""
 info "Done! Symlinks removed. Original backups restored where available."

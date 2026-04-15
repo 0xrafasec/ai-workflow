@@ -1,6 +1,6 @@
 ---
 name: factory
-description: "End-to-end feature delivery pipeline: roadmap → specs → GitHub issues → parallel worktree agents → PRs. Processes all unstarted roadmap features automatically."
+description: "End-to-end feature delivery pipeline — reads the roadmap, generates missing specs, optionally creates GitHub issues, then launches up to 5 parallel worktree agents that each implement a feature on its own branch and open a PR. Use when the user says 'run the factory', 'ship the backlog', 'process the roadmap', 'build everything that's unstarted', or wants automated multi-feature delivery across parallel worktrees."
 ---
 Run the factory pipeline for: $ARGUMENTS
 
@@ -319,7 +319,7 @@ Each agent receives this prompt:
 
 ## Test Strategy
 
-<from TDD.md if it exists, otherwise: "Discover from codebase — read existing test files for patterns">
+<from TECHNICAL_DESIGN_DOCUMENT.md if it exists, otherwise: "Discover from codebase — read existing test files for patterns">
 
 ## Your Feature
 
@@ -365,7 +365,7 @@ If you cannot fix a failure after 3 attempts, document the failure clearly and s
 
 ### Step 4 — Code review
 
-Run `/code-review` to check for security and architecture issues. Fix any HIGH severity findings. Re-run the quality gate after fixes.
+Run Anthropic's official `code-review` skill (from `claude-code-plugins`) if installed, otherwise run `/sec-review` and spawn the `architecture-reviewer` agent. Fix any HIGH severity findings. Re-run the quality gate after fixes.
 
 ### Step 5 — Commit and push
 
@@ -406,7 +406,7 @@ All three checks passed before this PR was opened:
 
 ## Security review
 
-<verdict from /code-review: PASS / REVIEW / FAIL>
+<verdict from code review: PASS / REVIEW / FAIL>
 
 ## Test plan
 

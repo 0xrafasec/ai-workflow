@@ -1,0 +1,12 @@
+{
+  "eval_id": 1,
+  "eval_name": "auth-bypass-timing",
+  "prompt": "Review the Python code in auth.py and report any security, architecture, or code-quality issues you find. Provide a written report with severity ratings (HIGH/MEDIUM/LOW), evidence (file + line), and recommended fixes.",
+  "assertions": [
+    "Detects MD5 for password hashing as HIGH",
+    "Detects hardcoded master-reset token as HIGH",
+    "Detects missing auth on /admin/delete-user as HIGH",
+    "Detects timing-attack vulnerability in password comparison (== instead of hmac.compare_digest)",
+    "Detects debug=True + host 0.0.0.0 as HIGH or MEDIUM"
+  ]
+}

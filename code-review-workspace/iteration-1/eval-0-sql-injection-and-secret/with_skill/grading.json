@@ -1,0 +1,7 @@
+{
+  "expectations": [
+    {"text": "Detects SQL injection in /users/search (string interpolation) as HIGH", "passed": true, "evidence": "S1 at server.ts:15-16 — HIGH, template literal interpolation flagged"},
+    {"text": "Detects hardcoded Stripe API key as HIGH", "passed": true, "evidence": "S2 at server.ts:4 — HIGH, sk_live_ prefix noted"},
+    {"text": "Does NOT falsely flag /users/:id parameterized query as SQL-injection vulnerable", "passed": true, "evidence": "Positive Practices section explicitly commends parameterized $1 query at server.ts:36"}
+  ]
+}

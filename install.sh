@@ -15,6 +15,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
+BIN_DIR="${AIWF_BIN_DIR:-$HOME/.local/bin}"
 
 FILTERS=("$@")
 
@@ -85,6 +86,29 @@ link() {
     info "Linked $dst -> $src"
 }
 
+link_bin() {
+    local src_rel="$1"
+    local dst_name="$2"
+    local src="$SCRIPT_DIR/$src_rel"
+    local dst="$BIN_DIR/$dst_name"
+
+    if ! should_install "$src_rel" "$dst_name"; then
+        return 0
+    fi
+
+    MATCHED=$((MATCHED + 1))
+
+    if [ ! -e "$src" ]; then
+        error "Source not found: $src"
+        return 1
+    fi
+
+    mkdir -p "$BIN_DIR"
+    backup_if_exists "$dst"
+    ln -sf "$src" "$dst"
+    info "Linked $dst -> $src"
+}
+
 echo ""
 echo "=== AI Workflow Installer ==="
 echo ""
@@ -103,6 +127,9 @@ MATCHED=0
 # Ensure ~/.claude exists
 mkdir -p "$CLAUDE_DIR"/{agents,commands,skills}
 
+# Install the aiwf launcher so follow-up platform commands work from a clone.
+link_bin "aiwf" "aiwf"
+
 # Global config
 link "CLAUDE.md"                "CLAUDE.md"
 link "settings.json"            "settings.json"
@@ -116,7 +143,7 @@ link "agents/architecture-reviewer.md"   "agents/architecture-reviewer.md"
 link "commands/sec-review.md"   "commands/sec-review.md"
 
 # Skills
-for skill in feature fix spec review new-project prd autopilot code-review roadmap architecture tdd security adr rfc commit pr design verify-design factory; do
+for skill in feature fix spec review new-project prd autopilot roadmap architecture tdd security adr rfc commit pr design verify-design factory; do
     mkdir -p "$CLAUDE_DIR/skills/$skill"
     link "skills/$skill/SKILL.md" "skills/$skill/SKILL.md"
 done

@@ -1,0 +1,11 @@
+{
+  "eval_id": 2,
+  "eval_name": "missing-validation-race",
+  "prompt": "Review the Go code in counter.go and report any security, architecture, or code-quality issues you find. Provide a written report with severity ratings (HIGH/MEDIUM/LOW), evidence (file + line), and recommended fixes.",
+  "assertions": [
+    "Detects command injection in pingHandler (shell concatenation) as HIGH",
+    "Detects data race on global counter variable",
+    "Detects XSS in profileHandler (unescaped name) as HIGH",
+    "Detects unchecked json.Unmarshal / io.ReadAll errors"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "expectations": [
+    {"text": "Detects MD5 for password hashing as HIGH", "passed": true, "evidence": "S1 Weak Crypto auth.py:14 HIGH"},
+    {"text": "Detects hardcoded master-reset token as HIGH", "passed": true, "evidence": "S3 Hardcoded Master Reset Token auth.py:38 HIGH"},
+    {"text": "Detects missing auth on /admin/delete-user as HIGH", "passed": true, "evidence": "S4 Unauthenticated Admin Endpoint auth.py:45-51 HIGH"},
+    {"text": "Detects timing-attack vulnerability in password comparison (== instead of hmac.compare_digest)", "passed": true, "evidence": "S2 Timing Attack on Password Comparison auth.py:27 HIGH"},
+    {"text": "Detects debug=True + host 0.0.0.0 as HIGH or MEDIUM", "passed": true, "evidence": "S5 Debug Mode / RCE via Werkzeug Debugger auth.py:55 HIGH"}
+  ]
+}

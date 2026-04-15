@@ -14,7 +14,7 @@ ai-workflow and [GitHub Spec Kit](https://github.com/github/spec-kit) solve over
 | **Feature specs** | `/spec` with verification criteria | `/speckit.specify` with acceptance criteria |
 | **Task breakdown** | `/roadmap` with phase dependencies | `/speckit.tasks` with parallelization markers |
 | **Implementation** | `/feature`, `/autopilot` with worktrees | `/speckit.implement` |
-| **Code review** | Language-aware agents (`/code-review`, `/review`) | Community extensions |
+| **Code review** | `/review` (writer/reviewer), `/sec-review`, plus Anthropic's `code-review` skill with language guides from `reviews/` | Community extensions |
 | **Security review** | Dedicated agents + `/sec-review` | Community extensions |
 | **Governance** | `/adr`, `/rfc` at any point | Constitution amendments |
 
@@ -68,7 +68,7 @@ flowchart TD
     end
 
     subgraph Review ["Review & Quality"]
-        T --> W["/review + /code-review"]
+        T --> W["/review + code-review"]
         U --> W
         W --> X["/sec-review"]
         X --> Y["Merge"]
@@ -111,7 +111,7 @@ flowchart LR
 
     subgraph AW2 ["ai-workflow — Review"]
         direction TB
-        C1["/code-review"] --> C2["/sec-review"]
+        C1["code-review"] --> C2["/sec-review"]
     end
 
     AW -->|"Roadmap + design docs"| SK
@@ -131,7 +131,7 @@ flowchart LR
 5. `/speckit.specify` — create detailed, traceable specs for each task in the roadmap
 6. `/speckit.plan` — technical implementation plan per spec
 7. `/speckit.tasks` + `/speckit.implement` — execute
-8. `/code-review` + `/sec-review` — review with language-aware agents
+8. `code-review` + `/sec-review` — review with language-aware agents
 
 **Why this works:** ai-workflow's interview-driven design phase produces richer context than going straight to Spec Kit templates. The roadmap gives structure *before* detailed specs exist. Then Spec Kit's constitutional compliance and task traceability keep specification and implementation disciplined. ai-workflow's review agents catch what CI can't.
 
@@ -154,7 +154,7 @@ flowchart LR
         direction TB
         B1["/roadmap<br/>(from Spec Kit tasks)"] --> B2["/autopilot<br/>Parallel worktrees"]
         B2 --> B3["/review"]
-        B3 --> B4["/code-review"]
+        B3 --> B4["code-review"]
         B4 --> B5["/sec-review"]
     end
 
@@ -172,7 +172,7 @@ flowchart LR
 4. `/speckit.tasks` — generate task list with `[P]` parallelization markers
 5. `/roadmap` — convert Spec Kit tasks into phased roadmap with dependencies
 6. `/autopilot` — execute the roadmap with parallel worktree agents
-7. `/review` + `/code-review` + `/sec-review` — full review pipeline
+7. `/review` + `code-review` + `/sec-review` — full review pipeline
 
 **Why this works:** Spec Kit's templates enforce structure that prevents vague specs. ai-workflow's `/roadmap` then phases those tasks with dependency ordering, and `/autopilot` runs them in parallel across isolated worktrees — something Spec Kit's `/speckit.implement` does sequentially.
 
@@ -194,7 +194,7 @@ Pick the tool that fits each phase:
 | Feature spec | Either — depends on the feature | Use `/spec` for complex features needing deep context; `/speckit.specify` for well-understood features needing traceability |
 | Task breakdown | `/speckit.tasks` (Spec Kit) | Better traceability with `[P]` markers and spec references |
 | Implementation | `/autopilot` (ai-workflow) | Parallel worktree execution is faster for multi-task phases |
-| Code review | `/code-review` (ai-workflow) | Language-specific review guides are deeper |
+| Code review | Anthropic's `code-review` skill + ai-workflow's language guides in `reviews/` | Language-specific review guides are deeper |
 | Security review | `/sec-review` (ai-workflow) | Dedicated parallel analysis agents |
 | Governance | `/adr` (ai-workflow) | Lightweight and can be created at any point |
 
@@ -295,9 +295,9 @@ flowchart TD
     S2B --> E2
     S3A --> E3["/feature or /autopilot<br/>Execute Phase 3"]
 
-    E1 --> R1["/code-review + /sec-review"]
-    E2 --> R2["/code-review + /sec-review"]
-    E3 --> R3["/code-review + /sec-review"]
+    E1 --> R1["code-review + /sec-review"]
+    E2 --> R2["code-review + /sec-review"]
+    E3 --> R3["code-review + /sec-review"]
 
     style DOCS fill:#1976D2,stroke:#0D47A1,color:#fff
     style ROAD fill:#7B1FA2,stroke:#4A148C,color:#fff
@@ -328,7 +328,7 @@ flowchart TD
 2. `/roadmap` — break the PRD into phased work (even without detailed specs yet)
 3. **Per task in each phase:** run `/spec <task-name>` or `/speckit.specify` to create a detailed, traceable spec
 4. `/autopilot` (or `/feature`) — execute the phase, now that every task has a spec
-5. `/code-review` + `/sec-review` — review before merging
+5. `code-review` + `/sec-review` — review before merging
 
 **Why this matters:** You don't always have detailed specs upfront. Often you have a PRD and a rough idea of phases. The roadmap gives you structure and ordering; then you specify each task *just before* implementing it, with the full roadmap context available. This avoids specifying tasks that might change as earlier phases are completed.
 
@@ -382,7 +382,7 @@ graph TB
     end
 
     subgraph Review ["Review"]
-        AUTO --> CR["/code-review"]
+        AUTO --> CR["code-review"]
         FEAT --> CR
         IMPL --> CR
         CR --> SR["/sec-review"]
@@ -410,7 +410,7 @@ graph TB
 |----------|---------------|
 | Greenfield project, solo developer | ai-workflow only — less setup, full lifecycle |
 | Team with mixed AI tools (Copilot, Cursor, Claude) | Spec Kit for specs + planning (agent-agnostic), ai-workflow for implementation + review (Claude Code) |
-| Existing Spec Kit project, want better reviews | Add ai-workflow's `/code-review` and `/sec-review` |
+| Existing Spec Kit project, want better reviews | Add ai-workflow's `/review` + `/sec-review`, plus Anthropic's `code-review` skill with this repo's `reviews/` guides |
 | Existing ai-workflow project, want better traceability | Add Spec Kit's `/speckit.constitution` and `/speckit.tasks` |
 | Large project, many parallel features | Both — Spec Kit for structure, ai-workflow `/autopilot` for execution |
 | Compliance-heavy project | Both — Spec Kit constitution for enforcement, ai-workflow `/sec-review` for auditing |
