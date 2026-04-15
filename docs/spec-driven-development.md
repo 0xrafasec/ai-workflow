@@ -26,17 +26,20 @@ graph TD
     SEC["/security<br/>Threat Model"]
     SPEC["/spec<br/>Feature Specs"]
     ROAD["/roadmap<br/>Task Breakdown"]
-    IMPL["/feature or /autopilot<br/>Implementation"]
+    DESIGN["/design + /verify-design<br/>UI design in Paper"]
+    IMPL["/feature · /autopilot · /factory<br/>Implementation"]
     REV["/review or code-review skill<br/>Review"]
 
     PRD --> ARCH
     PRD --> TDD
     PRD --> SEC
+    PRD --> DESIGN
     ARCH --> ROAD
     TDD --> ROAD
     SEC --> ROAD
     ROAD --> SPEC
     SPEC --> IMPL
+    DESIGN --> IMPL
     IMPL --> REV
 
     style PRD fill:#4a90d9,stroke:#2c5f8a,color:#fff
@@ -45,6 +48,7 @@ graph TD
     style SEC fill:#7b68ee,stroke:#5a4fcf,color:#fff
     style SPEC fill:#2ecc71,stroke:#27ae60,color:#fff
     style ROAD fill:#f39c12,stroke:#d68910,color:#fff
+    style DESIGN fill:#9b59b6,stroke:#7d3c98,color:#fff
     style IMPL fill:#e74c3c,stroke:#c0392b,color:#fff
     style REV fill:#95a5a6,stroke:#7f8c8d,color:#fff
 ```
@@ -166,33 +170,37 @@ The orchestrator never touches code — it only tracks progress and pauses betwe
 
 ## The Review Layer
 
-Every implementation goes through a multi-agent review before merge. The review system is stack-aware — it auto-detects the project's language and framework, then loads language-specific best practices.
+Every implementation goes through a stack-aware review before merge. `/review`, `/feature`, `/fix`, and `/factory` all follow the same two-path pattern: prefer Anthropic's official `code-review` skill if installed, otherwise fall back to `/sec-review` plus the `architecture-reviewer` agent. In both paths, the matching language guide from `reviews/` (`go.md`, `rust.md`, `typescript.md`, `python.md`) is loaded — passed as stack criteria to Anthropic's skill, or to the fallback agents directly.
 
 ```mermaid
 flowchart TB
-    CR["code-review skill<br/>(Anthropic)"]
+    TRIGGER["/review · /feature · /fix · /factory"]
+    DETECT["Detect stack →<br/>load matching<br/>reviews/*.md guide"]
 
-    CR --> SEC["Security Review<br/>(Opus)"]
-    CR --> ARCH["Architecture Review<br/>(Sonnet)"]
-    CR --> STACK["Stack-Specific Review<br/>(Sonnet)"]
+    TRIGGER --> DETECT
+    DETECT --> CHOICE{"Anthropic<br/>code-review skill<br/>installed?"}
 
-    SEC --> REPORT["Consolidated Report<br/>PASS / REVIEW / FAIL"]
+    CHOICE -->|Yes — preferred| CR["Anthropic code-review skill<br/>(stack criteria passed in)"]
+    CHOICE -->|No — fallback| FB["In-repo fallback<br/>(runs in parallel)"]
+
+    FB --> SEC["/sec-review<br/>(Opus)"]
+    FB --> ARCH["architecture-reviewer agent<br/>(Sonnet)"]
+
+    CR --> REPORT["Consolidated findings<br/>PASS / REVIEW / FAIL"]
+    SEC --> REPORT
     ARCH --> REPORT
-    STACK --> REPORT
 
-    SEC -.- SEC_GUIDE["Base: security-reviewer.md<br/>+ Language guide (SECURITY section)"]
-    ARCH -.- ARCH_GUIDE["Base: architecture-reviewer.md<br/>+ Language guide (ARCHITECTURE section)"]
-    STACK -.- STACK_GUIDE["Full language guide<br/>(go.md, rust.md, typescript.md, python.md)"]
-
-    style CR fill:#f39c12,stroke:#d68910,color:#fff
+    style TRIGGER fill:#f39c12,stroke:#d68910,color:#fff
+    style DETECT fill:#95a5a6,stroke:#7f8c8d,color:#fff
+    style CHOICE fill:#f5f5f5,stroke:#999,color:#333
+    style CR fill:#2ecc71,stroke:#27ae60,color:#fff
+    style FB fill:#9b59b6,stroke:#7d3c98,color:#fff
     style SEC fill:#e74c3c,stroke:#c0392b,color:#fff
     style ARCH fill:#4a90d9,stroke:#2c5f8a,color:#fff
-    style STACK fill:#4a90d9,stroke:#2c5f8a,color:#fff
     style REPORT fill:#2ecc71,stroke:#27ae60,color:#fff
-    style SEC_GUIDE fill:#f5f5f5,stroke:#ccc,color:#333
-    style ARCH_GUIDE fill:#f5f5f5,stroke:#ccc,color:#333
-    style STACK_GUIDE fill:#f5f5f5,stroke:#ccc,color:#333
 ```
+
+> The previous in-repo `/code-review` skill fanned out to three nested subagents (security, architecture, stack) loading `reviews/` guides as sectioned prompts. It was deprecated after a benchmark (`code-review-workspace/iteration-1/`) showed no detection lift over a no-skill baseline at ~1.5× the cost, and its nested subagents didn't execute in parallel as designed.
 
 ---
 

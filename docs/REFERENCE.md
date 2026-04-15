@@ -23,7 +23,7 @@
 This toolkit implements the workflow described in [WORKFLOW.md](./WORKFLOW.md). It provides:
 
 - **Agents** — specialized reviewers that can be spawned as subagents
-- **Skills** — reusable workflows (`/prd`, `/architecture`, `/tdd`, `/security`, `/adr`, `/rfc`, `/spec`, `/roadmap`, `/feature`, `/fix`, `/commit`, `/pr`, `/review`, `/autopilot`, `/new-project`, `/design`). For stack-aware code review, use Anthropic's official `code-review` skill from `claude-code-plugins`.
+- **Skills** — reusable workflows (`/prd`, `/architecture`, `/tdd`, `/security`, `/adr`, `/rfc`, `/spec`, `/roadmap`, `/feature`, `/fix`, `/commit`, `/pr`, `/review`, `/sec-review`, `/autopilot`, `/factory`, `/new-project`, `/design`, `/verify-design`). For stack-aware code review, use Anthropic's official `code-review` skill from `claude-code-plugins`.
 - **Settings** — notification hooks for parallel work (Claude Code)
 - **CLAUDE.md** — global defaults applied to every project
 
@@ -642,7 +642,7 @@ This skill was removed after a benchmark (see `code-review-workspace/iteration-1
 
 ### /sec-review
 
-**File:** `~/.claude/commands/sec-review.md`
+**File:** `~/.claude/commands/sec-review.md` *(delivered as a command rather than a `skills/<name>/SKILL.md` entry — it behaves as a slash-command skill in every other respect.)*
 
 **Purpose:** Detailed security audit with parallel analysis agents. More thorough than the security-reviewer agent — this is a full audit tool.
 
@@ -659,6 +659,85 @@ This skill was removed after a benchmark (see `code-review-workspace/iteration-1
 2. Each agent reads every file, traces data flow, assigns confidence scores
 3. Consolidates findings, deduplicates, filters by confidence >= 8
 4. Produces a structured report with verdict (PASS/REVIEW/FAIL) and positive practices
+
+---
+
+### /design
+
+**File:** `~/.claude/skills/design/SKILL.md`
+
+**Purpose:** Produce distinctive, production-grade UI designs in Paper.design MCP — a full design system + brand guide + every screen from the PRD, or a single flow/screen. Commits to a bold aesthetic direction (editorial, brutalist, luxury, retro-futuristic, technical, etc.) rather than defaulting to generic AI-SaaS looks.
+
+**Usage:**
+```
+/design                    # full: design system + brand guide + every screen in the PRD
+/design auth               # only the named flow group (reuses existing design system)
+/design auth/login         # a single screen and all its states
+/design --system-only      # refresh the design system + component library only
+/design --layouts-only     # skip system phase, go straight to layouts
+```
+
+**What it does:**
+1. Reads `docs/PRD.md`, `ARCHITECTURE.md`, `THREAT_MODEL.md`, and existing specs to extract screens and flows
+2. Runs a short `AskUserQuestion` interview (aesthetic, palette, typography, density, references) and commits to a direction
+3. Writes `docs/design/DESIGN_SYSTEM.md` (tokens, typography, spacing, components, accessibility)
+4. Builds a "Design System" and "Component Library" artboard in Paper (light + dark), then all flow-group artboards at desktop (1440×900) + mobile (390×844), with dark variants per group
+5. Stops at review checkpoints using `AskUserQuestion` — never monologues through an entire canvas
+
+**Requires:** a PRD or at least one feature spec. Runs on Opus/Sonnet — Haiku produces flatter layouts.
+
+---
+
+### /verify-design
+
+**File:** `~/.claude/skills/verify-design/SKILL.md`
+
+**Purpose:** Diff the running UI against Paper design refs with Playwright runtime checks, then fix mismatches in place. Not a report tool — it edits code and re-verifies.
+
+**Usage:**
+```
+/verify-design                       # every page that has a design ref
+/verify-design owner                 # one route/page
+/verify-design web/components/Hero.tsx   # one component
+```
+
+**What it does:**
+1. Resolves design references (`docs/design/`, spec artboard IDs, `DESIGN_SYSTEM.md`)
+2. Loads Paper artboards (desktop + mobile) via MCP — reads computed styles, never guesses from screenshots
+3. Drives the running dev server with Playwright at `1440x900` and `390x844`, captures screenshots + console errors, exercises interactive flows
+4. **Fixes** mismatches in place (prefers token fixes over ad-hoc values), re-runs Playwright + lint + typecheck + tests
+5. Severity model: HIGH = wrong font/color, broken responsive, runtime errors, inoperable controls, clipping; MEDIUM = off by >2 steps, hardcoded-instead-of-token; LOW = ≤2px drift
+
+**Rules:** never skip Playwright, never skip responsive checks, token violations are at minimum MEDIUM, missing loading/empty/error states are HIGH. If Playwright is unavailable it stops rather than silently degrading to static-only.
+
+---
+
+### /factory
+
+**File:** `~/.claude/skills/factory/SKILL.md`
+
+**Purpose:** End-to-end delivery pipeline — reads the roadmap, generates missing specs via speckit, optionally creates GitHub issues, then launches up to 5 parallel worktree agents that each implement a feature on its own branch behind a lint+typecheck+tests quality gate and open a PR.
+
+**Usage:**
+```
+/factory                     # every unstarted / spec-only feature in docs/roadmap/
+/factory 003_auth            # one phase file
+/factory auth-login          # one feature by slug
+/factory --dry-run           # scan only, show what would run
+/factory --no-issues         # skip GitHub issue creation
+/factory --limit 3           # override the 5-agent parallel cap
+```
+
+**What it does:**
+1. **Preflight** — verifies repo root, clean tree on main, `gh auth` + `project` scope, roadmap exists, resolves lint/typecheck/test commands
+2. **Scan** — classifies roadmap tasks as `unstarted | spec-only | in-progress | done`, processes only the first two
+3. **Spec generation** — runs `/speckit-spec`, `/speckit-plan`, `/speckit-tasks` sequentially via foreground subagents for each `unstarted` feature; warns-not-blocks on missing design refs
+4. **Issues (optional)** — creates GitHub issues on the project board with "Ready" status, one per feature
+5. **Quality gate** — registers a `Stop` hook in `.claude/settings.json` that runs `lint && typecheck && tests`; restored at the end
+6. **Parallel implementation** — batches of ≤5 `Agent` calls in a single message, `isolation: "worktree"`, `run_in_background: true`, `model: "sonnet"`. Each agent reads its spec, implements, passes the gate, runs the Anthropic `code-review` skill (or `/sec-review` + `architecture-reviewer`), commits, pushes, opens a PR
+7. **Summary + cleanup** — posts a per-feature results table, restores the previous `Stop` hook
+
+**Hard rules:** orchestrator never writes code; no PR is opened while any gate check fails; never retry automatically — present failures and wait for the user.
 
 ---
 
@@ -749,7 +828,10 @@ ai-workflow/
   skills/
     prd / architecture / tdd / security / adr / rfc /
     spec / roadmap / feature / fix / commit / pr /
-    review / autopilot / new-project / design
+    review / autopilot / new-project /
+    design / verify-design / factory
+    # (feature-workspace/ exists alongside but is benchmarking data, not a skill —
+    #  it has no top-level SKILL.md so install adapters skip it.)
 ```
 
 ### Claude Code install (`~/.claude/`)
@@ -783,6 +865,8 @@ ai-workflow/
     autopilot/SKILL.md                   # /autopilot
     new-project/SKILL.md                 # /new-project
     design/SKILL.md                      # /design
+    verify-design/SKILL.md               # /verify-design
+    factory/SKILL.md                     # /factory
 ```
 
 ### Cursor install (`~/.cursor/rules/`)
@@ -806,6 +890,8 @@ ai-workflow/
   aiwf-skill-autopilot.mdc
   aiwf-skill-new-project.mdc
   aiwf-skill-design.mdc
+  aiwf-skill-verify-design.mdc
+  aiwf-skill-factory.mdc
   aiwf-agent-security-reviewer.mdc
   aiwf-agent-architecture-reviewer.mdc
   aiwf-review-go.mdc
@@ -918,19 +1004,27 @@ The typical flow from idea to code:
 /security               "What are the threats and defenses?"
   |
   v
+/roadmap                "Phase breakdown with tasks, deps, parallelism"
+  |                     (generated from PRD + architecture + TDD + threat model)
+  v
 /spec <feature>         "Exact implementation details for this feature"
   |                     (references architecture, TDD, security docs)
-  v
-/roadmap                "Phase breakdown with tasks, deps, parallelism"
   |
-  +--→ /autopilot       "Execute the whole roadmap automatically"
-  |      (dispatches worktree agents, pauses between phases)
+  +--→ /design [flow]   "UI designs in Paper — design system + screens"
+  |      |              (run after PRD, before or alongside specs for UI work)
+  |      v
+  |    /verify-design   "Diff running UI against Paper refs, fix in place"
+  |
+  +--→ /autopilot       "Execute the whole roadmap with parallel worktree agents"
+  |
+  +--→ /factory         "End-to-end: gen specs, issues, parallel impl, PRs"
   |
   +--→ /feature <spec>  "Or implement one feature at a time manually"
        |
        v
      /review             "Independent review in a fresh session"
 
+/fix <issue|stack>      "Diagnose and fix a bug (anytime, no spec needed)"
 /adr <title>            "Capture a decision (anytime)"
 /rfc <title>            "Propose a significant change (anytime)"
 ```

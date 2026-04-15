@@ -686,9 +686,16 @@ With AI generating more code, review becomes the bottleneck. Address this by:
 # Daily workflow
 claude --worktree feature-x          # Start isolated work
 /feature docs/specs/feature_x.md     # Implement from spec
+/fix <issue-url-or-stack-trace>      # Or: diagnose and fix a bug (no spec needed)
+/design auth                         # UI features: mock in Paper first
+/verify-design owner                 # Then diff running UI vs Paper refs, fix in place
 /sec-review                          # Security check
 /commit                              # Stage + commit by logical concern
 /pr                                  # Push + open PR (add --draft for WIP)
+
+# End-to-end roadmap delivery
+/autopilot                           # Execute roadmap phase by phase (you approve between phases)
+/factory                             # Or: generate specs, open issues, ship ≤5 PRs in parallel
 
 # Parallel work
 claude --worktree task-a --tmux      # Terminal 1

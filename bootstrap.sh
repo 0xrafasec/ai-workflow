@@ -8,7 +8,7 @@ set -euo pipefail
 #
 # Pin to a specific release:
 #   curl -fsSL https://raw.githubusercontent.com/0xrafasec/ai-workflow/main/bootstrap.sh \
-#     | AIWF_REF=v1.0.0 bash
+#     | AIWF_REF=v0.1.0 bash
 #
 # Environment:
 #   AIWF_REPO_URL    Override repo URL (default: public GitHub HTTPS).

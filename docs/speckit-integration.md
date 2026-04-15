@@ -13,7 +13,7 @@ ai-workflow and [GitHub Spec Kit](https://github.com/github/spec-kit) solve over
 | **Threat modeling** | Dedicated security docs + agents (`/security`) | Available via community extensions |
 | **Feature specs** | `/spec` with verification criteria | `/speckit.specify` with acceptance criteria |
 | **Task breakdown** | `/roadmap` with phase dependencies | `/speckit.tasks` with parallelization markers |
-| **Implementation** | `/feature`, `/autopilot` with worktrees | `/speckit.implement` |
+| **Implementation** | `/feature`, `/autopilot`, `/factory` with worktrees (`/factory` drives `/speckit.{spec,plan,tasks}` then parallel workers) | `/speckit.implement` |
 | **Code review** | `/review` (writer/reviewer), `/sec-review`, plus Anthropic's `code-review` skill with language guides from `reviews/` | Community extensions |
 | **Security review** | Dedicated agents + `/sec-review` | Community extensions |
 | **Governance** | `/adr`, `/rfc` at any point | Constitution amendments |
@@ -193,7 +193,7 @@ Pick the tool that fits each phase:
 | Roadmap | `/roadmap` (ai-workflow) | Generates phased tasks from all available design docs before detailed specs exist |
 | Feature spec | Either — depends on the feature | Use `/spec` for complex features needing deep context; `/speckit.specify` for well-understood features needing traceability |
 | Task breakdown | `/speckit.tasks` (Spec Kit) | Better traceability with `[P]` markers and spec references |
-| Implementation | `/autopilot` (ai-workflow) | Parallel worktree execution is faster for multi-task phases |
+| Implementation | `/autopilot` or `/factory` (ai-workflow) | `/autopilot` for phased execution with human checkpoints; `/factory` when you want speckit spec generation + ≤5 parallel PRs behind a lint/typecheck/test quality gate |
 | Code review | Anthropic's `code-review` skill + ai-workflow's language guides in `reviews/` | Language-specific review guides are deeper |
 | Security review | `/sec-review` (ai-workflow) | Dedicated parallel analysis agents |
 | Governance | `/adr` (ai-workflow) | Lightweight and can be created at any point |

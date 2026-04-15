@@ -32,7 +32,7 @@ Each phase of development has dedicated tooling:
 
 ## Features
 
-- **17 slash-command skills** covering every phase from idea to merged PR
+- **18 slash-command skills** covering every phase from idea to merged PR
 - **Multi-platform** — native support for Claude Code, Cursor, and OpenAI Codex CLI
 - **Specialized review agents** — architecture and security reviewers spawned as subagents
 - **Language-aware code review** — auto-detects Go, Rust, TypeScript, or Python and loads stack-specific best practices
@@ -92,7 +92,7 @@ The workflow uses a tiered model strategy — Opus for decisions, Sonnet for exe
 curl -fsSL https://raw.githubusercontent.com/0xrafasec/ai-workflow/main/bootstrap.sh | bash
 ```
 
-This clones the repo into `~/.local/share/ai-workflow`, installs for all detected platforms, and puts `aiwf` in `~/.local/bin`. Pin to a specific release with `AIWF_REF=v1.0.0 bash`.
+This clones the repo into `~/.local/share/ai-workflow`, installs for all detected platforms, and puts `aiwf` in `~/.local/bin`. Pin to a specific release with `AIWF_REF=v0.1.0 bash`.
 
 **Auto-detection:** bootstrap installs for Claude Code always, then checks for Cursor (`~/.cursor` or `cursor` binary) and Codex CLI (`~/.codex` or `codex` binary) and installs those too.
 
@@ -176,8 +176,16 @@ Skills are multi-step workflows invoked as slash commands inside Claude Code.
 | `/prd` | Interview-driven Product Requirements Document |
 | `/architecture` | System architecture document |
 | `/tdd` | Technical Design Document (testing, dev env, CI/CD, coding standards) |
+| `/security` | STRIDE-style threat model (`docs/specs/THREAT_MODEL.md`) |
 | `/adr <title>` | Architecture Decision Record |
 | `/rfc <title>` | Request for Comments |
+
+### Design
+
+| Skill | Description |
+|-------|-------------|
+| `/design` | Produce distinctive, production-grade UI designs in Paper.design MCP |
+| `/verify-design` | Diff the running UI against Paper design refs with Playwright and fix mismatches |
 
 ### Implementation
 
@@ -186,7 +194,9 @@ Skills are multi-step workflows invoked as slash commands inside Claude Code.
 | `/spec <feature>` | Feature implementation spec with verification criteria |
 | `/roadmap` | Phased task breakdown from specs |
 | `/feature <spec>` | End-to-end feature implementation from a spec |
+| `/fix <issue>` | Diagnose and fix a bug from a description, stack trace, or GitHub issue |
 | `/autopilot` | Execute a full roadmap with parallel worktree agents |
+| `/factory` | End-to-end delivery pipeline — reads roadmap, generates specs, runs parallel `/feature` agents |
 | `/new-project <name>` | Scaffold a new project with the full workflow |
 
 ### Review
@@ -236,19 +246,23 @@ The typical flow from idea to shipped code:
   │
 /architecture              System structure
 /tdd                       Technical design (testing, dev env, CI/CD, standards)
+/security                  Threat model
   │
 /roadmap                   Phase breakdown from design docs
   │
 /spec <feature>            Detail each task in the roadmap
   │
-  ├── /autopilot           Execute the roadmap automatically
+  │   /design [flow]       UI designs in Paper (for UI features)
+  │   /verify-design       Diff running UI against Paper refs, fix in place
   │
+  ├── /autopilot           Execute the roadmap automatically
+  ├── /factory             End-to-end: gen specs, parallel worktree agents, PRs
   └── /feature <spec>      Or implement one feature at a time
         │
       /review              Independent review in a fresh session
 ```
 
-`/adr` and `/rfc` can be used at any point to capture decisions or propose changes.
+`/fix` can be used anytime for bug fixes (no spec needed). `/adr` and `/rfc` can be used at any point to capture decisions or propose changes.
 
 ### Parallel Development
 
@@ -315,7 +329,9 @@ ai-workflow/
 │   ├── new-project/
 │   ├── commit/
 │   ├── pr/
-│   └── design/
+│   ├── design/
+│   ├── verify-design/
+│   └── factory/
 └── docs/
     ├── WORKFLOW.md            # Full workflow documentation
     └── REFERENCE.md           # Quick reference for all components
