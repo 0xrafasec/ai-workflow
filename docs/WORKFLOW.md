@@ -658,6 +658,8 @@ claude -p "Audit this codebase for OWASP Top 10 vulnerabilities" \
 3. **Monthly**, prune CLAUDE.md — remove rules Claude already follows naturally
 4. **Quarterly**, review hooks and skills — are they still needed? Are new ones warranted?
 
+For workhorse skills (those that fire across many tasks), don't tune on vibes — benchmark. See [SKILL_QUALITY.md](./SKILL_QUALITY.md) for the A/B process, graded assertions, and a worked example of iterating `/feature` through two rounds.
+
 ### Metrics to Track
 
 - **PR cycle time** — from branch creation to merge
