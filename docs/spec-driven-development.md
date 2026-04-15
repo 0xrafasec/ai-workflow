@@ -28,7 +28,7 @@ graph TD
     ROAD["/roadmap<br/>Task Breakdown"]
     DESIGN["/design + /verify-design<br/>UI design in Paper"]
     IMPL["/feature · /autopilot · /factory<br/>Implementation"]
-    REV["/review or code-review skill<br/>Review"]
+    REV["/review or code-review (Anthropic)<br/>Review"]
 
     PRD --> ARCH
     PRD --> TDD
