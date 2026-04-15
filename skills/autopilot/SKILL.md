@@ -1,6 +1,6 @@
 ---
 name: autopilot
-description: Execute a full roadmap automatically, phase by phase, with parallel worktree agents
+description: "Execute a roadmap end-to-end — phase by phase, delegating each phase to a worktree subagent, with human checkpoints between phases. Use when the user says 'run the roadmap', 'autopilot this', 'ship phases 1-3', 'work through docs/roadmap/', wants unattended multi-phase delivery, or hands over a roadmap file expecting the whole thing executed."
 ---
 Execute the roadmap at: $ARGUMENTS
 
@@ -26,10 +26,10 @@ Read these files to understand the project — this is the only heavy reading yo
 - `CLAUDE.md` — build commands, conventions
 - `docs/PRD.md` or equivalent — what the project is
 - `docs/specs/ARCHITECTURE.md` — system structure (if exists)
-- `docs/specs/TDD.md` — **Testing Strategy**, dev environment, CI/CD (if exists)
+- `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` — **Testing Strategy**, dev environment, CI/CD (if exists)
 - `docs/specs/THREAT_MODEL.md` — security model (if exists)
 
-Summarize what you learned in 3-5 lines, **including the test strategy from TDD.md** (frameworks, test layers, run commands, file locations). This summary will be passed to every subagent so they have project context without reading everything themselves. If no TDD.md exists, note that subagents should discover test patterns from the codebase.
+Summarize what you learned in 3-5 lines, **including the test strategy from TECHNICAL_DESIGN_DOCUMENT.md** (frameworks, test layers, run commands, file locations). This summary will be passed to every subagent so they have project context without reading everything themselves. If no TECHNICAL_DESIGN_DOCUMENT.md exists, note that subagents should discover test patterns from the codebase.
 
 ### 3. Execute Phase by Phase
 
@@ -61,7 +61,7 @@ Each agent gets this prompt:
 [From CLAUDE.md]
 
 ## Test Strategy
-[From TDD.md Testing Strategy, or "Discover from codebase — check test directories, frameworks, patterns"]
+[From TECHNICAL_DESIGN_DOCUMENT.md Testing Strategy, or "Discover from codebase — check test directories, frameworks, patterns"]
 
 ## Your Task
 Phase: [phase name]

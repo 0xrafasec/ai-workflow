@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: Create or update the Technical Design Document (testing strategy, dev environment, CI/CD, coding standards)
+description: "Create or update docs/specs/TECHNICAL_DESIGN_DOCUMENT.md — testing strategy, dev environment, CI/CD, coding standards, linter/formatter choices. Use when the user asks to define testing strategy, set up CI/CD, pick linters/formatters, standardize the dev setup, or says 'how should we test this', 'what's our coding style', 'write the tech design doc', 'set up conventions for the repo'."
 ---
 Create the Technical Design Document. Argument: $ARGUMENTS
 
@@ -9,7 +9,7 @@ Create the Technical Design Document. Argument: $ARGUMENTS
 Before interviewing, explore the project's current build and test setup:
 
 1. **Check for existing docs:**
-   - Read `docs/specs/TDD.md` — if revising, don't start from scratch
+   - Read `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` — if revising, don't start from scratch
    - Read `CLAUDE.md` for build/test commands
    - Read `docs/specs/ARCHITECTURE.md` if it exists (for technology context)
    - Read `README.md` for setup instructions
@@ -38,7 +38,7 @@ For inherited projects, explore before asking — "I see you have pytest with a 
 
 ## Write
 
-Write to `docs/specs/TDD.md`:
+Write to `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md`:
 
 ```markdown
 # Technical Design Document

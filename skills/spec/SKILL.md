@@ -1,6 +1,6 @@
 ---
 name: spec
-description: "Create a feature implementation spec: /spec <feature-name>"
+description: "Create a feature implementation spec at docs/specs/<feature>.md — scope, approach, affected files, verification. Use when the user says 'spec out feature X', 'write the implementation plan for Y', 'turn this idea into a spec', 'document how we'll build this', or needs a doc the /feature skill can execute from later."
 ---
 Create a feature implementation spec for: $ARGUMENTS
 
@@ -11,7 +11,7 @@ Before interviewing, read what already exists:
 1. **Check for existing docs:**
    - Read `docs/PRD.md` or `docs/prd/` if they exist
    - Read `docs/specs/ARCHITECTURE.md` for system structure
-   - Read `docs/specs/TDD.md` for testing strategy
+   - Read `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` for testing strategy
    - Read `docs/specs/THREAT_MODEL.md` for security context
    - Read `README.md`, `CLAUDE.md`
 
@@ -81,7 +81,7 @@ Write to `docs/specs/<feature_name>.md`:
 ### E2E Tests (if applicable)
 - [ ] [user flow]: [steps] → [expected outcome]
 
-*Adapt the layers to what the feature touches. A pure logic change may only need unit tests. An API feature needs unit + integration. A critical user-facing flow needs all three. Reference the Testing Strategy in `docs/specs/TDD.md` if it exists.*
+*Adapt the layers to what the feature touches. A pure logic change may only need unit tests. An API feature needs unit + integration. A critical user-facing flow needs all three. Reference the Testing Strategy in `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` if it exists.*
 
 ## Out of Scope
 [What this does NOT include]

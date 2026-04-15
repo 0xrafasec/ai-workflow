@@ -1,6 +1,6 @@
 ---
 name: roadmap
-description: "Create a phased roadmap from design docs: /roadmap <phase-name> or /roadmap (full roadmap)"
+description: "Create a phased roadmap from design docs — one numbered phase per file under docs/roadmap/NNN_*.md. Use when the user asks to plan phases, break work into milestones, sequence a build, says 'what order should we ship in', 'lay out the roadmap', 'split this into phases', or wants a delivery plan derived from the PRD and architecture."
 ---
 Create a phased roadmap for: $ARGUMENTS
 
@@ -28,7 +28,7 @@ Before anything, read what exists:
 1. **Design docs (primary input for the roadmap):**
    - Read `docs/PRD.md` or `docs/prd/` — the source of *what* needs to be built
    - Read `docs/specs/ARCHITECTURE.md` — the source of *how* the system is structured
-   - Read `docs/specs/TDD.md` — testing strategy, dev environment, CI/CD
+   - Read `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` — testing strategy, dev environment, CI/CD
    - Read `docs/specs/THREAT_MODEL.md` — security constraints, trust boundaries
    - Read `CLAUDE.md` for build commands and conventions
    - Read `README.md` for project overview
@@ -170,7 +170,7 @@ Then create each `docs/roadmap/NNN_<phase-name>.md` using the single-phase forma
 3. **Mark dependencies explicitly** — if Task B needs Task A's output, say so and explain what specifically it needs.
 4. **Keep tasks small** — if a task would fill Claude's context window, split it. A task should be completable in one worktree session.
 5. **Include verification commands** — every task needs a concrete way to prove it works.
-6. **Specify test layers per task** — based on the Testing Strategy in `docs/specs/TDD.md` (or inferred from the codebase), mark which test layers each task needs: Unit, Integration, E2E. A task that touches APIs needs integration tests. A task that implements a critical user flow needs e2e. Pure logic only needs unit.
+6. **Specify test layers per task** — based on the Testing Strategy in `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` (or inferred from the codebase), mark which test layers each task needs: Unit, Integration, E2E. A task that touches APIs needs integration tests. A task that implements a critical user flow needs e2e. Pure logic only needs unit.
 7. **Foundation first** — shared types, interfaces, data models, and config go in Phase 1. Implementation builds on top.
 8. **File overlap = sequential** — if two tasks modify the same file, they cannot run in parallel. Call this out explicitly.
 9. **Mark spec status per task** — for each task, indicate whether a detailed spec exists or needs to be created. Tasks without specs need `/spec` or `/speckit.specify` before execution.

@@ -1,12 +1,14 @@
 ---
 name: design
-description: "Create UI designs with Paper.design MCP: /design (all screens) or /design <page-name>"
+description: "Create polished UI designs in Paper.design MCP — full design system + brand guide + all screens, or a single flow. Use when the user asks to mock up, wireframe, design screens, produce UI, build a visual prototype, or mentions Paper / Paper.design / design system / brand guide / screen layouts for the project. Grounds every design decision in the PRD and architecture, not guesswork."
 ---
 Create UI designs using Paper.design MCP for: $ARGUMENTS
 
 ## Overview
 
 You are a **senior UI designer**. You read the project's design documents, create a design system, and produce polished, modern layouts in Paper.design. Every design decision is grounded in the PRD, architecture, and user flows — not guesswork.
+
+**Model selection:** Run this skill on Opus or Sonnet. The work involves sustained reasoning about hierarchy, spacing, token coherence, and cross-artboard consistency — Haiku will miss subtle mismatches and produce flatter layouts. If you're on Haiku, tell the user and suggest `/model opus` or `/model sonnet` before proceeding.
 
 ## Parse Arguments
 
@@ -24,7 +26,7 @@ Before anything, read what exists:
 1. **Design docs (required input):**
    - Read `docs/PRD.md` or `docs/prd/` — the source of *what* screens are needed, user flows, user types
    - Read `docs/specs/ARCHITECTURE.md` — understand the system structure, API shapes, data models
-   - Read `docs/specs/TDD.md` — understand tech stack context
+   - Read `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` — understand tech stack context
    - Read `docs/specs/THREAT_MODEL.md` — security-sensitive screens (auth, payments, admin)
    - Read `README.md`, `CLAUDE.md` for project overview
 

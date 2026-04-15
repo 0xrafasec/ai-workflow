@@ -1,6 +1,6 @@
 ---
 name: rfc
-description: "Create a Request for Comments: /rfc <title>"
+description: "Create a Request for Comments — heavier than an ADR, lighter than a full spec — for significant changes that need team input before implementation (new systems, major refactors, breaking changes, process changes). Use when the user says 'write an RFC', 'propose X to the team', 'get feedback before we build this', or the decision is too big for an ADR but premature for a spec."
 ---
 Create a Request for Comments. Argument: $ARGUMENTS
 

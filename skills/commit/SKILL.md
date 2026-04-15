@@ -1,16 +1,18 @@
 ---
 name: commit
-description: Stage and commit the working tree as one or more logical conventional commits
+description: "Stage and commit the working tree, splitting unrelated changes into separate conventional commits. Use when the user says 'commit this', 'save my work', 'wrap this up', 'check in the changes', wants the working tree split into logical commits with conventional-commit messages, or is ready to record progress in git before moving on."
 ---
 Stage and commit the current working tree.
 
-## Important
+## Guardrails
 
-- **Never** bundle unrelated changes into a single commit. A bug fix and a refactor are separate commits even if both are small.
-- **Never** push, force-push, amend, reset, or touch the remote. Pushing is `/pr`'s job.
-- **Never** use `--no-verify`. If a pre-commit hook fails, stop and ask the user how to proceed — do NOT `--amend` on failure, fix the issue and create a new commit.
-- **Never** use `git add .` or `git add -A`. Stage explicit file paths to avoid sweeping in secrets, large binaries, or untracked junk.
-- Respect the global CLAUDE.md rule: *"Split commits by logical concern; each commit leaves the codebase working."*
+A few things that matter, and why:
+
+- **Keep commits focused — one concern per commit.** A bug fix and a refactor, even if both are tiny, go in separate commits. This is what makes `git log` and `git blame` useful later, and it's what lets reviewers (and `git revert`) isolate one change without dragging in others.
+- **Don't push, force-push, amend, reset, or touch the remote.** Those belong to `/pr` or the user. This skill's job ends at the local commit — staying in that lane keeps the two operations reviewable independently.
+- **Don't bypass pre-commit hooks with `--no-verify`.** Hooks exist to catch real problems (lint, types, secrets). If one fails, the commit didn't happen — fix the underlying issue and commit again. Do **not** `--amend` after a hook failure: since the commit didn't land, `--amend` would rewrite the *previous* commit, quietly overwriting earlier work.
+- **Stage explicit paths, not `git add .` / `-A`.** Wildcards sweep in whatever's lying around — `.env`, credentials, build artifacts, half-finished scratch files. Naming paths explicitly keeps that stuff out.
+- Follow the global CLAUDE.md rule: *"Split commits by logical concern; each commit leaves the codebase working."*
 
 ## Steps
 

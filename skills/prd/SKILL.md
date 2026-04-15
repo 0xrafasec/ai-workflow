@@ -1,6 +1,6 @@
 ---
 name: prd
-description: Interview the user and create a Product Requirements Document
+description: "Interview the user and produce a Product Requirements Document — personas, user stories, scope, success metrics. Use when the user asks to write a PRD, draft product requirements, capture user stories, define success metrics, or says 'what should we build', 'let's scope this product', 'write up the requirements'."
 ---
 Create a Product Requirements Document for: $ARGUMENTS
 

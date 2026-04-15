@@ -1,6 +1,6 @@
 ---
 name: pr
-description: "Open a pull request for the current branch: /pr [--draft]"
+description: "Push the current branch and open a pull request via gh — assumes commits already exist. Use when the user says 'open a PR', 'push this up for review', 'ship this branch', 'create a draft PR', 'put this up on GitHub', or is ready to hand a branch off to reviewers. Supports --draft for work-in-progress."
 ---
 Open a pull request for the current branch. Assumes commits already exist (from `/commit`, `/feature`, `/fix`, or manual commits).
 
@@ -10,13 +10,15 @@ $ARGUMENTS may contain:
 - **`--draft`** — open the PR as a draft (GitHub's "Draft pull request" option). Use for work-in-progress where you want early CI feedback or a review conversation but aren't ready to merge.
 - **No flags** — open a normal, review-ready PR.
 
-## Important
+## Guardrails
 
-- **Never** force-push to `main` / `master`. Warn the user if they explicitly ask for it.
-- **Never** force-push without explicit user confirmation.
-- **Never** merge the PR, request reviewers, add labels, or close issues. Those are explicit follow-up actions.
-- **Do not** add Claude / Anthropic co-author tags to the PR body. Those belong in individual commits (and only when configured), not in PR descriptions.
-- If the working tree is dirty, stop and tell the user to run `/commit` first. This skill never commits.
+A few things that matter, and why:
+
+- **Don't force-push to `main` / `master`.** Force-pushing a shared branch rewrites history under everyone else's feet — it's the single most common way to destroy other people's work. If the user explicitly asks for it, surface the risk and confirm before proceeding.
+- **Don't force-push any branch without explicit user confirmation.** Even on feature branches, someone may have pulled or based work off it — ask first.
+- **Don't merge, request reviewers, add labels, or close issues as part of this skill.** Those are human judgment calls that depend on team conventions and context this skill doesn't have. Open the PR; let the user drive the rest.
+- **Don't add Claude / Anthropic co-author tags in the PR body.** Co-authorship belongs on individual commits (where configured), not repeated in PR descriptions where it just adds noise.
+- **If the working tree is dirty, stop and point the user at `/commit`.** This skill opens PRs; it doesn't commit. Mixing the two obscures what the PR actually contains.
 
 ## Steps
 

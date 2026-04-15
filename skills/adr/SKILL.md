@@ -1,6 +1,6 @@
 ---
 name: adr
-description: "Create an Architecture Decision Record: /adr <title>"
+description: "Create an Architecture Decision Record (ADR) — a single numbered file capturing context, options, and the choice made. Use whenever the user wants to document a design decision, says 'record why we picked X', 'write an ADR', 'lock in this choice', or is choosing between technical options worth preserving for future contributors. Invoked as /adr <title>."
 ---
 Create an Architecture Decision Record. Argument: $ARGUMENTS
 

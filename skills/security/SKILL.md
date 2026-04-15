@@ -1,6 +1,6 @@
 ---
 name: security
-description: Create or update the threat model and security spec
+description: "Create or update docs/specs/THREAT_MODEL.md — STRIDE-style threat model, trust boundaries, attack surface, mitigations. Use when the user asks for a threat model, security review, attack-surface analysis, STRIDE pass, or says 'what could go wrong security-wise', 'identify the threats', 'lock this down before launch', 'review the security posture'."
 ---
 Create the threat model. Argument: $ARGUMENTS
 

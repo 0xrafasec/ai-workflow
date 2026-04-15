@@ -1,6 +1,6 @@
 ---
 name: architecture
-description: Create or update the system architecture document
+description: "Create or update docs/specs/ARCHITECTURE.md — services, components, data flow, trust boundaries. Use when the user asks to design the system, map out how pieces fit together, sketch data flow, define boundaries, or says 'how should this be structured', 'write up the system design', 'let's architect this', 'draw the component diagram'."
 ---
 Create the system architecture document. Argument: $ARGUMENTS
 
