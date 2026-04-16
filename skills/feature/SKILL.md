@@ -19,7 +19,11 @@ If the spec doesn't exist, ask the user whether to create one via `/spec <name>`
 
 2. **Pick a test strategy.** Read `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` if it exists; otherwise infer from the project (test dirs, `package.json` / `pyproject.toml` / `Makefile`, 1–2 existing test files). Unit tests always; integration tests when the feature crosses boundaries (API, DB, filesystem, subprocess); e2e only for critical user flows. If no tests exist yet, set up the minimum infrastructure and tell the user.
 
+   **Test placement is a contract, not an implementation detail.** If the spec or existing project structure distinguishes `tests/unit/` from `tests/integration/` (or equivalent layout), mirror that distinction in directory placement based on *what the test covers*, not *how you wrote it*. A test that exercises a module across a real boundary (Qdrant container, respx-stubbed HTTP, tmp_path filesystem) belongs in `tests/integration/` even if it runs fast and mocks a few leaves. A test of pure logic belongs in `tests/unit/` even if the function happens to be in a service-layer file. Getting this wrong scatters integration coverage into the unit suite, where it drifts out of the slow-path CI filter and stops catching the boundary regressions it exists to catch.
+
 3. **Plan if non-trivial.** Touches 3+ files or has non-obvious design decisions? Use Plan Mode to align before writing code.
+
+   For larger scopes (6+ files or multi-phase work), before writing any code produce a **file placement table** derived from the spec — one row per module, with columns: `(source file, test file, test type, depends on)`. This forces you to resolve test-type ambiguity up front against the spec's language, catches underspecified corners, and gives the user a checkpoint before the implementation commits to a structure. If the project already has a `tasks.md` or equivalent task breakdown (e.g., from `/speckit-tasks`), treat it as the source of truth for file paths and test placement and skip generating a duplicate table.
 
 4. **Implement with tests, layer by layer.** Unit → integration → e2e. Run each layer and fix failures before moving on. Tests must cover every Verification Criterion.
 
