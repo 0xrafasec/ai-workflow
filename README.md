@@ -364,6 +364,7 @@ The bundled `statusline-command.sh` shows model name, context usage percentage, 
 | [Spec Kit Integration](docs/speckit-integration.md) | How to combine ai-workflow with GitHub Spec Kit |
 | [Workflow Guide](docs/WORKFLOW.md) | Full workflow guide — phases, conventions, CI/CD integration, team practices |
 | [Reference](docs/REFERENCE.md) | Quick reference for all agents, skills, settings, and daily patterns |
+| [Changelog](CHANGELOG.md) | Release notes — what changed in each version |
 
 ## Modifying the Toolkit
 
