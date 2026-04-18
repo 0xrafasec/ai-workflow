@@ -51,6 +51,23 @@ The MCP-equivalent operations map to these `gh` calls (shown as the fallback ref
 
 If the exact MCP tool name differs from the table, use whichever MCP tool matches the operation — inspect the available MCP tools, don't hard-code the name.
 
+## User prompts — use `AskUserQuestion`
+
+Every interactive decision point in this skill must use the `AskUserQuestion` tool, not free-text prompts. Confirmations rendered as plain text are easy for the user to miss and produce ambiguous answers ("ok", "sure", "go"); structured options are faster to answer, unambiguous to parse, and let the user pick "Other" to override.
+
+The four decision points in this skill are:
+
+| When | Question | Header (≤12 chars) | Options (first = recommended) |
+|------|----------|--------------------|-------------------------------|
+| Preflight step 4 — drifted / gone issues found | "How should I reconcile the drifted or closed issues?" | `Reconcile` | **Update in place (Recommended)**, Close + refile, Skip |
+| Preflight step 6 — dry-run confirmation | "Proceed with the plan above?" | `Proceed?` | **Yes, proceed (Recommended)**, Cancel |
+| Pacing — roadmap-index horizon | "Which horizon should I file?" | `Horizon` | **Current + next phase (Recommended)**, Full roadmap |
+| Execution loop — after each milestone batch | "Proceed to Phase NNN+1?" | `Next phase` | **Yes, continue (Recommended)**, Stop here |
+
+All four are single-select (`multiSelect: false`). The user can always pick the auto-added "Other" to type free-form guidance — treat that as a correction and re-plan rather than proceeding.
+
+If two decisions are needed back-to-back (e.g., horizon choice + dry-run confirm on the same roadmap-index run), batch them into one `AskUserQuestion` call with two questions, so the user clicks once.
+
 ## Preflight
 
 1. **Pick transport** (above). Stop if neither works.
@@ -59,13 +76,11 @@ If the exact MCP tool name differs from the table, use whichever MCP tool matche
 4. **Detect already-filed issues.**
    - For each row that already has a `#<N>` in the `Issue` column, fetch the issue (MCP `get_issue` or `gh issue view`).
    - Classify each as `match` (still aligned with the source), `drift` (title/labels/milestone or body need an update), or `gone` (issue was closed or deleted).
-   - Present a short summary to the user: `X rows already filed: Y match / Z drift / W gone`. Ask what to do about drift/gone rows. Options:
-     - **Update in place** — patch titles/labels/milestone/body.
-     - **Close + refile** — close the drifted issue with a comment pointing to its replacement, then file a fresh one and update the `Issue` column.
-     - **Skip** — leave as-is (use this when the drift is intentional).
-   - Rows without an `Issue` value are always new.
+   - Print the summary in text: `X rows already filed: Y match / Z drift / W gone`.
+   - Then call `AskUserQuestion` (see "User prompts" above) with a single `Reconcile` question to choose the bulk action (Update in place / Close + refile / Skip). If the user picks "Other" and names specific rows, re-plan per-row before proceeding.
+   - Rows without an `Issue` value are always new and don't enter this prompt.
 5. **Fetch existing milestones** — match phase filenames against existing milestone titles so reruns are idempotent.
-6. **Dry-run the plan.** Before any write, print the full list of what will be created or changed — milestones, issues (title + labels + milestone), and writebacks. Ask the user to confirm before proceeding.
+6. **Dry-run the plan.** Before any write, print the full list of what will be created or changed — milestones, issues (title + labels + milestone), and writebacks. Then call `AskUserQuestion` with a `Proceed?` question (Yes / Cancel) to confirm before proceeding. Do not proceed on free-text affirmations — wait for the structured answer. For a roadmap-index input, batch this with the `Horizon` question in the same `AskUserQuestion` call.
 
 ## Milestone shape
 
@@ -170,7 +185,7 @@ Why this is the default (team practice that translates cleanly to solo):
 1. Identify the **current phase** — first phase whose status is not `Completed` in the index table, or whose tasks don't all have filled `Issue` values.
 2. Identify the **next phase** — the phase directly after the current one in the index.
 3. Propose filing *only those two* in the dry-run. Explicitly list the phases being skipped ("Phases 004–009 stay in docs/roadmap/ for now — re-run `/issues` when you're ready to start the next wave").
-4. Ask the user: **"File two phases (recommended) or the full roadmap?"** If they say full, proceed without the horizon cap — but warn them about the label-rot cost.
+4. Ask the user via `AskUserQuestion` (see "User prompts" above) with the `Horizon` question — options "Current + next phase (Recommended)" and "Full roadmap". If they pick full, proceed without the horizon cap — but warn them about the label-rot cost. Batch this with the dry-run `Proceed?` question in the same call to save a click.
 
 This rule does not apply to phase-file or single-spec inputs — those are already scoped.
 
@@ -182,7 +197,7 @@ For roadmap/phase inputs, file **one milestone + its issues at a time**, in road
 
 1. Print the created milestone URL + issue URLs and numbers.
 2. Patch the `Issue:` / `Issues:` columns in the source roadmap/spec files with the newly-minted `#<N>` values.
-3. Ask: **"Proceed to Phase NNN+1?"** — halt on anything other than yes.
+3. Call `AskUserQuestion` with the `Next phase` question (Yes, continue / Stop here) — halt unless the user selects "Yes, continue". An "Other" response is also a halt: re-plan before continuing.
 
 This keeps a broken run recoverable (stop after any batch and fix the source file) and keeps writebacks atomic per phase.
 
