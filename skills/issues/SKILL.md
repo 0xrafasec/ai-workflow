@@ -150,6 +150,32 @@ Filed by `/issues` from `<source-file>`.
 
 Create via MCP `create_issue` (preferred; pass title/body/milestone/labels as fields) or `gh issue create --title "..." --body-file <tmp> --milestone "Phase NNN — <name>" --label "type:feat" --label "complexity:med" ...` (fallback).
 
+## Pacing: two-milestone horizon (default recommendation)
+
+When the input is a roadmap index (`docs/roadmap/README.md`) spanning many phases, **default to filing only the current phase + the next phase** — not the entire roadmap. Everything further out stays in the roadmap doc and nowhere else.
+
+Why this is the default (team practice that translates cleanly to solo):
+- GitHub issues rot. Filing 50+ upfront creates stale `blocked` / `needs-spec` labels, milestones that close with half their items undone, and branches pointing at dead scope.
+- The roadmap doc is the long-range artifact; GitHub issues are the short-range one. Don't duplicate them — they serve different cadences.
+- Two phases of horizon is enough to see upcoming dependencies without fabricating backlog pressure for work months out.
+- A solo dev gets team discipline (issue-per-PR, milestone-scoped work) without the team overhead (triage meetings, stale-label maintenance).
+
+**Dropped on purpose** (team overhead with no solo payoff):
+- Story points / effort estimates.
+- Skeleton issues for every post-MVP phase.
+- `needs-spec` / `blocked` labels on work 3+ phases out — the roadmap doc already carries that state.
+
+**Default behavior when the input is a roadmap index:**
+
+1. Identify the **current phase** — first phase whose status is not `Completed` in the index table, or whose tasks don't all have filled `Issue` values.
+2. Identify the **next phase** — the phase directly after the current one in the index.
+3. Propose filing *only those two* in the dry-run. Explicitly list the phases being skipped ("Phases 004–009 stay in docs/roadmap/ for now — re-run `/issues` when you're ready to start the next wave").
+4. Ask the user: **"File two phases (recommended) or the full roadmap?"** If they say full, proceed without the horizon cap — but warn them about the label-rot cost.
+
+This rule does not apply to phase-file or single-spec inputs — those are already scoped.
+
+**Rolling forward:** re-running `/issues docs/roadmap/README.md` later is idempotent on already-filed phases (see Idempotency rules) and picks up the next two-phase window. Typical rhythm: when you're mid-way through the current milestone, re-run to file the next-next phase, keeping the two-phase buffer ahead of active work.
+
 ## Execution mode: per-milestone confirmation
 
 For roadmap/phase inputs, file **one milestone + its issues at a time**, in roadmap order. After each milestone batch:
@@ -184,6 +210,8 @@ If a row was updated in place (not newly filed), leave the `Issue:` column alone
 ## After writing
 
 1. Print a final summary: N milestones created, M issues created, K updated, list the URLs.
-2. Suggest the next step based on what's now in place:
-   - **All tasks have issues?** → "Run `/autopilot docs/roadmap/NNN_<phase>.md` to execute a phase, or `/feature docs/specs/<name>.md` to implement one task/slice."
-   - **Only the first phase was filed?** → "Re-run `/issues docs/roadmap/README.md` to continue filing the remaining phases, or file per phase with `/issues docs/roadmap/NNN_<phase>.md` as you get to them."
+2. Remind the user of the horizon: which phases were filed, which stayed in the roadmap doc, and when to re-run to advance the window.
+3. Suggest the next step based on what's now in place:
+   - **Current phase filed?** → "Run `/feature docs/specs/<name>.md` (or a slice file) to implement one task, or `/autopilot docs/roadmap/NNN_<phase>.md` to run the phase end-to-end."
+   - **Mid-phase check-in?** → "When you're ~halfway through the current phase, re-run `/issues docs/roadmap/README.md` to file the next phase and keep a two-phase buffer ahead."
+   - **Finished a phase?** → "Mark the phase `Completed` in the roadmap index's Status column, then re-run `/issues docs/roadmap/README.md` — it'll advance the window to the next unstarted phase."
