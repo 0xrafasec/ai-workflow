@@ -80,7 +80,9 @@ Create `docs/roadmap/` directory if it doesn't exist.
 
 ### Single Phase
 
-If the user gave a phase name or single feature area, compute the next prefix (see Phase Numbering above) and write to `docs/roadmap/NNN_<phase-name>.md`:
+If the user gave a phase name or single feature area, compute the next prefix (see Phase Numbering above) and write to `docs/roadmap/NNN_<phase-name>.md`.
+
+**Trunk rule for tasks.** One task = one vertical slice = one PR ≤200 lines (per root `CLAUDE.md`'s Trunk-Based Workflow). If a task is `complexity:high`, the spec it points to **must** be sliced (directory-based spec with a `## Slices` table, per `/spec`). The roadmap task then tracks the *spec*, not a PR — the actual PRs come from the spec's slices.
 
 ```markdown
 # Phase: [Name]
@@ -88,33 +90,47 @@ If the user gave a phase name or single feature area, compute the next prefix (s
 ## Context
 [What this phase accomplishes. Dependencies on prior phases if any.]
 
+## Trunk Alignment
+[Which tasks ship user-ready vs. behind a feature flag. Name the flags. If the whole phase is gated by one flag (e.g., `jira_ingest_enabled`), say so here.]
+
 ## Tasks
 
 ### Task 1: [Name]
 - **Spec:** docs/specs/[name].md (exists | needs creation)
 - **Design reference:** [Figma node | Paper artboard id | path to image | N/A for non-UI]
+- **Type:** feat / fix / refactor / chore / test / docs / perf / security
 - **Files:** [list of files to create or modify]
 - **Dependencies:** None
 - **Tests:** Unit + Integration (sets up data models and API layer)
 - **Verification:** [command to verify this task works]
-- **Estimated complexity:** Low/Medium/High
+- **Feature flag:** `none` or `flag_name` (default off)
+- **Estimated complexity:** Low / Medium / High
+- **Milestone:** Phase NNN — [phase-name]
+- **Issues:** — (filled by `/issues`)
 
-### Task 2: [Name]
-- **Spec:** docs/specs/[name].md (exists | needs creation)
-- **Design reference:** [Figma node | Paper artboard id | path to image | N/A for non-UI]
-- **Files:** [list of files to create or modify]
+### Task 2: [Name] — HIGH complexity → sliced spec
+- **Spec:** docs/specs/[name]/README.md (sliced — see its Slices table for PR-sized slices)
+- **Type:** feat
+- **Files:** [cross-slice file list]
 - **Dependencies:** Task 1 (needs [specific thing])
 - **Tests:** Unit + Integration (service interactions)
 - **Verification:** [command]
-- **Estimated complexity:** Medium
+- **Feature flag:** `flag_name` (covers every slice)
+- **Estimated complexity:** High
+- **Milestone:** Phase NNN — [phase-name]
+- **Issues:** — (one GitHub issue per slice, filled by `/issues`)
 
 ### Task 3: [Name] (can parallelize with Task 2)
 - **Spec:** docs/specs/[name].md (exists | needs creation)
+- **Type:** feat
 - **Files:** [list — no overlap with Task 2]
 - **Dependencies:** Task 1
 - **Tests:** Unit only (pure UI logic, no service boundary)
 - **Verification:** [command]
+- **Feature flag:** `none`
 - **Estimated complexity:** Low
+- **Milestone:** Phase NNN — [phase-name]
+- **Issues:** —
 
 ## Execution Order
 
@@ -123,10 +139,13 @@ If the user gave a phase name or single feature area, compute the next prefix (s
 
 ## Phase Checklist
 - [ ] All tasks have detailed specs
+- [ ] All `complexity:high` tasks have sliced specs (≤200 lines per slice)
+- [ ] `/issues` has filed the phase milestone + one issue per task/slice
 - [ ] All tasks completed
 - [ ] All verification commands pass
 - [ ] PRs reviewed and merged
 - [ ] Integration tests pass (if applicable)
+- [ ] Feature flags flipped on where the phase calls for it (or flagged as deferred in `## Trunk Alignment`)
 ```
 
 ### Full Roadmap
@@ -165,15 +184,16 @@ Then create each `docs/roadmap/NNN_<phase-name>.md` using the single-phase forma
 
 ## Key Rules for Task Breakdown
 
-1. **One task = one PR.** Each task should produce a single, reviewable PR.
-2. **Identify parallelizable tasks** — tasks that touch different files can run simultaneously in worktrees.
-3. **Mark dependencies explicitly** — if Task B needs Task A's output, say so and explain what specifically it needs.
-4. **Keep tasks small** — if a task would fill Claude's context window, split it. A task should be completable in one worktree session.
-5. **Include verification commands** — every task needs a concrete way to prove it works.
-6. **Specify test layers per task** — based on the Testing Strategy in `docs/TECHNICAL_DESIGN_DOCUMENT.md` (or inferred from the codebase), mark which test layers each task needs: Unit, Integration, E2E. A task that touches APIs needs integration tests. A task that implements a critical user flow needs e2e. Pure logic only needs unit.
-7. **Foundation first** — shared types, interfaces, data models, and config go in Phase 1. Implementation builds on top.
-8. **File overlap = sequential** — if two tasks modify the same file, they cannot run in parallel. Call this out explicitly.
-9. **Mark spec status per task** — for each task, indicate whether a detailed spec exists or needs to be created. Tasks without specs need `/spec` or `/speckit.specify` before execution.
+1. **One task = one vertical slice ≤200 lines = one PR** (trunk-based). If a task is `complexity:high`, point it at a **sliced spec** (directory form, see `/spec`). The roadmap task is the tracker; the PRs come from the slices.
+2. **Every task names its commit type** — `feat` / `fix` / `refactor` / `chore` / `test` / `docs` / `perf` / `security`. This drives the branch prefix and the `type:*` GitHub label.
+3. **Every task names its feature flag** — or `none` if the task ships user-ready on merge. `main` must stay deployable after every merge.
+4. **Identify parallelizable tasks** — tasks that touch different files can run simultaneously in worktrees.
+5. **Mark dependencies explicitly** — if Task B needs Task A's output, say so and explain what specifically it needs.
+6. **Include verification commands** — every task needs a concrete way to prove it works.
+7. **Specify test layers per task** — based on the Testing Strategy in `docs/TECHNICAL_DESIGN_DOCUMENT.md` (or inferred from the codebase), mark which test layers each task needs: Unit, Integration, E2E. A task that touches APIs needs integration tests. A task that implements a critical user flow needs e2e. Pure logic only needs unit.
+8. **Foundation first** — shared types, interfaces, data models, and config go in Phase 1. Implementation builds on top.
+9. **File overlap = sequential** — if two tasks modify the same file, they cannot run in parallel. Call this out explicitly.
+10. **Mark spec status per task** — indicate whether a detailed spec exists or needs to be created. Tasks without specs need `/spec` or `/speckit.specify` before execution. Tasks without GitHub issues need `/issues` before execution.
 
 ## After Writing
 
@@ -185,7 +205,8 @@ Then create each `docs/roadmap/NNN_<phase-name>.md` using the single-phase forma
 2. Iterate until the user is satisfied.
 
 3. Suggest next steps based on spec coverage:
-   - **Tasks need specs?** → "Create detailed specs before executing: `/spec <feature-name>` for each task (or `/speckit.specify` with GitHub Spec Kit)"
-   - **All tasks have specs?** → "Run `/autopilot docs/roadmap/README.md` to execute the full roadmap"
-   - **Start one phase?** → "Run `/autopilot docs/roadmap/NNN_<phase-name>.md`" (use the actual numbered filename)
-   - **Single task?** → "Run `/feature docs/specs/<name>.md`"
+   - **Tasks need specs?** → "Create detailed specs before executing: `/spec <feature-name>` for each task (or `/speckit.specify` with GitHub Spec Kit). `complexity:high` tasks must produce a sliced directory-form spec."
+   - **All tasks have specs, no GitHub issues yet?** → "Run `/issues docs/roadmap/README.md` to file milestones (one per phase) and issues (one per task/slice)."
+   - **All tasks have specs + issues?** → "Run `/autopilot docs/roadmap/README.md` to execute the full roadmap"
+   - **Start one phase?** → "Run `/issues docs/roadmap/NNN_<phase-name>.md`, then `/autopilot docs/roadmap/NNN_<phase-name>.md`"
+   - **Single task?** → "`/feature docs/specs/<name>.md`" (or a specific slice file for sliced specs)

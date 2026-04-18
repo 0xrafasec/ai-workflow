@@ -50,9 +50,9 @@ Before writing, estimate the implementation size (lines of code + tests). Per th
 - Every slice must leave `main` deployable. If a slice adds user-visible behavior that isn't ready to ship, call out a **feature flag** in its spec (name the flag, default off).
 - Slice vertically (DB → API → UI for *one* capability), not horizontally (all DB, then all API, then all UI). Vertical slices ship value; horizontal slices pile up un-shippable intermediate state.
 - No slice depends on an unmerged slice. If B truly needs A's code merged first, mark the dependency explicitly in B's spec and do not start B until A is merged.
-- Each slice gets its own branch (`feat/<feature>-<slice-slug>`), its own PR, and is deleted after merge.
+- Each slice is its own branch, its own PR, deleted after merge. Branch naming is `<type>/<issue-number>-<slice-slug>` once `/issues` has filed the issue (e.g., `feat/42-jira-sync`); before then, `<type>/<slice-slug>` is acceptable.
 
-**Index file** (`docs/specs/<feature_name>/README.md`):
+**Index file** (`docs/specs/<feature_name>/README.md`) — the Slices table is the **source of truth for `/issues`**:
 
 ```markdown
 # Feature: [Name]
@@ -62,16 +62,34 @@ Before writing, estimate the implementation size (lines of code + tests). Per th
 
 ## Slices
 
-| # | Slice | Flag | Depends on | Status |
-|---|-------|------|------------|--------|
-| 001 | [slice-name](001_slice-name.md) | `none` or `flag_name` | — | Not started |
-| 002 | [slice-name](002_slice-name.md) | `flag_name` | 001 | Not started |
+| # | Slice | Type | Flag | Depends on | Complexity | Issue | Status |
+|---|-------|------|------|------------|------------|-------|--------|
+| 001 | [slice-name](001_slice-name.md) | feat | `none` or `flag_name` | — | low/med/high | — | Not started |
+| 002 | [slice-name](002_slice-name.md) | feat | `flag_name` | 001 | low/med/high | — | Not started |
 
 ## Rollout
 [When each flag flips on, who owns the decision, what verifies the rollout.]
 ```
 
+Column rules:
+- **Type** — one of the conventional-commit prefixes (`feat`, `fix`, `refactor`, `chore`, `test`, `docs`, `perf`, `security`). Drives the branch prefix and the `type:*` label on GitHub.
+- **Flag** — exact flag name (default off) or `none` if the slice ships user-ready.
+- **Depends on** — other slice numbers that must merge first; `—` if independent.
+- **Complexity** — `low` / `med` / `high`. `high` is a smell that the slice should be re-sliced; if you keep a `high` row, its sub-spec must contain a `## Slicing` section explaining why one PR is still defensible.
+- **Issue** — left as `—` when the spec is written. `/issues` fills this with `#<number>` after filing on GitHub, and the branch then becomes `<type>/<issue-number>-<slice-slug>`.
+
 Then write each slice spec using the single-file template below. In each sub-spec, add a `## Feature Flag` section naming the flag and default state (or state `None — slice is user-ready on merge`).
+
+**Single-file specs** (≤200 lines, no slicing) still need the trunk metadata so `/issues` can file an issue for them. Add a short frontmatter-style block near the top:
+
+```markdown
+## Trunk Metadata
+- **Type:** feat
+- **Flag:** `none` or `flag_name`
+- **Complexity:** low/med/high
+- **Issue:** — (filled by `/issues`)
+- **Branch (post-/issues):** `<type>/<issue-number>-<slug>`
+```
 
 ## Write
 
@@ -131,4 +149,5 @@ For a single (≤200 line) spec, write to `docs/specs/<feature_name>.md`:
    - No architecture doc? → "Define system structure with `/architecture`"
    - No TDD? → "Define testing and dev workflow with `/tdd`"
    - No threat model and there are security concerns? → "Consider `/security`"
-   - Specs are done? → "Ready for `/roadmap` or `/feature docs/specs/<name>.md`"
+   - Spec approved? → "File GitHub issues with `/issues docs/specs/<name>.md` (or `/issues docs/specs/<name>/README.md` for a sliced spec). This populates the `Issue` column and unlocks `<type>/<issue-number>-<slug>` branch naming."
+   - Issues filed? → "Ready for `/feature docs/specs/<name>.md` (single) or `/feature docs/specs/<name>/NNN_<slice>.md` (one slice at a time)."

@@ -17,7 +17,16 @@ If the spec lives under `docs/specs/<feature>/` (sliced spec, per `/spec`'s trun
 
 ## Branch
 
-Before writing code, ensure you are on a short-lived branch named for this slice: `feat/<slug>` (or `feat/<feature>-<slice-slug>` for sliced features). If currently on `main`/`master`, create the branch now. See the global **Trunk-Based Workflow** in root `CLAUDE.md` for branch/worktree conventions.
+Before writing code, ensure you are on a short-lived branch named for this slice, **always cut from `main`** (never from another feature branch — trunk forbids stacking).
+
+Branch-name resolution order:
+1. If the spec's `## Trunk Metadata` (or its row in the Slices table) has a filled `Issue: #<N>` field, use `<type>/<N>-<slug>` — e.g., `feat/42-jira-sync`. This is the canonical form after `/issues` has run.
+2. If no issue is filed yet, fall back to `<type>/<slug>` — e.g., `feat/jira-sync`. When the issue later gets filed, do NOT rename the branch mid-flight; keep the name and put `Closes #<N>` in the PR body.
+3. `<type>` comes from the spec's `Type` field (`feat`/`fix`/`refactor`/`chore`/`test`/`docs`/`perf`/`security`).
+
+If the spec is missing `Type` or `Issue`, warn the user and pick the most conservative default (`feat/<slug>`). Don't silently guess.
+
+See the global **Trunk-Based Workflow** in root `CLAUDE.md` for worktree conventions.
 
 ## Workflow
 
@@ -61,6 +70,8 @@ Before writing code, ensure you are on a short-lived branch named for this slice
    - **No `--pr`:** Stop. Tell the user: "Feature implemented and committed on `<current-branch>`. Run with `--pr` when ready to open a PR."
    - **`--pr` / `--pr <base>`:** Push current branch, open PR against `main` (or `<base>`). The PR body **must** contain all of:
      - **Summary** — 1–3 bullets: what changed and why
-     - **Spec** — link to `docs/specs/<name>.md`
+     - **Spec** — link to `docs/specs/<name>.md` (or the specific slice file)
+     - **Closes** — `Closes #<N>` for the tracking issue (from the spec's `Issue:` field). If the slice has no issue yet, write `Closes: (none — ran before /issues)` and open the issue afterwards. Never ship a slice without a tracked issue for more than one merge cycle.
+     - **Feature flag** — name the flag and its default state, or `Flag: none (ships user-ready)`. Must match the spec's `## Feature Flag` section.
      - **Security review** — verdict line: `Security: PASS` / `REVIEW` / `FAIL` (from step 6). Never omit this. If the feature has zero security surface, write `Security: PASS (no new inputs/auth/io surface)` so reviewers know you considered it.
      - **Test plan** — which layers (unit/integration/e2e), what they cover, how to run each

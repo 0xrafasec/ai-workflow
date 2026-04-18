@@ -27,7 +27,7 @@
 - Large features ship as N independently mergeable slices off `main`, not stacked on each other. If a slice isn't user-ready, merge it behind a feature flag so `main` stays deployable.
 - Worktrees live **outside the repo** (e.g., `../<repo>-<slug>`) to keep `git status` clean. If kept inside, add the directory to `.gitignore`.
 - After merge: delete the branch (local + remote) and remove the worktree. Never reuse a merged branch.
-- Canonical feature flow: `/spec` → (slice if >200 lines) → `/feature <spec> --pr` → `/review` (fresh session) → merge → delete branch + worktree.
+- Canonical feature flow: `/spec` → (slice if >200 lines) → `/issues` (file milestones + issues on GitHub) → `/feature <spec> --pr` → `/review` (fresh session) → merge → delete branch + worktree.
 - Full guide (why, how, recipes, FAQ): `docs/TRUNK_BASED_WORKFLOW.md` in the ai-workflow repo.
 
 ## Code Quality
@@ -49,7 +49,7 @@
 - All global config (CLAUDE.md, settings.json, agents, skills, commands, reviews) is symlinked from ~/Projects/AI/ai-workflow into ~/.claude/
 - NEVER edit files directly in ~/.claude/ — changes will be lost or cause symlink conflicts
 - To modify any skill, agent, command, or config: edit the source in ~/Projects/AI/ai-workflow/, then commit and push
-- Available skills: /prd, /architecture, /tdd, /security, /adr, /rfc, /spec, /roadmap, /feature, /fix, /commit, /pr, /review, /autopilot, /new-project, /sec-review, /verify-design, /factory
+- Available skills: /prd, /architecture, /tdd, /security, /adr, /rfc, /spec, /roadmap, /issues, /feature, /fix, /commit, /pr, /review, /autopilot, /new-project, /sec-review, /verify-design, /factory
 - Extras (opt-in): personal add-ons under `extras/`, installed only when `./install.sh --extra` is run. Current extras: `/rlabs-design` (personal brand design system — not part of the core workflow).
 - For stack-aware code review, use Anthropic's official `code-review` skill (from `claude-code-plugins`). The previous custom `/code-review` was deprecated after a benchmark showed no detection lift over baseline at ~1.5× cost. Language guides in `reviews/` are still loaded on demand by `/review`, `/feature`, `/fix`.
 - Run `install.sh` after adding new skills or agents to re-symlink
