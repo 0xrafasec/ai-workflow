@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-04-18
+
+### Added
+- `/issues` — **two-milestone horizon** as the default pacing recommendation for roadmap-index inputs. The skill now proposes filing only the current phase + the next phase (not the entire roadmap), names the phases it's skipping, and asks before filing more. Rolling forward is idempotent: re-running advances the window once phases complete. This is the team practice that translates cleanly to solo work — it gives team discipline (issue-per-PR, milestone-scoped) without team overhead (stale labels, quarter-long backlogs, triage meetings).
+
+### Changed
+- `/issues` "After writing" guidance now reinforces the horizon: when the current phase is roughly halfway done, re-run to file the next-next phase.
+
 ## [0.5.0] - 2026-04-18
 
 ### Added
