@@ -60,6 +60,7 @@ FILES=(
     "skills/design/SKILL.md"
     "skills/verify-design/SKILL.md"
     "skills/factory/SKILL.md"
+    "skills/issues/SKILL.md"
     "reviews/go.md"
     "reviews/rust.md"
     "reviews/typescript.md"
