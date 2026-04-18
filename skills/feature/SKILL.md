@@ -11,7 +11,9 @@ Implement the feature described in $ARGUMENTS.
 - `--pr` → also push + open PR (default target: `main`)
 - `--pr <branch>` → push + open PR targeting `<branch>`
 
-If the spec doesn't exist, ask the user whether to create one via `/spec <name>` first, or build without a spec (they describe the feature inline). For bugfixes, use `/fix` instead.
+If the spec doesn't exist, use **AskUserQuestion** to ask whether to create one via `/spec <name>` first or build without a spec (they describe the feature inline). For bugfixes, use `/fix` instead.
+
+**Asking the user questions.** Whenever this skill needs a decision from the user mid-flight (missing spec, slice-size override, split shape, ambiguous metadata, etc.), use the **AskUserQuestion** tool — never plain free-text prompts. Phrase the question clearly, lead with your recommendation as the first option labelled "(Recommended)", and keep options mutually exclusive. Free-text follow-up is always available to the user via the auto-injected "Other" choice, so don't pad with a custom-input option.
 
 If the spec lives under `docs/specs/<feature>/` (sliced spec, per `/spec`'s trunk-based slicing), `/feature` implements **one slice at a time**. The argument must point to a specific slice file (`docs/specs/<feature>/NNN_<slice>.md`), never the index `README.md`.
 
@@ -44,9 +46,9 @@ See the global **Trunk-Based Workflow** in root `CLAUDE.md` for worktree convent
 
 5. **Quality checks.** Run the project's lint, typecheck, and full test suite (check CLAUDE.md / Makefile for commands).
 
-   **Slice-size gate (trunk-based).** Before committing, run `git diff --stat main...HEAD` (or `git diff --stat` if nothing is committed yet). If the total diff exceeds **~200 lines** (tests included), stop and:
-   - If the spec is a single file: tell the user the slice is too large, propose a split into N sub-slices, and offer to re-run `/spec <name>` to produce `docs/specs/<name>/NNN_*.md` slice files.
-   - If the spec is already one slice of a sliced feature: flag the overrun (the spec under-estimated), propose which hunks to defer to a follow-up slice, and stop for user decision.
+   **Slice-size gate (trunk-based).** Before committing, run `git diff --stat main...HEAD` (or `git diff --stat` if nothing is committed yet). If the total diff exceeds **~200 lines** (tests included), stop and surface the overrun via **AskUserQuestion**:
+   - If the spec is a single file: include a "ship it anyway" override option plus 1–2 concrete split proposals (e.g., "Split into N sub-slices under `docs/specs/<name>/NNN_*.md`"). Recommend the option that best matches the diff shape — recommend "ship it anyway" only when the bulk is mechanical (formatter reflow, generated lockfile, mass rename) and the substantive review surface is small.
+   - If the spec is already one slice of a sliced feature: include "ship anyway", "defer hunks X/Y to a follow-up slice", and any other relevant choice for the user.
 
    Never silently ship a >200-line slice. The gate can be overridden by the user ("ship it anyway"), but never by the skill.
 
