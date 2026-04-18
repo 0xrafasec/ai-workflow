@@ -10,9 +10,9 @@ Before interviewing, read what already exists:
 
 1. **Check for existing docs:**
    - Read `docs/PRD.md` or `docs/prd/` if they exist
-   - Read `docs/specs/ARCHITECTURE.md` for system structure
-   - Read `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` for testing strategy
-   - Read `docs/specs/THREAT_MODEL.md` for security context
+   - Read `docs/ARCHITECTURE.md` for system structure
+   - Read `docs/TECHNICAL_DESIGN_DOCUMENT.md` for testing strategy
+   - Read `docs/THREAT_MODEL.md` for security context
    - Read `README.md`, `CLAUDE.md`
 
 2. **If no docs exist (inherited project):**
@@ -81,7 +81,7 @@ Write to `docs/specs/<feature_name>.md`:
 ### E2E Tests (if applicable)
 - [ ] [user flow]: [steps] → [expected outcome]
 
-*Adapt the layers to what the feature touches. A pure logic change may only need unit tests. An API feature needs unit + integration. A critical user-facing flow needs all three. Reference the Testing Strategy in `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` if it exists.*
+*Adapt the layers to what the feature touches. A pure logic change may only need unit tests. An API feature needs unit + integration. A critical user-facing flow needs all three. Reference the Testing Strategy in `docs/TECHNICAL_DESIGN_DOCUMENT.md` if it exists.*
 
 ## Out of Scope
 [What this does NOT include]

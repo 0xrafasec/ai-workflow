@@ -12,7 +12,7 @@ RFCs are for significant changes that need team input before implementation — 
 
 1. Check `docs/rfc/` for existing RFCs — determine the next number. If none exist, start at `0001`.
 2. Read recent RFCs (last 2-3) to match the project's style.
-3. Read `docs/specs/ARCHITECTURE.md` and `docs/PRD.md` if they exist — the RFC should reference existing design, not repeat it.
+3. Read `docs/ARCHITECTURE.md` and `docs/PRD.md` if they exist — the RFC should reference existing design, not repeat it.
 
 ## Interview
 

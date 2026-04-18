@@ -12,7 +12,7 @@ ADRs capture a single decision — the context, options considered, and the choi
 
 1. Check `docs/adr/` for existing ADRs — determine the next number. If no ADRs exist, start at `0001`.
 2. Read recent ADRs (last 2-3) to match the project's style and voice.
-3. If the decision relates to architecture, read `docs/specs/ARCHITECTURE.md` for context.
+3. If the decision relates to architecture, read `docs/ARCHITECTURE.md` for context.
 
 ## Interview
 

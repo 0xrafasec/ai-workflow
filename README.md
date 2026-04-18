@@ -176,7 +176,7 @@ Skills are multi-step workflows invoked as slash commands inside Claude Code.
 | `/prd` | Interview-driven Product Requirements Document |
 | `/architecture` | System architecture document |
 | `/tdd` | Technical Design Document (testing, dev env, CI/CD, coding standards) |
-| `/security` | STRIDE-style threat model (`docs/specs/THREAT_MODEL.md`) |
+| `/security` | STRIDE-style threat model (`docs/THREAT_MODEL.md`) |
 | `/adr <title>` | Architecture Decision Record |
 | `/rfc <title>` | Request for Comments |
 

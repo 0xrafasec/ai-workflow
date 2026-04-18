@@ -1,6 +1,6 @@
 ---
 name: architecture
-description: "Create or update docs/specs/ARCHITECTURE.md — services, components, data flow, trust boundaries. Use when the user asks to design the system, map out how pieces fit together, sketch data flow, define boundaries, or says 'how should this be structured', 'write up the system design', 'let's architect this', 'draw the component diagram'."
+description: "Create or update docs/ARCHITECTURE.md — services, components, data flow, trust boundaries. Use when the user asks to design the system, map out how pieces fit together, sketch data flow, define boundaries, or says 'how should this be structured', 'write up the system design', 'let's architect this', 'draw the component diagram'."
 ---
 Create the system architecture document. Argument: $ARGUMENTS
 
@@ -10,7 +10,7 @@ Before interviewing, read what already exists:
 
 1. **Check for existing docs:**
    - Read `docs/PRD.md` or `docs/prd/` if they exist
-   - Read `docs/specs/ARCHITECTURE.md` — if revising, don't start from scratch
+   - Read `docs/ARCHITECTURE.md` — if revising, don't start from scratch
    - Read `README.md`, `CLAUDE.md`
    - Read any whitepaper, design doc, or existing architecture doc
 
@@ -38,7 +38,7 @@ For inherited projects, focus more on: "Is my understanding correct?" and "What 
 
 ## Write
 
-Write to `docs/specs/ARCHITECTURE.md`:
+Write to `docs/ARCHITECTURE.md`:
 
 ```markdown
 # Architecture

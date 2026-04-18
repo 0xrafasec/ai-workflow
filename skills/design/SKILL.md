@@ -25,9 +25,9 @@ Before anything, read what exists:
 
 1. **Design docs (required input):**
    - Read `docs/PRD.md` or `docs/prd/` — the source of *what* screens are needed, user flows, user types
-   - Read `docs/specs/ARCHITECTURE.md` — understand the system structure, API shapes, data models
-   - Read `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` — understand tech stack context
-   - Read `docs/specs/THREAT_MODEL.md` — security-sensitive screens (auth, payments, admin)
+   - Read `docs/ARCHITECTURE.md` — understand the system structure, API shapes, data models
+   - Read `docs/TECHNICAL_DESIGN_DOCUMENT.md` — understand tech stack context
+   - Read `docs/THREAT_MODEL.md` — security-sensitive screens (auth, payments, admin)
    - Read `README.md`, `CLAUDE.md` for project overview
 
 2. **Existing feature specs:**

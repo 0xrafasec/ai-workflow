@@ -29,7 +29,7 @@ You are the **reviewer**, not the writer. Do NOT rewrite the implementation. Fla
    - **Business logic correctness** - Does it solve the actual problem?
    - **Design decisions** - Are the tradeoffs right?
    - **What's missing** - What didn't the author think of?
-   - **Test layer coverage** - Check against `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` Testing Strategy (if it exists) or infer from codebase patterns:
+   - **Test layer coverage** - Check against `docs/TECHNICAL_DESIGN_DOCUMENT.md` Testing Strategy (if it exists) or infer from codebase patterns:
      - Are unit tests present for new business logic?
      - Are integration tests present for new API endpoints, DB operations, or service boundaries?
      - Are e2e tests present for critical user flows (if applicable)?

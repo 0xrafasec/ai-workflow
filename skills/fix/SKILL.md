@@ -37,7 +37,7 @@ Default behavior is **commit only, no PR**.
 
 4. **Discover test strategy** — Before writing the fix, understand the project's test approach:
 
-   a. **Check for TDD:** Read `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` — if it has a Testing Strategy section, follow it.
+   a. **Check for TDD:** Read `docs/TECHNICAL_DESIGN_DOCUMENT.md` — if it has a Testing Strategy section, follow it.
    b. **If no TDD:** Infer from the codebase — look for existing test directories, frameworks, patterns, and naming conventions (same discovery as `/feature` step 3b).
    c. **Determine which test layers the bug touches** — a bug in a pure function needs a unit test; a bug in an API endpoint needs an integration test; a bug in a user flow may need an e2e test.
 

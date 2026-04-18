@@ -213,7 +213,7 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
 
 **Interview focus:** Components, data flow, technology choices, deployment model, scaling, integration points, key decisions and tradeoffs.
 
-**Writes to:** `docs/specs/ARCHITECTURE.md`
+**Writes to:** `docs/ARCHITECTURE.md`
 
 **Document structure:**
 - System overview (with Mermaid diagram)
@@ -240,7 +240,7 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
 
 **Interview focus:** Test frameworks and layers (unit/integration/e2e), dev environment setup, CI/CD pipeline, coding standards, tooling decisions, observability, dependency management.
 
-**Writes to:** `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md`
+**Writes to:** `docs/TECHNICAL_DESIGN_DOCUMENT.md`
 
 **Document structure:**
 - Testing Strategy (source of truth for `/feature`, `/fix`, `/roadmap`, `/autopilot`)
@@ -270,7 +270,7 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
 
 **Interview focus:** Trust boundaries, auth/authz, sensitive data inventory, attack surface, threat actors, compliance requirements, existing security measures.
 
-**Writes to:** `docs/specs/THREAT_MODEL.md`
+**Writes to:** `docs/THREAT_MODEL.md`
 
 **Document structure:**
 - Trust assumptions (with Mermaid trust hierarchy)
@@ -386,7 +386,7 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
 **What it does:**
 1. Reads the spec thoroughly
 2. Checks for a matching roadmap task in `docs/roadmap/`
-3. Discovers test strategy — reads `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` or infers from codebase (test directories, frameworks, patterns)
+3. Discovers test strategy — reads `docs/TECHNICAL_DESIGN_DOCUMENT.md` or infers from codebase (test directories, frameworks, patterns)
 4. Plans the implementation (enters Plan Mode if complex)
 5. Implements with tests at the right layers (unit, integration, e2e) based on the test strategy
 6. Runs lint, typecheck, and all test layers
@@ -418,7 +418,7 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
 1. Understands the bug (from description or GitHub issue)
 2. Searches the codebase to locate the relevant code paths
 3. Diagnoses root cause — traces data flow, checks git history
-4. Discovers test strategy from `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` or codebase
+4. Discovers test strategy from `docs/TECHNICAL_DESIGN_DOCUMENT.md` or codebase
 5. Fixes with minimal change + regression tests at the right layer(s)
 6. Runs quality checks and a stack-aware code review (Anthropic's `code-review` skill, or `/sec-review` + architecture-reviewer)
 7. Commits with `fix:` message describing what was broken

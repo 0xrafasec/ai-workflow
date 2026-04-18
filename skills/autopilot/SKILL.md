@@ -25,9 +25,9 @@ If the roadmap doesn't have enough detail (missing spec paths, unclear dependenc
 Read these files to understand the project — this is the only heavy reading you do:
 - `CLAUDE.md` — build commands, conventions
 - `docs/PRD.md` or equivalent — what the project is
-- `docs/specs/ARCHITECTURE.md` — system structure (if exists)
-- `docs/specs/TECHNICAL_DESIGN_DOCUMENT.md` — **Testing Strategy**, dev environment, CI/CD (if exists)
-- `docs/specs/THREAT_MODEL.md` — security model (if exists)
+- `docs/ARCHITECTURE.md` — system structure (if exists)
+- `docs/TECHNICAL_DESIGN_DOCUMENT.md` — **Testing Strategy**, dev environment, CI/CD (if exists)
+- `docs/THREAT_MODEL.md` — security model (if exists)
 
 Summarize what you learned in 3-5 lines, **including the test strategy from TECHNICAL_DESIGN_DOCUMENT.md** (frameworks, test layers, run commands, file locations). This summary will be passed to every subagent so they have project context without reading everything themselves. If no TECHNICAL_DESIGN_DOCUMENT.md exists, note that subagents should discover test patterns from the codebase.
 

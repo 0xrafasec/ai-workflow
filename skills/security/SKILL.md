@@ -1,6 +1,6 @@
 ---
 name: security
-description: "Create or update docs/specs/THREAT_MODEL.md — STRIDE-style threat model, trust boundaries, attack surface, mitigations. Use when the user asks for a threat model, security review, attack-surface analysis, STRIDE pass, or says 'what could go wrong security-wise', 'identify the threats', 'lock this down before launch', 'review the security posture'."
+description: "Create or update docs/THREAT_MODEL.md — STRIDE-style threat model, trust boundaries, attack surface, mitigations. Use when the user asks for a threat model, security review, attack-surface analysis, STRIDE pass, or says 'what could go wrong security-wise', 'identify the threats', 'lock this down before launch', 'review the security posture'."
 ---
 Create the threat model. Argument: $ARGUMENTS
 
@@ -9,8 +9,8 @@ Create the threat model. Argument: $ARGUMENTS
 Before interviewing, understand the system's security surface:
 
 1. **Check for existing docs:**
-   - Read `docs/specs/THREAT_MODEL.md` — if revising, don't start from scratch
-   - Read `docs/specs/ARCHITECTURE.md` for system structure and trust boundaries
+   - Read `docs/THREAT_MODEL.md` — if revising, don't start from scratch
+   - Read `docs/ARCHITECTURE.md` for system structure and trust boundaries
    - Read `CLAUDE.md`, `README.md`
 
 2. **Explore the codebase for security-relevant patterns:**
@@ -39,7 +39,7 @@ For inherited projects: "I see you're using X for auth — is that intentional o
 
 ## Write
 
-Write to `docs/specs/THREAT_MODEL.md`:
+Write to `docs/THREAT_MODEL.md`:
 
 ```markdown
 # Threat Model
