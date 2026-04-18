@@ -129,8 +129,11 @@ Nothing is configured in `git` itself. The rules live in docs + skill gates + (o
 git worktree add -b feat/user-avatar-upload ../myrepo-avatar main
 cd ../myrepo-avatar
 
-# 3. Implement + PR
-/feature docs/specs/user-avatar-upload.md --pr
+# 3. Implement, then ship
+/feature docs/specs/user-avatar-upload.md
+# review the diff, then:
+/commit
+/pr
 
 # 4. After merge, clean up
 git checkout main && git pull
@@ -157,7 +160,8 @@ git worktree remove ../myrepo-avatar
 # 2. Implement each slice in its own branch, back to back
 git worktree add -b feat/oauth-provider-config ../myrepo-oauth-1 main
 cd ../myrepo-oauth-1
-/feature docs/specs/oauth-integration/001_provider-config.md --pr
+/feature docs/specs/oauth-integration/001_provider-config.md
+# review the diff, then `/commit` + `/pr`
 # merge, delete, repeat for 002, 003, 004
 
 # 3. Flip the flag when 004 merges (or on product's timeline)
@@ -168,8 +172,8 @@ Note: slices 002–004 are cut from `main` *after* 001 is merged — never stack
 ### A bug fix
 
 ```bash
-/fix "login fails when password contains ';' --pr"
-# Lands as fix/login-semicolon, one commit, tested, merged.
+/fix "login fails when password contains ';'"
+# Lands on fix/login-semicolon. Review the diff, then `/commit` + `/pr`.
 ```
 
 ### Emergency rollback

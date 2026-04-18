@@ -1,15 +1,13 @@
 ---
 name: feature
-description: "Implement a feature end-to-end from a spec file at docs/specs/<name>.md — code it, commit in logical chunks, optionally push + open a PR. Use when the user says 'implement the auth spec', 'build feature X', 'code up the Y spec', 'work through docs/specs/<name>.md', or points at a spec and asks to execute it."
+description: "Implement a feature end-to-end from a spec file at docs/specs/<name>.md — code it and verify it. Stops with a working tree the user can review. Use when the user says 'implement the auth spec', 'build feature X', 'code up the Y spec', 'work through docs/specs/<name>.md', or points at a spec and asks to execute it."
 ---
 Implement the feature described in $ARGUMENTS.
 
 ## Parse arguments
 
-- `/feature <name>` → `docs/specs/<name>.md`, commit only
+- `/feature <name>` → `docs/specs/<name>.md`
 - `/feature <path>.md` → use explicit path
-- `--pr` → also push + open PR (default target: `main`)
-- `--pr <branch>` → push + open PR targeting `<branch>`
 
 If the spec doesn't exist, use **AskUserQuestion** to ask whether to create one via `/spec <name>` first or build without a spec (they describe the feature inline). For bugfixes, use `/fix` instead.
 
@@ -46,34 +44,24 @@ See the global **Trunk-Based Workflow** in root `CLAUDE.md` for worktree convent
 
 5. **Quality checks.** Run the project's lint, typecheck, and full test suite (check CLAUDE.md / Makefile for commands).
 
-   **Slice-size gate (trunk-based).** Before committing, run `git diff --stat main...HEAD` (or `git diff --stat` if nothing is committed yet). If the total diff exceeds **~200 lines** (tests included), stop and surface the overrun via **AskUserQuestion**:
-   - If the spec is a single file: include a "ship it anyway" override option plus 1–2 concrete split proposals (e.g., "Split into N sub-slices under `docs/specs/<name>/NNN_*.md`"). Recommend the option that best matches the diff shape — recommend "ship it anyway" only when the bulk is mechanical (formatter reflow, generated lockfile, mass rename) and the substantive review surface is small.
-   - If the spec is already one slice of a sliced feature: include "ship anyway", "defer hunks X/Y to a follow-up slice", and any other relevant choice for the user.
+   **Slice-size gate (trunk-based).** Before reporting completion, run `git diff --stat main...HEAD` (or `git diff --stat` if working changes are unstaged). If the total diff exceeds **~200 lines** (tests included), stop and surface the overrun via **AskUserQuestion**:
+   - If the spec is a single file: include a "ship as-is" override option plus 1–2 concrete split proposals (e.g., "Split into N sub-slices under `docs/specs/<name>/NNN_*.md`"). Recommend the option that best matches the diff shape — recommend "ship as-is" only when the bulk is mechanical (formatter reflow, generated lockfile, mass rename) and the substantive review surface is small.
+   - If the spec is already one slice of a sliced feature: include "ship as-is", "defer hunks X/Y to a follow-up slice", and any other relevant choice for the user.
 
-   Never silently ship a >200-line slice. The gate can be overridden by the user ("ship it anyway"), but never by the skill.
+   Never silently leave a >200-line slice in the working tree. The gate can be overridden by the user ("ship as-is"), but never by the skill.
 
-   **Feature flag wiring.** If the spec's `## Feature Flag` section names a flag, verify the new behavior is gated by it before committing. If the flag doesn't exist yet in the project, create it (default off) in the same slice.
+   **Feature flag wiring.** If the spec's `## Feature Flag` section names a flag, verify the new behavior is gated by it. If the flag doesn't exist yet in the project, create it (default off) as part of this slice.
 
-6. **Pre-PR self-review.** You are about to ask someone to merge this — catch the obvious stuff first.
+6. **Self-review.** Catch the obvious stuff before handing back.
    - Prefer Anthropic's official `code-review` skill (from `claude-code-plugins`) if installed.
    - Otherwise run `/sec-review` for security, and spawn an **architecture-reviewer** subagent for architecture, handing it the matching language guide from `reviews/` (`go.md`, `rust.md`, `typescript.md`, `python.md`).
 
-   This is a self-check, not a trust boundary — you're the writer reading the reviewer. Before merge, a fresh-session `/review` or a human reviewer is still required.
+   This is a self-check, not a trust boundary — you're the writer reading the reviewer. A fresh-session `/review` or a human reviewer is still expected before merge.
 
-7. **Commit, split by logical concern.** Each commit must leave the codebase working. Use conventional messages (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, etc.). Split boundaries that tend to work:
-   - A CRUD feature: `db/models` → `schemas/validation` → `endpoints/handlers` → `tests`
-   - A refactor: one commit per extracted module (with its tests)
-   - A pure utility: one `feat:` commit, one `test:` commit if tests landed separately
-   - `docs:` and chore config changes always get their own commit
-   
-   A single `feat: do the thing` + `docs: add PR body` is almost never the right split — if you're tempted to ship that, look again.
+7. **Report and stop.** Summarize for the user:
+   - **Files changed** — `git diff --stat` output, or a short list.
+   - **Verification** — lint / typecheck / test commands run and their tail output.
+   - **Self-review verdict** — `Security: PASS` / `REVIEW` / `FAIL` from step 6 (or `Security: PASS (no new inputs/auth/io surface)` when zero surface).
+   - **Slice metadata** — for the eventual PR body the user will write: spec link, `Closes #<N>` line from the spec's `Issue:` field (or `Closes: (none — ran before /issues)`), feature-flag state from `## Feature Flag`, and a one-paragraph test plan (which layers were touched, how to re-run them).
 
-8. **Ship (conditional).**
-   - **No `--pr`:** Stop. Tell the user: "Feature implemented and committed on `<current-branch>`. Run with `--pr` when ready to open a PR."
-   - **`--pr` / `--pr <base>`:** Push current branch, open PR against `main` (or `<base>`). The PR body **must** contain all of:
-     - **Summary** — 1–3 bullets: what changed and why
-     - **Spec** — link to `docs/specs/<name>.md` (or the specific slice file)
-     - **Closes** — `Closes #<N>` for the tracking issue (from the spec's `Issue:` field). If the slice has no issue yet, write `Closes: (none — ran before /issues)` and open the issue afterwards. Never ship a slice without a tracked issue for more than one merge cycle.
-     - **Feature flag** — name the flag and its default state, or `Flag: none (ships user-ready)`. Must match the spec's `## Feature Flag` section.
-     - **Security review** — verdict line: `Security: PASS` / `REVIEW` / `FAIL` (from step 6). Never omit this. If the feature has zero security surface, write `Security: PASS (no new inputs/auth/io surface)` so reviewers know you considered it.
-     - **Test plan** — which layers (unit/integration/e2e), what they cover, how to run each
+   Then stop. The user reviews the working tree and decides next steps (typically `/commit` then `/pr`).

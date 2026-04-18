@@ -1,6 +1,6 @@
 ---
 name: fix
-description: "Diagnose and fix a bug from a description, a stack trace, or a GitHub issue link — reproduce, patch, commit, optionally PR. Use when the user says 'fix this', 'debug X', 'something is broken', 'why isn't Y working', pastes an error/traceback, or links an issue expecting a patch. Covers root-cause diagnosis, not just symptom patching."
+description: "Diagnose and fix a bug from a description, a stack trace, or a GitHub issue link — reproduce and patch. Stops with a working tree the user can review. Use when the user says 'fix this', 'debug X', 'something is broken', 'why isn't Y working', pastes an error/traceback, or links an issue expecting a patch. Covers root-cause diagnosis, not just symptom patching."
 ---
 Fix the bug described in $ARGUMENTS.
 
@@ -9,10 +9,6 @@ Fix the bug described in $ARGUMENTS.
 The argument can be:
 - **Bug description:** `/fix users can't login when password contains special chars`
 - **Issue link:** `/fix https://github.com/org/repo/issues/42`
-- **Description + `--pr`:** `/fix <description> --pr` — fix, commit, push, create PR
-- **Description + `--pr <branch>`:** `/fix <description> --pr develop` — fix, commit, push, PR to specific branch
-
-Default behavior is **commit only, no PR**.
 
 ## Branch
 
@@ -57,28 +53,22 @@ Before writing code, ensure you are on a short-lived branch named `fix/<slug>`. 
 
 6. **Run quality checks** — Run the project's lint, typecheck, and test commands (check CLAUDE.md or Makefile for the right commands). Run ALL test layers, not just unit tests.
 
-   **Slice-size gate (trunk-based).** Before committing, run `git diff --stat main...HEAD` (or `git diff --stat` if nothing is committed yet). If the total diff exceeds **~200 lines** (tests included), stop and propose a split — a "fix" that balloons into a refactor is two PRs, not one. Never silently ship a >200-line fix without the user's explicit override.
+   **Slice-size gate (trunk-based).** Before reporting completion, run `git diff --stat main...HEAD` (or `git diff --stat` if working changes are unstaged). If the total diff exceeds **~200 lines** (tests included), stop and propose a split via **AskUserQuestion** — a "fix" that balloons into a refactor is two slices, not one. Never silently leave a >200-line fix in the working tree without the user's explicit override.
 
 7. **Stack-aware code review** — Prefer Anthropic's official `code-review` skill (from `claude-code-plugins`) if installed. Otherwise, run `/sec-review` for security and spawn an **architecture-reviewer** subagent for architecture, passing the matching language guide from `reviews/` as stack-specific criteria.
 
-   **Scope of this pass:** this is a pre-PR self-check. Reviewer subagents have fresh context, but *you* (the writer) are reading and acting on their findings — not a true writer/reviewer separation. Before merge, run `/review` in a **fresh session** (or have a human review the PR) so a reviewer who never watched the code being written can weigh in.
+   This is a self-check, not a trust boundary — reviewer subagents have fresh context, but *you* (the writer) are reading and acting on their findings. A fresh-session `/review` or a human reviewer is still expected before merge.
 
 8. **Address findings** — Fix any HIGH severity issues from the review. For MEDIUM issues, use your judgment.
 
-9. **Commit** — Use `fix:` conventional commit message. The message should describe what was broken, not what you changed. Example: `fix: login fails when password contains special characters`.
+9. **Report and stop.** Summarize for the user:
+   - **Root cause** — 1–2 sentences on what was actually broken.
+   - **Files changed** — `git diff --stat` output, or a short list.
+   - **Regression tests** — which layers (unit/integration/e2e) you added, where they live, how to re-run them.
+   - **Verification** — lint / typecheck / test commands run and their tail output.
+   - **Self-review verdict** — `Security: PASS` / `REVIEW` / `FAIL` from step 7.
+   - **Issue link** — if one was provided, so the user can reference it later.
 
-10. **Ship (conditional):**
+   Suggested conventional-commit subject for when the user commits: `fix: <what was broken>` (describe the bug, not the change). Example: `fix: login fails when password contains special characters`.
 
-   - **No `--pr` flag (default):** Stop here. Tell the user: "Bug fixed and committed on `<current-branch>`."
-
-   - **`--pr`:** Push the current branch and create a PR targeting the repo's default branch (usually `main`).
-
-   - **`--pr <base-branch>`:** Push the current branch and create a PR targeting the specified base branch.
-
-   PR contents:
-     - Summary: what was broken and why
-     - Root cause analysis (1-2 sentences)
-     - What the fix does
-     - Regression tests: which layers (unit/integration/e2e), what they cover
-     - Security review verdict (PASS/REVIEW/FAIL from step 7)
-     - Link to issue (if one was provided)
+   Then stop. The user reviews the working tree and decides next steps (typically `/commit` then `/pr`).

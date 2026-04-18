@@ -376,12 +376,11 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
 
 **Usage:**
 ```
-/feature docs/specs/auth.md                    # implement + commit (no PR)
-/feature docs/specs/auth.md --pr               # implement + commit + push + PR to default branch
-/feature docs/specs/auth.md --pr develop       # same, but PR targets 'develop'
+/feature docs/specs/auth.md                    # implement + verify
+/feature docs/specs/auth/001_models.md         # implement one slice of a sliced spec
 ```
 
-**Default is commit only, no PR.** You control when to ship. The source branch is always your current branch/worktree — `--pr` only controls the **target base branch** for the PR.
+**Stops with a working tree the user can review.** You ship via `/commit` + `/pr` after reviewing the diff.
 
 **What it does:**
 1. Reads the spec thoroughly
@@ -392,9 +391,7 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
 6. Runs lint, typecheck, and all test layers
 7. Runs stack-aware code review — prefers Anthropic's official `code-review` skill; falls back to `/sec-review` + architecture-reviewer agent with the matching language guide
 8. Fixes HIGH severity findings
-9. Commits with conventional commit messages, split by logical concern
-10. **If `--pr`:** pushes and creates a PR with summary, spec link, security verdict, architecture summary, and test plan (which layers, what they cover)
-11. **If no `--pr`:** stops and tells you the feature is ready to ship when you are
+9. Reports files changed, verification output, self-review verdict, and slice metadata for the PR body — then stops
 
 ---
 
@@ -406,13 +403,11 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
 
 **Usage:**
 ```
-/fix users can't login with special chars         # fix + commit
+/fix users can't login with special chars         # diagnose + patch + verify
 /fix https://github.com/org/repo/issues/42        # fix from issue
-/fix login bug --pr                                # fix + commit + push + PR
-/fix login bug --pr develop                        # PR targets develop
 ```
 
-**Default is commit only, no PR.**
+**Stops with a working tree the user can review.** You ship via `/commit` + `/pr` after reviewing the diff.
 
 **What it does:**
 1. Understands the bug (from description or GitHub issue)
@@ -421,7 +416,7 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
 4. Discovers test strategy from `docs/TECHNICAL_DESIGN_DOCUMENT.md` or codebase
 5. Fixes with minimal change + regression tests at the right layer(s)
 6. Runs quality checks and a stack-aware code review (Anthropic's `code-review` skill, or `/sec-review` + architecture-reviewer)
-7. Commits with `fix:` message describing what was broken
+7. Reports root cause, files changed, regression tests, verification output, and a suggested `fix:` commit subject — then stops
 
 ---
 

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-04-18
+
+### Fixed
+- `/feature` and `/fix` no longer commit, push, or open PRs — both stop after implementation, verification, and self-review with a structured report (files changed, lint/typecheck/test tail, security verdict, slice metadata, suggested commit subjects). The previous `--pr` flag and auto-commit step quietly turned every run into a shipped PR before the user had a chance to read the diff; the user reviews the working tree, then ships via `/commit` + `/pr`. Orchestrators (`/autopilot`, `/factory`) keep their auto-commit/PR behavior — that is where it earns its keep.
+- `/feature` `Asking the user questions` rule now requires the `AskUserQuestion` tool for every mid-flight decision (missing spec, slice-size override, split shape, ambiguous metadata) — free-text prompts were ambiguous to parse and easy to skip.
+
+### Changed
+- Canonical feature flow in `CLAUDE.md` now reads: `/spec → (slice if >200 lines) → /issues → /feature <spec> → review the diff → /commit → /pr → /review → merge → cleanup`.
+- `docs/TRUNK_BASED_WORKFLOW.md` and `docs/REFERENCE.md` recipes updated to drop `--pr` from `/feature` and `/fix`.
+
 ## [0.5.2] - 2026-04-18
 
 ### Fixed

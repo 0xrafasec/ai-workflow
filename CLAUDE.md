@@ -27,7 +27,7 @@
 - Large features ship as N independently mergeable slices off `main`, not stacked on each other. If a slice isn't user-ready, merge it behind a feature flag so `main` stays deployable.
 - Worktrees live **outside the repo** (e.g., `../<repo>-<slug>`) to keep `git status` clean. If kept inside, add the directory to `.gitignore`.
 - After merge: delete the branch (local + remote) and remove the worktree. Never reuse a merged branch.
-- Canonical feature flow: `/spec` → (slice if >200 lines) → `/issues` (file milestones + issues on GitHub) → `/feature <spec> --pr` → `/review` (fresh session) → merge → delete branch + worktree.
+- Canonical feature flow: `/spec` → (slice if >200 lines) → `/issues` (file milestones + issues on GitHub) → `/feature <spec>` → review the diff → `/commit` → `/pr` → `/review` (fresh session) → merge → delete branch + worktree.
 - Full guide (why, how, recipes, FAQ): `docs/TRUNK_BASED_WORKFLOW.md` in the ai-workflow repo.
 
 ## Code Quality
