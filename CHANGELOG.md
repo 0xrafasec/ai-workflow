@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-04-18
+
+### Fixed
+- `/issues` now uses the `AskUserQuestion` tool for every interactive decision — drift/gone reconciliation, dry-run confirmation, roadmap-index horizon, and the per-milestone "proceed to next phase?" loop. Free-text confirmations were easy to miss and ambiguous to parse ("ok", "sure", "go"); structured options make each decision one click with an explicit recommended default, and batch the horizon + dry-run prompts into a single call on roadmap-index runs.
+
 ## [0.5.1] - 2026-04-18
 
 ### Added
