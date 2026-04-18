@@ -13,6 +13,12 @@ Implement the feature described in $ARGUMENTS.
 
 If the spec doesn't exist, ask the user whether to create one via `/spec <name>` first, or build without a spec (they describe the feature inline). For bugfixes, use `/fix` instead.
 
+If the spec lives under `docs/specs/<feature>/` (sliced spec, per `/spec`'s trunk-based slicing), `/feature` implements **one slice at a time**. The argument must point to a specific slice file (`docs/specs/<feature>/NNN_<slice>.md`), never the index `README.md`.
+
+## Branch
+
+Before writing code, ensure you are on a short-lived branch named for this slice: `feat/<slug>` (or `feat/<feature>-<slice-slug>` for sliced features). If currently on `main`/`master`, create the branch now. See the global **Trunk-Based Workflow** in root `CLAUDE.md` for branch/worktree conventions.
+
 ## Workflow
 
 1. **Read the spec.** Note the Verification Criteria — your tests must cover each one.
@@ -28,6 +34,14 @@ If the spec doesn't exist, ask the user whether to create one via `/spec <name>`
 4. **Implement with tests, layer by layer.** Unit → integration → e2e. Run each layer and fix failures before moving on. Tests must cover every Verification Criterion.
 
 5. **Quality checks.** Run the project's lint, typecheck, and full test suite (check CLAUDE.md / Makefile for commands).
+
+   **Slice-size gate (trunk-based).** Before committing, run `git diff --stat main...HEAD` (or `git diff --stat` if nothing is committed yet). If the total diff exceeds **~200 lines** (tests included), stop and:
+   - If the spec is a single file: tell the user the slice is too large, propose a split into N sub-slices, and offer to re-run `/spec <name>` to produce `docs/specs/<name>/NNN_*.md` slice files.
+   - If the spec is already one slice of a sliced feature: flag the overrun (the spec under-estimated), propose which hunks to defer to a follow-up slice, and stop for user decision.
+
+   Never silently ship a >200-line slice. The gate can be overridden by the user ("ship it anyway"), but never by the skill.
+
+   **Feature flag wiring.** If the spec's `## Feature Flag` section names a flag, verify the new behavior is gated by it before committing. If the flag doesn't exist yet in the project, create it (default off) in the same slice.
 
 6. **Pre-PR self-review.** You are about to ask someone to merge this — catch the obvious stuff first.
    - Prefer Anthropic's official `code-review` skill (from `claude-code-plugins`) if installed.

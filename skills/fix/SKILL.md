@@ -14,6 +14,10 @@ The argument can be:
 
 Default behavior is **commit only, no PR**.
 
+## Branch
+
+Before writing code, ensure you are on a short-lived branch named `fix/<slug>`. If currently on `main`/`master`, create the branch now. See the global **Trunk-Based Workflow** in root `CLAUDE.md` for branch/worktree conventions.
+
 ## Steps
 
 1. **Understand the bug**
@@ -52,6 +56,8 @@ Default behavior is **commit only, no PR**.
    - Run the project's test suite and fix any failures.
 
 6. **Run quality checks** — Run the project's lint, typecheck, and test commands (check CLAUDE.md or Makefile for the right commands). Run ALL test layers, not just unit tests.
+
+   **Slice-size gate (trunk-based).** Before committing, run `git diff --stat main...HEAD` (or `git diff --stat` if nothing is committed yet). If the total diff exceeds **~200 lines** (tests included), stop and propose a split — a "fix" that balloons into a refactor is two PRs, not one. Never silently ship a >200-line fix without the user's explicit override.
 
 7. **Stack-aware code review** — Prefer Anthropic's official `code-review` skill (from `claude-code-plugins`) if installed. Otherwise, run `/sec-review` for security and spawn an **architecture-reviewer** subagent for architecture, passing the matching language guide from `reviews/` as stack-specific criteria.
 

@@ -31,6 +31,8 @@ A few things that matter, and why:
 
    - **Dirty tree?** Stop and tell the user: *"Working tree has uncommitted changes. Run `/commit` first, then re-run `/pr`."*
    - **On `main` / `master`?** Stop and tell the user: *"You're on `<base>`. Create a feature branch first."*
+   - **Branch name doesn't match the trunk-based convention?** (`feat/*`, `fix/*`, `refactor/*`, `docs/*`, `chore/*`, `test/*`, `perf/*`, `security/*`) Warn the user and offer to rename before pushing. The convention lives in root `CLAUDE.md` → **Trunk-Based Workflow**.
+   - **Diff >200 lines?** Run `git diff --stat <base>...HEAD`; if it exceeds ~200 lines (tests included), warn the user and suggest splitting. Proceed only if the user explicitly confirms ("ship it anyway") — this is a warning, not a hard block, since `/pr` runs after commits already exist.
    - Record the base branch name (usually `main`, sometimes `master` or `develop`).
 
 2. **Gather the commit range** — with the base branch resolved:
@@ -119,6 +121,10 @@ A few things that matter, and why:
    Add `--draft` **only** if the user passed `--draft` in $ARGUMENTS (or explicitly asked for a draft during the approval step).
 
 9. **Return the PR URL** — `gh pr create` prints it on success. Show it to the user as the final output.
+
+10. **Post-merge cleanup reminder.** After printing the URL, append a one-liner reminder (do not execute — the PR isn't merged yet):
+
+    *"After merge, clean up: `git checkout <base> && git pull && git branch -d <branch> && git push origin --delete <branch>` (and `git worktree remove <path>` if you used a worktree). Trunk-based workflow — never reuse a merged branch."*
 
 ## Scope boundary
 

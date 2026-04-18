@@ -20,7 +20,7 @@
 
 ## Overview
 
-This toolkit implements the workflow described in [WORKFLOW.md](./WORKFLOW.md). It provides:
+This toolkit implements the workflow described in [WORKFLOW.md](./WORKFLOW.md), built around the branching model in [TRUNK_BASED_WORKFLOW.md](./TRUNK_BASED_WORKFLOW.md). It provides:
 
 - **Agents** — specialized reviewers that can be spawned as subagents
 - **Skills** — reusable workflows (`/prd`, `/architecture`, `/tdd`, `/security`, `/adr`, `/rfc`, `/spec`, `/roadmap`, `/feature`, `/fix`, `/commit`, `/pr`, `/review`, `/sec-review`, `/autopilot`, `/factory`, `/new-project`, `/design`, `/verify-design`). For stack-aware code review, use Anthropic's official `code-review` skill from `claude-code-plugins`.

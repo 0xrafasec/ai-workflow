@@ -20,6 +20,16 @@
 ## Git Workflow
 - Check you are in the correct project directory and that it is a git repo before running commit/PR/bootstrap commands.
 
+## Trunk-Based Workflow
+- `main` is trunk; always deployable. No long-lived `develop` or `release/*` branches.
+- Branches are short-lived (hours to ~2 days). Name them by type: `feat/<slug>`, `fix/<slug>`, `refactor/<slug>`, `docs/<slug>`, `chore/<slug>`, `test/<slug>`, `perf/<slug>`, `security/<slug>`.
+- **One branch = one PR = one vertical slice.** Target ≤200 lines of diff (tests included). If larger, split before opening the PR.
+- Large features ship as N independently mergeable slices off `main`, not stacked on each other. If a slice isn't user-ready, merge it behind a feature flag so `main` stays deployable.
+- Worktrees live **outside the repo** (e.g., `../<repo>-<slug>`) to keep `git status` clean. If kept inside, add the directory to `.gitignore`.
+- After merge: delete the branch (local + remote) and remove the worktree. Never reuse a merged branch.
+- Canonical feature flow: `/spec` → (slice if >200 lines) → `/feature <spec> --pr` → `/review` (fresh session) → merge → delete branch + worktree.
+- Full guide (why, how, recipes, FAQ): `docs/TRUNK_BASED_WORKFLOW.md` in the ai-workflow repo.
+
 ## Code Quality
 - No unnecessary abstractions - keep code as simple as it can be
 - No speculative features or premature generalization
@@ -27,7 +37,7 @@
 - Tests must cover verification criteria from the spec
 
 ## PR Structure
-- Keep PRs focused: one concern per PR, under 200 lines when possible
+- Keep PRs focused: one concern per PR, under 200 lines when possible (see **Trunk-Based Workflow** above for slicing rules and feature-flag expectations)
 - PR description must include: summary, link to spec, security checklist, test plan
 
 ## Context Management
