@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-18
+
+### Added
+- `extras/` opt-in tree with `--extra` flag on `install.sh` for personal add-ons that stay outside the core workflow.
+- `/rlabs-design` as the first extra — personal brand design system (tokens, typography, assets, UI kits, preview cards). Installed only when `./install.sh --extra` is passed.
+
+### Changed
+- Project-wide docs moved from `docs/specs/` to `docs/` root: `ARCHITECTURE.md`, `TECHNICAL_DESIGN_DOCUMENT.md`, and `THREAT_MODEL.md`. `docs/specs/` is now reserved for individual feature specs only.
+- All skill references updated accordingly across `architecture`, `tdd`, `security`, `adr`, `rfc`, `spec`, `roadmap`, `design`, `autopilot`, `feature`, `fix`, `review` skills, plus `README.md` and `docs/REFERENCE.md`.
+
 ## [0.2.0] - 2026-04-15
 
 ### Added
@@ -41,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial tagged release: full SDLC toolkit for AI-assisted coding — skills, agents, review guides, hooks, and the `aiwf` launcher for Claude Code.
 
-[Unreleased]: https://github.com/0xrafasec/ai-workflow/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/0xrafasec/ai-workflow/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/0xrafasec/ai-workflow/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/0xrafasec/ai-workflow/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/0xrafasec/ai-workflow/releases/tag/v0.1.0
