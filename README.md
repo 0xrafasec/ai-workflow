@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">ai-workflow</h1>
+  <h1 align="center">AI Workflow</h1>
   <p align="center">
     Full SDLC (Software Development Life Cycle) for AI-assisted coding — from idea to production.<br/>
     Built on SDD (Spec-Driven Development): specs are the source of truth, AI agents execute them.<br/>
@@ -18,7 +18,7 @@
 
 ## What is this?
 
-ai-workflow covers the entire software development lifecycle for AI-assisted coding — from the initial idea through design, implementation, review, and delivery. It installs as a set of global skills, agents, and conventions that apply to every project you work on.
+AI Workflow covers the entire software development lifecycle for AI-assisted coding — from the initial idea through design, implementation, review, and delivery. It installs as a set of global skills, agents, and conventions that apply to every project you work on.
 
 Each phase of development has dedicated tooling:
 
@@ -361,7 +361,7 @@ The bundled `statusline-command.sh` shows model name, context usage percentage, 
 | Document | Description |
 |----------|-------------|
 | [Spec-Driven Development](docs/spec-driven-development.md) | Detailed explanation of the SDD methodology with Mermaid diagrams |
-| [Spec Kit Integration](docs/speckit-integration.md) | How to combine ai-workflow with GitHub Spec Kit |
+| [Spec Kit Integration](docs/speckit-integration.md) | How to combine AI Workflow with GitHub Spec Kit |
 | [Workflow Guide](docs/WORKFLOW.md) | Full workflow guide — phases, conventions, CI/CD integration, team practices |
 | [Reference](docs/REFERENCE.md) | Quick reference for all agents, skills, settings, and daily patterns |
 | [Changelog](CHANGELOG.md) | Release notes — what changed in each version |
