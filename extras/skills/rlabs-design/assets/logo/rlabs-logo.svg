@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96" fill="none">
+  
+  <g>
+    
+    <rect x="0" y="0" width="80" height="80" rx="0" fill="currentColor"></rect>
+    <text x="40" y="60" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="800" font-size="56" fill="var(--accent-fg, #FAFAF7)" letter-spacing="-0.03em">R</text>
+    
+    <circle cx="66" cy="14" r="3" fill="#C6F24E"></circle>
+  </g>
+  
+  <text x="100" y="58" font-family="Poppins, sans-serif" font-weight="800" font-size="56" fill="currentColor" letter-spacing="-0.03em">rlabs</text>
+</svg>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<script src="https://unpkg.com/lucide@0.462.0"></script>
+<style>
+  .grid { display:grid; grid-template-columns: repeat(16, 1fr); gap:10px 14px; align-items:center; }
+  .grid svg { width:22px; height:22px; color: var(--fg1); }
+  .section { display:flex; flex-direction:column; gap:8px; }
+  .lbl { font-family: var(--font-mono); font-size:10px; color: var(--fg3); text-transform:uppercase; letter-spacing:0.08em; }
+</style>
+</head>
+<body><div class="card">
+  <div class="tag">iconography · lucide · 1,500+ icons · 24px / 1.75 stroke</div>
+
+  <div class="section">
+    <div class="lbl">core ui</div>
+    <div class="grid" data-icons="home,search,settings,bell,user,menu,plus,minus,x,check,chevron-right,chevron-down,arrow-right,arrow-up-right,external-link,copy,download,upload,share,filter,more-horizontal,eye,eye-off,edit-3,trash-2,refresh-cw,save,loader,command,calendar"></div>
+  </div>
+
+  <div class="section">
+    <div class="lbl">ai · blockchain · data</div>
+    <div class="grid" data-icons="cpu,brain,sparkles,zap,bot,link,link-2,shield,shield-check,lock,key,wallet,coins,bitcoin,database,server,activity,bar-chart-3,line-chart,pie-chart,trending-up,trending-down,hash,box,boxes,code,terminal,git-branch,git-commit,workflow"></div>
+  </div>
+
+  <div class="section">
+    <div class="lbl">status + feedback</div>
+    <div class="grid" data-icons="check-circle-2,alert-circle,alert-triangle,info,x-circle,help-circle,clock,timer,play,pause,square,skip-forward,rotate-cw,wifi,wifi-off,signal,battery,circle-dot,flame,star"></div>
+  </div>
+
+  <div class="section">
+    <div class="lbl">communication</div>
+    <div class="grid" data-icons="mail,message-square,message-circle,send,phone,video,mic,mic-off,users,user-plus,at-sign,paperclip,smile,inbox,megaphone"></div>
+  </div>
+
+  <div class="section">
+    <div class="lbl">social · brands</div>
+    <div class="grid" data-icons="github,twitter,linkedin,youtube,instagram,facebook,twitch,slack,dribbble,figma,globe,rss,chrome"></div>
+  </div>
+
+  <div class="mono" style="color:var(--fg3); line-height:1.55;">
+    lucide.dev · open source (ISC) · CDN: <span style="color:var(--fg2);">unpkg.com/lucide</span> · react: <span style="color:var(--fg2);">lucide-react</span>
+  </div>
+</div>
+<script>
+  document.querySelectorAll('[data-icons]').forEach(el => {
+    const names = el.dataset.icons.split(',');
+    el.innerHTML = names.map(n => `<i data-lucide="${n.trim()}" stroke-width="1.75"></i>`).join('');
+  });
+  lucide.createIcons();
+</script>
+</body></html>

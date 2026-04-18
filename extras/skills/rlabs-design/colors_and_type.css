@@ -1,0 +1,335 @@
+/* =============================================================
+   RLABS DESIGN SYSTEM — colors_and_type.css
+   Foundational CSS variables for color and typography.
+   Load this file once at the top of every HTML surface.
+   ============================================================= */
+
+/* ---------- Fonts ---------- */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('fonts/Poppins-ExtraBold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 100;
+  font-display: swap;
+  src: url('fonts/Roboto-Thin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('fonts/Roboto-Light.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/Roboto-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('fonts/Roboto-Medium.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/Roboto-Bold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('fonts/JetBrainsMono-Variable.woff2') format('woff2');
+}
+
+/* ---------- ROOT / LIGHT (default) ---------- */
+:root {
+  /* Raw palette — do not reference directly in components; use semantic tokens below. */
+  --rl-black: #000000;
+  --rl-near-black: #0A0A0B;
+  --rl-ink: #111113;
+  --rl-graphite: #1C1C1F;
+  --rl-steel: #2A2A2E;
+  --rl-ash: #6E6E76;
+  --rl-fog: #B4B4BB;
+  --rl-mist: #E6E6E1;
+  --rl-paper: #FAFAF7;
+  --rl-white: #FFFFFF;
+
+  /* Accents */
+  --rl-signal: #C6F24E;     /* acid lime — live / ok / primary cta */
+  --rl-signal-deep: #A9D638;
+  --rl-ember: #FF5B2E;      /* cadmium orange — attention / destructive */
+  --rl-ember-deep: #E0421A;
+  --rl-lapis: #2E5BFF;      /* electric blue — links / chain */
+  --rl-lapis-deep: #1A3FD9;
+  --rl-violet: #A855F7;     /* violet — AI / model indicator */
+  --rl-violet-deep: #8B3DEA;
+
+  /* ---------- Semantic tokens — LIGHT MODE ---------- */
+  --bg:           var(--rl-paper);
+  --bg-elevated:  var(--rl-white);
+  --bg-sunken:    #F2F2EE;
+  --bg-inverse:   var(--rl-near-black);
+
+  --fg1: var(--rl-near-black);           /* primary text */
+  --fg2: #3A3A3F;                         /* secondary text */
+  --fg3: var(--rl-ash);                   /* tertiary / captions */
+  --fg-disabled: rgba(10,10,11,0.32);
+  --fg-inverse:  var(--rl-paper);
+
+  --border-subtle:  rgba(0,0,0,0.08);
+  --border-strong:  rgba(0,0,0,0.16);
+  --border-contrast: var(--rl-near-black);
+
+  --accent:         var(--rl-near-black); /* primary — black in light mode */
+  --accent-fg:      var(--rl-paper);
+  --accent-hover:   var(--rl-ink);
+
+  --signal:  var(--rl-signal);
+  --signal-fg: var(--rl-near-black);
+  --ember:   var(--rl-ember);
+  --ember-fg: var(--rl-white);
+  --lapis:   var(--rl-lapis);
+  --lapis-fg: var(--rl-white);
+  --violet:  var(--rl-violet);
+  --violet-fg: var(--rl-white);
+
+  --success: var(--rl-signal-deep);
+  --danger:  var(--rl-ember);
+  --warning: #E5A23A;
+  --info:    var(--rl-lapis);
+
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-2: 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-3: 0 12px 32px rgba(0,0,0,0.10);
+  --shadow-focus: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+
+  --overlay: rgba(10,10,11,0.48);
+  --scrim:   rgba(250,250,247,0.72);
+
+  /* ---------- Type ---------- */
+  --font-display: 'Poppins', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-body:    'Roboto', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --fw-thin:   100;
+  --fw-light:  300;
+  --fw-regular:400;
+  --fw-medium: 500;
+  --fw-bold:   700;
+  --fw-display:800;
+
+  /* Modular scale — 1.25 ratio, base 16 */
+  --fs-xs:    12px;
+  --fs-sm:    14px;
+  --fs-base:  16px;
+  --fs-md:    18px;
+  --fs-lg:    20px;
+  --fs-xl:    24px;
+  --fs-2xl:   32px;
+  --fs-3xl:   40px;
+  --fs-4xl:   56px;
+  --fs-5xl:   72px;
+  --fs-6xl:   96px;
+  --fs-display:128px;
+
+  --lh-tight: 1.05;
+  --lh-snug:  1.2;
+  --lh-normal:1.5;
+  --lh-loose: 1.7;
+
+  --tracking-tight:  -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide:    0.04em;
+  --tracking-caps:    0.06em;
+}
+
+/* ---------- DARK MODE ---------- */
+:root[data-theme="dark"],
+html.dark,
+[data-theme="dark"] {
+  --bg:          var(--rl-near-black);
+  --bg-elevated: var(--rl-ink);
+  --bg-sunken:   #050506;
+  --bg-inverse:  var(--rl-paper);
+
+  --fg1: var(--rl-paper);
+  --fg2: #C8C8CC;
+  --fg3: #8A8A92;
+  --fg-disabled: rgba(250,250,247,0.32);
+  --fg-inverse:  var(--rl-near-black);
+
+  --border-subtle:  rgba(255,255,255,0.08);
+  --border-strong:  rgba(255,255,255,0.16);
+  --border-contrast: var(--rl-paper);
+
+  --accent:        var(--rl-paper);        /* primary — paper in dark mode */
+  --accent-fg:     var(--rl-near-black);
+  --accent-hover:  var(--rl-white);
+
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-2: 0 6px 16px rgba(0,0,0,0.5);
+  --shadow-3: 0 20px 48px rgba(0,0,0,0.6);
+
+  --overlay: rgba(0,0,0,0.72);
+  --scrim:   rgba(10,10,11,0.72);
+}
+
+/* Auto dark via media query if user hasn't chosen */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:          var(--rl-near-black);
+    --bg-elevated: var(--rl-ink);
+    --bg-sunken:   #050506;
+    --bg-inverse:  var(--rl-paper);
+    --fg1: var(--rl-paper);
+    --fg2: #C8C8CC;
+    --fg3: #8A8A92;
+    --fg-disabled: rgba(250,250,247,0.32);
+    --fg-inverse:  var(--rl-near-black);
+    --border-subtle:  rgba(255,255,255,0.08);
+    --border-strong:  rgba(255,255,255,0.16);
+    --border-contrast: var(--rl-paper);
+    --accent:        var(--rl-paper);
+    --accent-fg:     var(--rl-near-black);
+    --accent-hover:  var(--rl-white);
+    --shadow-1: 0 1px 2px rgba(0,0,0,0.4);
+    --shadow-2: 0 6px 16px rgba(0,0,0,0.5);
+    --shadow-3: 0 20px 48px rgba(0,0,0,0.6);
+    --overlay: rgba(0,0,0,0.72);
+    --scrim:   rgba(10,10,11,0.72);
+  }
+}
+
+/* =============================================================
+   SEMANTIC TYPOGRAPHY
+   ============================================================= */
+body {
+  font-family: var(--font-body);
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-base);
+  line-height: var(--lh-normal);
+  color: var(--fg1);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.display,
+h1.display {
+  font-family: var(--font-display);
+  font-weight: var(--fw-display);
+  font-size: var(--fs-display);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  text-transform: lowercase;
+  color: var(--fg1);
+  margin: 0;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-display);
+  font-size: var(--fs-5xl);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tracking-tight);
+  text-transform: lowercase;
+  color: var(--fg1);
+  margin: 0;
+}
+h2 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-display);
+  font-size: var(--fs-3xl);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-tight);
+  text-transform: lowercase;
+  color: var(--fg1);
+  margin: 0;
+}
+h3 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-display);
+  font-size: var(--fs-xl);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-tight);
+  color: var(--fg1);
+  margin: 0;
+}
+h4, .eyebrow {
+  font-family: var(--font-body);
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-xs);
+  line-height: var(--lh-snug);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--fg2);
+  margin: 0;
+}
+
+p, .body {
+  font-family: var(--font-body);
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-base);
+  line-height: var(--lh-normal);
+  color: var(--fg1);
+}
+
+.lede {
+  font-family: var(--font-body);
+  font-weight: var(--fw-light);
+  font-size: var(--fs-lg);
+  line-height: var(--lh-normal);
+  color: var(--fg2);
+}
+
+small, .caption {
+  font-family: var(--font-body);
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  color: var(--fg3);
+}
+
+code, .mono, kbd, samp {
+  font-family: var(--font-mono);
+  font-weight: var(--fw-regular);
+  font-size: 0.92em;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg1);
+}
+
+.num {
+  font-family: var(--font-body);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+.display-up {
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+}
+
+a {
+  color: var(--fg1);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 200ms cubic-bezier(0.2,0.8,0.2,1);
+}
+a:hover { color: var(--lapis); }

@@ -1,0 +1,20 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css"></head>
+<body><div class="card">
+  <div class="tag">badges · status + tags</div>
+  <style>
+    .badge { font-family:var(--font-body); font-weight:600; font-size:11px; padding:4px 9px; border-radius:9999px; display:inline-flex; align-items:center; gap:6px; letter-spacing:0.02em; border:1px solid transparent; }
+    .dot { width:6px; height:6px; border-radius:50%; }
+    .chip { font-family:var(--font-mono); font-weight:500; font-size:11px; padding:4px 9px; border-radius:4px; background:#0A0A0B; color:#FAFAF7; }
+    .chip.alt { background:#E6E6E1; color:#0A0A0B; }
+  </style>
+  <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+    <span class="badge" style="background:#EAF7C8; color:#2E4A06; border-color:#C5E37A;"><span class="dot" style="background:#4F7A0D;"></span>live</span>
+    <span class="badge" style="background:#FFE0D6; color:#8F1F03; border-color:#FFB199;"><span class="dot" style="background:#C03A10;"></span>failed</span>
+    <span class="badge" style="background:#DDE5FF; color:#102A8F; border-color:#A8B8F5;"><span class="dot" style="background:#1A3FD9;"></span>pending</span>
+    <span class="badge" style="background:#E2E2DD; color:#0A0A0B; border-color:#B4B4BB;"><span class="dot" style="background:#3A3A3F;"></span>paused</span>
+    <span class="chip">mainnet</span>
+    <span class="chip alt">v1.4.2</span>
+    <span class="chip">gpt-4o</span>
+  </div>
+</div></body></html>

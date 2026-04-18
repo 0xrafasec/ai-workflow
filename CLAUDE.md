@@ -40,6 +40,7 @@
 - NEVER edit files directly in ~/.claude/ — changes will be lost or cause symlink conflicts
 - To modify any skill, agent, command, or config: edit the source in ~/Projects/AI/ai-workflow/, then commit and push
 - Available skills: /prd, /architecture, /tdd, /security, /adr, /rfc, /spec, /roadmap, /feature, /fix, /commit, /pr, /review, /autopilot, /new-project, /sec-review, /verify-design, /factory
+- Extras (opt-in): personal add-ons under `extras/`, installed only when `./install.sh --extra` is run. Current extras: `/rlabs-design` (personal brand design system — not part of the core workflow).
 - For stack-aware code review, use Anthropic's official `code-review` skill (from `claude-code-plugins`). The previous custom `/code-review` was deprecated after a benchmark showed no detection lift over baseline at ~1.5× cost. Language guides in `reviews/` are still loaded on demand by `/review`, `/feature`, `/fix`.
 - Run `install.sh` after adding new skills or agents to re-symlink
 - When adding, removing, or renaming skills/agents/commands: always update install.sh, uninstall.sh, and the "Available skills" list above to stay in sync

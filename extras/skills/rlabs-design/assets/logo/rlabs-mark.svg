@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+  <rect x="0" y="0" width="80" height="80" fill="currentColor"></rect>
+  <text x="40" y="60" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="800" font-size="56" fill="var(--accent-fg, #FAFAF7)" letter-spacing="-0.03em">R</text>
+  <circle cx="66" cy="14" r="3" fill="#C6F24E"></circle>
+</svg>

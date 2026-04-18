@@ -1,0 +1,110 @@
+/* =============================================================
+   RLABS DESIGN SYSTEM — tokens.css
+   Spacing, radii, elevation, motion, layout.
+   Pair with colors_and_type.css.
+   ============================================================= */
+
+:root {
+  /* ---------- Spacing (4px base) ---------- */
+  --space-0:   0;
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   24px;
+  --space-6:   32px;
+  --space-7:   48px;
+  --space-8:   64px;
+  --space-9:   96px;
+  --space-10: 128px;
+
+  /* ---------- Radii ---------- */
+  --radius-0:   0;
+  --radius-1:   4px;
+  --radius-2:   8px;
+  --radius-3:  12px;
+  --radius-pill: 9999px;
+
+  /* ---------- Borders ---------- */
+  --border-width: 1px;
+  --border-width-strong: 2px;
+
+  /* ---------- Motion ---------- */
+  --ease:        cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in:     cubic-bezier(0.4, 0, 1, 1);
+  --ease-linear: linear;
+
+  --dur-micro:   120ms;
+  --dur-fast:    200ms;
+  --dur-base:    320ms;
+  --dur-slow:    520ms;
+  --dur-page:    720ms;
+
+  /* ---------- Layout ---------- */
+  --container-content:   1280px;
+  --container-marketing: 1440px;
+  --gutter-desktop: 24px;
+  --gutter-mobile:  16px;
+
+  --nav-h-desktop: 64px;
+  --nav-h-mobile:  56px;
+  --sidebar-w:     264px;
+  --sidebar-w-collapsed: 64px;
+
+  /* ---------- Breakpoints (for reference; use in @media) ---------- */
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+  --bp-2xl:1536px;
+
+  /* ---------- Z-index ---------- */
+  --z-base:   1;
+  --z-sticky: 100;
+  --z-nav:    200;
+  --z-dropdown: 300;
+  --z-modal:  400;
+  --z-toast:  500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-micro: 100ms;
+    --dur-fast:  100ms;
+    --dur-base:  100ms;
+    --dur-slow:  100ms;
+    --dur-page:  100ms;
+  }
+  *, *::before, *::after {
+    animation-duration: 100ms !important;
+    transition-duration: 100ms !important;
+  }
+}
+
+/* =============================================================
+   UTILITY CLASSES (opt-in)
+   ============================================================= */
+
+/* noise texture overlay — attach to a positioned element */
+.noise::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+.hairline-grid {
+  background-image:
+    linear-gradient(to right, var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* focus ring utility */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--lapis);
+  outline-offset: 2px;
+}

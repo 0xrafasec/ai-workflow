@@ -1,0 +1,47 @@
+/* Preview card base — loaded by every card in preview/ */
+@import url('../colors_and_type.css');
+@import url('../tokens.css');
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg1);
+  overflow: hidden;
+}
+.card {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--bg);
+}
+.card.dark {
+  background: var(--rl-near-black);
+  color: var(--rl-paper);
+  --fg1: var(--rl-paper);
+  --fg2: #C8C8CC;
+  --fg3: #8A8A92;
+  --border-subtle: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.16);
+  --bg: var(--rl-near-black);
+  --bg-elevated: var(--rl-ink);
+}
+.row { display: flex; gap: 8px; align-items: stretch; }
+.col { display: flex; flex-direction: column; gap: 4px; }
+.tag {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg3);
+}
+.mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg2);
+}

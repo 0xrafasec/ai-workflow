@@ -1,0 +1,227 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Rlabs Slide Template</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="../tokens.css">
+<style>
+  html, body { margin:0; padding:0; background:#2A2A2E; }
+  .deck { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .slide {
+    width: 1280px; height: 720px; position: relative; overflow: hidden;
+    transform-origin: center center;
+  }
+  .bg-dark  { background: var(--rl-near-black); color: var(--rl-paper); }
+  .bg-light { background: var(--rl-paper);      color: var(--rl-near-black); }
+  .bg-ink   { background: #111113;              color: var(--rl-paper); }
+
+  .pad { padding: 80px; box-sizing: border-box; width: 100%; height: 100%; display: flex; flex-direction: column; }
+  .eyebrow { font-family: var(--font-body); font-weight: 500; font-size: 14px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--rl-signal); }
+  .dim    { color: #8A8A92; }
+  .title  { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.03em; line-height: 0.95; text-transform: lowercase; margin:0; }
+  .big    { font-size: 140px; }
+  .med    { font-size: 96px; }
+  .sm     { font-size: 56px; }
+  .quote  { font-family: var(--font-display); font-weight: 800; font-size: 80px; line-height: 1.05; letter-spacing: -0.02em; text-transform: lowercase; margin:0; }
+  .body   { font-family: var(--font-body); font-weight: 300; font-size: 22px; line-height: 1.5; }
+  .mono   { font-family: var(--font-mono); font-size: 14px; }
+
+  .mark {
+    position: absolute; top: 40px; left: 40px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .mark .sq {
+    width: 24px; height: 24px; background: var(--rl-paper);
+    display: flex; align-items: center; justify-content: center; position: relative;
+  }
+  .mark .sq span { font-family: var(--font-display); font-weight:800; font-size: 18px; color: var(--rl-near-black); letter-spacing: -0.03em; }
+  .mark .sq::after { content:''; position:absolute; top:4px; right:4px; width:3px; height:3px; border-radius:50%; background:var(--rl-signal); }
+  .mark .wm { font-family: var(--font-display); font-weight:800; font-size: 18px; text-transform: lowercase; letter-spacing: -0.02em; }
+
+  .bg-light .mark .sq { background: var(--rl-near-black); }
+  .bg-light .mark .sq span { color: var(--rl-paper); }
+
+  .foot { position: absolute; bottom: 40px; left: 80px; right: 80px; display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 12px; color: #8A8A92; }
+
+  .grid-bg {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+  .bg-light .grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
+  }
+
+  .mesh {
+    position: absolute; width: 900px; height: 900px; top: -200px; right: -200px;
+    background: radial-gradient(circle, rgba(198,242,78,0.22), transparent 60%);
+    filter: blur(20px); pointer-events: none;
+  }
+
+  .cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0; flex: 1; }
+  .cols2 > div { padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+  .cols2 .a { background: #0A0A0B; color: var(--rl-paper); border-right: 1px solid rgba(255,255,255,0.12); }
+  .cols2 .b { background: #FAFAF7; color: var(--rl-near-black); }
+
+  .nav { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display:flex; gap:8px; z-index:100; }
+  .nav button { font-family: var(--font-body); font-weight: 500; font-size: 12px; padding: 6px 12px; border:1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.6); color: #FAFAF7; border-radius: 6px; cursor: pointer; backdrop-filter: blur(12px); }
+  .nav .cur { background: #C6F24E; color: #0A0A0B; border-color: transparent; }
+
+  .metric { font-family: var(--font-display); font-weight: 800; font-size: 96px; line-height: 1; letter-spacing: -0.03em; text-transform: lowercase; }
+  .metric-lbl { font-family: var(--font-body); font-size: 14px; color: #8A8A92; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+  <!-- slides are absolutely positioned siblings; only .active is visible -->
+</div>
+
+<script>
+  const slides = [
+    // 1. TITLE
+    `<section class="slide bg-dark" data-screen-label="01 Title">
+       <div class="grid-bg"></div><div class="mesh"></div>
+       <div class="mark"><div class="sq"><span>R</span></div><div class="wm">rlabs</div></div>
+       <div class="pad" style="justify-content:flex-end;">
+         <div class="eyebrow">rlabs · q2 briefing</div>
+         <h1 class="title big" style="margin-top:16px;">intelligence,<br/>verified onchain.</h1>
+         <div class="body dim" style="margin-top:32px; max-width:720px;">An operator's view of where agent infrastructure is going, and what we're shipping next.</div>
+       </div>
+       <div class="foot"><span>april 2026</span><span>∎ rlabs, inc.</span></div>
+     </section>`,
+
+    // 2. SECTION OPENER
+    `<section class="slide bg-dark" data-screen-label="02 Section">
+       <div class="mark"><div class="sq"><span>R</span></div><div class="wm">rlabs</div></div>
+       <div class="pad" style="justify-content:center;">
+         <div class="eyebrow">part 01</div>
+         <h1 class="title big" style="margin-top:12px;">the thesis.</h1>
+       </div>
+       <div class="foot"><span>01 / 05</span><span>rlabs q2</span></div>
+     </section>`,
+
+    // 3. CONTENT
+    `<section class="slide bg-light" data-screen-label="03 Content">
+       <div class="mark"><div class="sq"><span>R</span></div><div class="wm">rlabs</div></div>
+       <div class="pad" style="justify-content:center;">
+         <div class="eyebrow" style="color:#1A3FD9;">what we build</div>
+         <h1 class="title med" style="margin-top:12px;">six primitives.<br/>one trustworthy agent layer.</h1>
+         <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top:56px; max-width:1000px;">
+           <div><div class="mono" style="color:#8A8A92;">01</div><div style="font-family:var(--font-display);font-weight:800;font-size:28px;text-transform:lowercase;letter-spacing:-0.02em;margin-top:6px;">onchain agents</div></div>
+           <div><div class="mono" style="color:#8A8A92;">02</div><div style="font-family:var(--font-display);font-weight:800;font-size:28px;text-transform:lowercase;letter-spacing:-0.02em;margin-top:6px;">verifiable inference</div></div>
+           <div><div class="mono" style="color:#8A8A92;">03</div><div style="font-family:var(--font-display);font-weight:800;font-size:28px;text-transform:lowercase;letter-spacing:-0.02em;margin-top:6px;">chain-agnostic sdk</div></div>
+           <div><div class="mono" style="color:#8A8A92;">04</div><div style="font-family:var(--font-display);font-weight:800;font-size:28px;text-transform:lowercase;letter-spacing:-0.02em;margin-top:6px;">live observability</div></div>
+           <div><div class="mono" style="color:#8A8A92;">05</div><div style="font-family:var(--font-display);font-weight:800;font-size:28px;text-transform:lowercase;letter-spacing:-0.02em;margin-top:6px;">model-agnostic</div></div>
+           <div><div class="mono" style="color:#8A8A92;">06</div><div style="font-family:var(--font-display);font-weight:800;font-size:28px;text-transform:lowercase;letter-spacing:-0.02em;margin-top:6px;">ships in a day</div></div>
+         </div>
+       </div>
+       <div class="foot" style="color:#6E6E76;"><span>03 / 05</span><span>rlabs q2</span></div>
+     </section>`,
+
+    // 4. METRIC / BIG NUMBER
+    `<section class="slide bg-ink" data-screen-label="04 Metric">
+       <div class="grid-bg"></div>
+       <div class="mark"><div class="sq"><span>R</span></div><div class="wm">rlabs</div></div>
+       <div class="pad" style="justify-content:center;">
+         <div class="eyebrow">traction · last 90 days</div>
+         <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 48px; margin-top: 32px; max-width:1100px;">
+           <div><div class="metric">4.2m</div><div class="metric-lbl">agent txns settled</div></div>
+           <div><div class="metric" style="color:#C6F24E;">99.98%</div><div class="metric-lbl">uptime across mainnets</div></div>
+           <div><div class="metric">142<span style="font-size:48px;">ms</span></div><div class="metric-lbl">median decision latency</div></div>
+         </div>
+       </div>
+       <div class="foot"><span>04 / 05</span><span>rlabs q2</span></div>
+     </section>`,
+
+    // 5. QUOTE
+    `<section class="slide bg-dark" data-screen-label="05 Quote">
+       <div class="mark"><div class="sq"><span>R</span></div><div class="wm">rlabs</div></div>
+       <div class="pad" style="justify-content:center; max-width: 1100px;">
+         <div style="font-family:var(--font-display); font-weight:800; font-size:140px; line-height:0.7; color:#C6F24E; margin-bottom:12px;">"</div>
+         <h2 class="quote">we don't want smarter agents.<br/>we want <em style="font-style:normal; color:#C6F24E;">accountable</em> ones.</h2>
+         <div class="body dim" style="margin-top:40px;">— aryan r., founder · rlabs</div>
+       </div>
+       <div class="foot"><span>05 / 05</span><span>rlabs q2</span></div>
+     </section>`,
+
+    // 6. COMPARISON
+    `<section class="slide" data-screen-label="06 Comparison" style="display:flex; flex-direction:column;">
+       <div class="cols2">
+         <div class="a">
+           <div class="eyebrow" style="color:#FF5B2E;">without rlabs</div>
+           <h2 class="title sm" style="margin-top:10px;">weeks of contract glue.</h2>
+           <ul style="font-family:var(--font-body); font-size:18px; line-height:1.8; color:#8A8A92; padding-left:18px; margin-top:16px;">
+             <li>bespoke signer infra</li>
+             <li>ad-hoc gas budgeting</li>
+             <li>audit logs in slack</li>
+             <li>model costs out of control</li>
+           </ul>
+         </div>
+         <div class="b">
+           <div class="eyebrow" style="color:#1A3FD9;">with rlabs</div>
+           <h2 class="title sm" style="margin-top:10px;">one sdk. ship monday.</h2>
+           <ul style="font-family:var(--font-body); font-size:18px; line-height:1.8; color:#3A3A3F; padding-left:18px; margin-top:16px;">
+             <li>managed key vaults</li>
+             <li>gas abstraction built in</li>
+             <li>cryptographic audit trail</li>
+             <li>per-agent cost caps</li>
+           </ul>
+         </div>
+       </div>
+     </section>`,
+
+    // 7. CLOSING
+    `<section class="slide bg-dark" data-screen-label="07 Closing">
+       <div class="grid-bg"></div><div class="mesh"></div>
+       <div class="mark"><div class="sq"><span>R</span></div><div class="wm">rlabs</div></div>
+       <div class="pad" style="justify-content:center;">
+         <div class="eyebrow">next</div>
+         <h1 class="title big" style="margin-top:12px;">ship to<br/>mainnet →</h1>
+         <div class="mono" style="color:#8A8A92; margin-top:40px;">rlabs.xyz/start   ·   @rlabs</div>
+       </div>
+       <div class="foot"><span>thanks.</span><span>∎</span></div>
+     </section>`,
+  ];
+
+  const deck = document.getElementById('deck');
+  let idx = 0;
+
+  function fit() {
+    const slide = document.querySelector('.slide');
+    if (!slide) return;
+    const sx = window.innerWidth / 1280;
+    const sy = window.innerHeight / 720;
+    const s = Math.min(sx, sy) * 0.95;
+    slide.style.transform = `scale(${s})`;
+  }
+
+  function render() {
+    deck.innerHTML = slides[idx];
+    fit();
+    // build nav
+    let nav = document.querySelector('.nav');
+    if (!nav) {
+      nav = document.createElement('div');
+      nav.className = 'nav';
+      document.body.appendChild(nav);
+    }
+    nav.innerHTML = slides.map((_, i) =>
+      `<button class="${i===idx?'cur':''}" onclick="go(${i})">${String(i+1).padStart(2,'0')}</button>`
+    ).join('');
+  }
+
+  window.go = (i) => { idx = (i + slides.length) % slides.length; render(); };
+  window.addEventListener('resize', fit);
+  window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') go(idx + 1);
+    if (e.key === 'ArrowLeft') go(idx - 1);
+  });
+  render();
+</script>
+</body>
+</html>

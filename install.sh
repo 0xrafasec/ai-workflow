@@ -5,9 +5,14 @@ set -euo pipefail
 # Symlinks this repo's config files into ~/.claude/ so changes stay in sync.
 #
 # Usage:
-#   ./install.sh                    Install everything
+#   ./install.sh                    Install the core workflow (no extras)
+#   ./install.sh --extra            Install core + everything under extras/
 #   ./install.sh settings.json      Install only matching target(s)
-#   ./install.sh settings.json CLAUDE.md skills/feature/SKILL.md
+#   ./install.sh --extra rlabs-design
+#
+# Extras are personal/optional add-ons (e.g. private brand systems) that live
+# under extras/ and are not part of the default workflow. They are only linked
+# when --extra is passed.
 #
 # A filter matches a target if it equals the source path, the destination
 # path, or the basename of either. This lets you refresh one file without
@@ -17,7 +22,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 BIN_DIR="${AIWF_BIN_DIR:-$HOME/.local/bin}"
 
-FILTERS=("$@")
+INSTALL_EXTRAS=0
+FILTERS=()
+for arg in "$@"; do
+    if [ "$arg" = "--extra" ] || [ "$arg" = "--extras" ]; then
+        INSTALL_EXTRAS=1
+    else
+        FILTERS+=("$arg")
+    fi
+done
 
 # Colors
 RED='\033[0;31m'
@@ -113,9 +126,12 @@ echo ""
 echo "=== AI Workflow Installer ==="
 echo ""
 if [ ${#FILTERS[@]} -eq 0 ]; then
-    echo "This will symlink ALL config files from:"
+    echo "This will symlink ALL core config files from:"
 else
     echo "This will symlink filtered targets (${FILTERS[*]}) from:"
+fi
+if [ "$INSTALL_EXTRAS" -eq 1 ]; then
+    echo "  (--extra: extras/ add-ons included)"
 fi
 echo "  $SCRIPT_DIR"
 echo "into:"
@@ -147,6 +163,15 @@ for skill in feature fix spec review new-project prd autopilot roadmap architect
     mkdir -p "$CLAUDE_DIR/skills/$skill"
     link "skills/$skill/SKILL.md" "skills/$skill/SKILL.md"
 done
+
+# Extras (opt-in via --extra): personal add-ons that sit outside the core
+# workflow. Multi-file skills are symlinked as whole directories so supporting
+# files (CSS tokens, fonts, assets, UI kits, previews) resolve from within.
+if [ "$INSTALL_EXTRAS" -eq 1 ]; then
+    for skill in rlabs-design; do
+        link "extras/skills/$skill" "skills/$skill"
+    done
+fi
 
 # Language-specific review guides
 mkdir -p "$CLAUDE_DIR/reviews"

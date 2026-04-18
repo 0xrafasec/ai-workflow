@@ -1,0 +1,58 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="_card.css">
+<style>
+  .nav { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-radius:8px; border:1px solid; }
+  .mark { width:22px; height:22px; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:800; font-size:15px; letter-spacing:-0.03em; position:relative; }
+  .mark::after { content:''; position:absolute; top:3px; right:3px; width:4px; height:4px; border-radius:50%; background:#C6F24E; }
+  .wm { font-family:var(--font-display); font-weight:800; font-size:18px; letter-spacing:-0.02em; text-transform:lowercase; }
+  .links { display:flex; gap:18px; font-family:var(--font-body); font-size:14px; }
+  .btn { font-family:var(--font-body); font-weight:500; font-size:13px; padding:7px 14px; border:none; border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+  .btn { transition: background 160ms ease, box-shadow 200ms ease, color 160ms ease; }
+  .btn-ghost { background:transparent; }
+  .links a { cursor:pointer; transition: color 160ms ease; position:relative; padding-bottom:2px; }
+  .links a::after { content:''; position:absolute; left:0; right:0; bottom:-4px; height:1px; background:currentColor; opacity:0; transform:scaleX(0.3); transform-origin:left; transition: opacity 180ms ease, transform 220ms cubic-bezier(0.2,0.8,0.2,1); }
+  .links a:hover::after { opacity:1; transform:scaleX(1); }
+  .links a.cur::after { opacity:1; transform:scaleX(1); }
+  /* light */
+  .light { background:#FFF; border-color:rgba(0,0,0,0.10); }
+  .light .mark { background:#0A0A0B; color:#FAFAF7; }
+  .light .wm { color:#0A0A0B; }
+  .light .links a { color:#3A3A3F; text-decoration:none; }
+  .light .links a:hover { color:#0A0A0B; }
+  .light .links a.cur { color:#0A0A0B; font-weight:500; }
+  .light .btn-ghost { color:#0A0A0B; }
+  .light .btn-ghost:hover { background:rgba(0,0,0,0.06); }
+  .light .btn-primary { background:#0A0A0B; color:#FAFAF7; }
+  .light .btn-primary:hover { background:#2A2A2E; }
+  /* dark */
+  .dark { background:#0A0A0B; border-color:rgba(255,255,255,0.10); }
+  .dark .mark { background:#FAFAF7; color:#0A0A0B; }
+  .dark .wm { color:#FAFAF7; }
+  .dark .links a { color:#8A8A92; text-decoration:none; }
+  .dark .links a:hover { color:#FAFAF7; }
+  .dark .links a.cur { color:#FAFAF7; font-weight:500; }
+  .dark .btn-ghost { color:#FAFAF7; }
+  .dark .btn-ghost:hover { background:rgba(255,255,255,0.08); }
+  .dark .btn-primary { background:#FAFAF7; color:#0A0A0B; }
+  .dark .btn-primary:hover { background:#FFFFFF; box-shadow:0 4px 14px rgba(250,250,247,0.2); }
+</style>
+</head>
+<body><div class="card">
+  <div class="tag">nav · top bar · light + dark</div>
+  <div style="display:flex; flex-direction:column; gap:10px;">
+    <div class="nav light">
+      <div style="display:flex; align-items:center; gap:24px;">
+        <div style="display:flex; align-items:center; gap:6px;"><div class="mark"><span style="z-index:1;">R</span></div><div class="wm">rlabs</div></div>
+        <div class="links"><a class="cur">agents</a><a>chains</a><a>docs</a><a>pricing</a></div>
+      </div>
+      <div style="display:flex; gap:6px;"><button class="btn btn-ghost">sign in</button><button class="btn btn-primary">start building →</button></div>
+    </div>
+    <div class="nav dark">
+      <div style="display:flex; align-items:center; gap:24px;">
+        <div style="display:flex; align-items:center; gap:6px;"><div class="mark"><span style="z-index:1;">R</span></div><div class="wm">rlabs</div></div>
+        <div class="links"><a class="cur">agents</a><a>chains</a><a>docs</a><a>pricing</a></div>
+      </div>
+      <div style="display:flex; gap:6px;"><button class="btn btn-ghost">sign in</button><button class="btn btn-primary">start building →</button></div>
+    </div>
+  </div>
+</div></body></html>

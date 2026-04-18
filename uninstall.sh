@@ -70,6 +70,15 @@ for f in "${FILES[@]}"; do
     unlink_if_symlink "$CLAUDE_DIR/$f"
 done
 
+# Extras (opt-in in install.sh via --extra). Always cleaned up on uninstall
+# regardless of whether they were installed, so this is safe to run.
+EXTRA_SKILLS=(
+    "skills/rlabs-design"
+)
+for f in "${EXTRA_SKILLS[@]}"; do
+    unlink_if_symlink "$CLAUDE_DIR/$f"
+done
+
 unlink_if_symlink "$BIN_DIR/aiwf"
 
 echo ""
