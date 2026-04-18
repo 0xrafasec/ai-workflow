@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-04-18
+
+### Added
+- `/issues` skill — files GitHub milestones (one per phase) and issues (one per task/slice) from `docs/roadmap/*.md` and `docs/specs/*.md`. Polymorphic input: a roadmap index, a single phase, a sliced spec's `README.md`, or a single-file spec. Uses the GitHub MCP as the primary transport with `gh` CLI as a fallback. Per-milestone confirmation loop keeps broken runs recoverable. Writes issue numbers back into the source Markdown so `/feature` can derive branch names.
+- Label taxonomy bootstrapped on first `/issues` run: `type:feat|fix|refactor|chore|test|docs|perf|security`, `complexity:low|med|high`, `mvp|post-mvp`, `needs-spec|spec-ready|blocked`, each with a default color.
+
+### Changed
+- `/spec` now emits a trunk-aware Slices table with `Type`, `Flag`, `Depends on`, `Complexity`, and `Issue` columns — the table is the source of truth for `/issues`. Single-file specs get a `## Trunk Metadata` block with the same fields so `/issues` can file them too.
+- `/roadmap` tasks now carry `Type`, `Feature flag`, `Milestone`, and `Issues` fields. `complexity:high` tasks must point at a sliced directory-form spec (one PR per slice). Phase template gains a `## Trunk Alignment` section naming flags and shipping state.
+- `/feature` derives branch names from the spec's `Issue` field — canonical form is `<type>/<issue-number>-<slug>` (e.g., `feat/42-jira-sync`). Falls back to `<type>/<slug>` when no issue is filed yet. PR body now requires `Closes #<N>` and a `Feature flag` line matching the spec.
+- Canonical feature flow in `CLAUDE.md` now reads: `/spec → (slice if >200 lines) → /issues → /feature <spec> --pr → /review → merge → cleanup`.
+
 ## [0.4.0] - 2026-04-18
 
 ### Added
