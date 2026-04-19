@@ -21,8 +21,8 @@ The argument is one of:
 
 - **Roadmap index** — `/issues docs/roadmap/README.md` files *everything*: one milestone per phase file, one issue per task, one issue per slice where a task points at a sliced spec.
 - **Phase file** — `/issues docs/roadmap/NNN_<phase>.md` files one milestone + the phase's tasks (and slices where applicable).
-- **Sliced spec index** — `/issues docs/specs/<feature>/README.md` files one issue per row in the Slices table. Uses the feature's existing milestone if found (matched by phase reference in the spec), otherwise creates a standalone no-milestone batch.
-- **Single spec** — `/issues docs/specs/<feature>.md` files one issue. No milestone unless the spec references a phase.
+- **Sliced spec index** — `/issues docs/specs/NNN_<feature>/README.md` files one issue per row in the Slices table. Uses the feature's existing milestone if found (matched by phase reference in the spec), otherwise creates a standalone no-milestone batch.
+- **Single spec** — `/issues docs/specs/NNN_<feature>.md` files one issue. No milestone unless the spec references a phase.
 
 No argument? Default to `docs/roadmap/README.md` if it exists; otherwise prompt.
 
@@ -227,6 +227,6 @@ If a row was updated in place (not newly filed), leave the `Issue:` column alone
 1. Print a final summary: N milestones created, M issues created, K updated, list the URLs.
 2. Remind the user of the horizon: which phases were filed, which stayed in the roadmap doc, and when to re-run to advance the window.
 3. Suggest the next step based on what's now in place:
-   - **Current phase filed?** → "Run `/feature docs/specs/<name>.md` (or a slice file) to implement one task, or `/autopilot docs/roadmap/NNN_<phase>.md` to run the phase end-to-end."
+   - **Current phase filed?** → "Run `/feature docs/specs/NNN_<name>.md` (or a slice file `docs/specs/NNN_<name>/MMM_<slice>.md`) to implement one task, or `/autopilot docs/roadmap/NNN_<phase>.md` to run the phase end-to-end."
    - **Mid-phase check-in?** → "When you're ~halfway through the current phase, re-run `/issues docs/roadmap/README.md` to file the next phase and keep a two-phase buffer ahead."
    - **Finished a phase?** → "Mark the phase `Completed` in the roadmap index's Status column, then re-run `/issues docs/roadmap/README.md` — it'll advance the window to the next unstarted phase."

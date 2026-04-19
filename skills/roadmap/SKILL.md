@@ -96,7 +96,7 @@ If the user gave a phase name or single feature area, compute the next prefix (s
 ## Tasks
 
 ### Task 1: [Name]
-- **Spec:** docs/specs/[name].md (exists | needs creation)
+- **Spec:** docs/specs/NNN_[name].md (exists | needs creation)
 - **Design reference:** [Figma node | Paper artboard id | path to image | N/A for non-UI]
 - **Type:** feat / fix / refactor / chore / test / docs / perf / security
 - **Files:** [list of files to create or modify]
@@ -109,7 +109,7 @@ If the user gave a phase name or single feature area, compute the next prefix (s
 - **Issues:** — (filled by `/issues`)
 
 ### Task 2: [Name] — HIGH complexity → sliced spec
-- **Spec:** docs/specs/[name]/README.md (sliced — see its Slices table for PR-sized slices)
+- **Spec:** docs/specs/NNN_[name]/README.md (sliced — see its Slices table for PR-sized slices)
 - **Type:** feat
 - **Files:** [cross-slice file list]
 - **Dependencies:** Task 1 (needs [specific thing])
@@ -121,7 +121,7 @@ If the user gave a phase name or single feature area, compute the next prefix (s
 - **Issues:** — (one GitHub issue per slice, filled by `/issues`)
 
 ### Task 3: [Name] (can parallelize with Task 2)
-- **Spec:** docs/specs/[name].md (exists | needs creation)
+- **Spec:** docs/specs/NNN_[name].md (exists | needs creation)
 - **Type:** feat
 - **Files:** [list — no overlap with Task 2]
 - **Dependencies:** Task 1
@@ -194,6 +194,7 @@ Then create each `docs/roadmap/NNN_<phase-name>.md` using the single-phase forma
 8. **Foundation first** — shared types, interfaces, data models, and config go in Phase 1. Implementation builds on top.
 9. **File overlap = sequential** — if two tasks modify the same file, they cannot run in parallel. Call this out explicitly.
 10. **Mark spec status per task** — indicate whether a detailed spec exists or needs to be created. Tasks without specs need `/spec` or `/speckit.specify` before execution. Tasks without GitHub issues need `/issues` before execution.
+11. **Spec prefix mirrors the phase number.** Specs for tasks in Phase `NNN` are written to `docs/specs/NNN_<name>.md` (or `docs/specs/NNN_<name>/` if sliced). When a phase has multiple tasks, disambiguate with a letter suffix: `NNN.A_<name>.md`, `NNN.B_<name>.md`. See `/spec` for full numbering rules.
 
 ## After Writing
 
@@ -209,4 +210,4 @@ Then create each `docs/roadmap/NNN_<phase-name>.md` using the single-phase forma
    - **All tasks have specs, no GitHub issues yet?** → "Run `/issues docs/roadmap/README.md` to file milestones (one per phase) and issues (one per task/slice)."
    - **All tasks have specs + issues?** → "Run `/autopilot docs/roadmap/README.md` to execute the full roadmap"
    - **Start one phase?** → "Run `/issues docs/roadmap/NNN_<phase-name>.md`, then `/autopilot docs/roadmap/NNN_<phase-name>.md`"
-   - **Single task?** → "`/feature docs/specs/<name>.md`" (or a specific slice file for sliced specs)
+   - **Single task?** → "`/feature docs/specs/NNN_<name>.md`" (or a specific slice file `docs/specs/NNN_<name>/MMM_<slice>.md` for sliced specs)

@@ -1,8 +1,20 @@
 ---
 name: spec
-description: "Create a feature implementation spec at docs/specs/<feature>.md — scope, approach, affected files, verification. Use when the user says 'spec out feature X', 'write the implementation plan for Y', 'turn this idea into a spec', 'document how we'll build this', or needs a doc the /feature skill can execute from later."
+description: "Create a feature implementation spec at docs/specs/NNN_<feature>.md (prefix mirrors the roadmap phase) — scope, approach, affected files, verification. Use when the user says 'spec out feature X', 'write the implementation plan for Y', 'turn this idea into a spec', 'document how we'll build this', or needs a doc the /feature skill can execute from later."
 ---
 Create a feature implementation spec for: $ARGUMENTS
+
+## Spec Numbering
+
+All spec files (and sliced-spec directories) get a zero-padded 3-digit prefix matching their **roadmap phase number**, so spec order mirrors roadmap order at a glance: `001_foundations.md`, `002_jira-sync/`, `003_frontend.md`, etc.
+
+**Rules:**
+- **Mirror the roadmap phase.** If this spec implements a task in `docs/roadmap/NNN_<phase>.md`, the spec prefix is the same `NNN`. Check the roadmap file before picking a number.
+- **Multiple specs per phase → letter suffix.** When a phase has more than one task/spec, disambiguate with `NNN.A_<name>.md`, `NNN.B_<name>.md`, etc., assigned in task order within the phase. A lone spec in a phase stays `NNN_<name>.md` (no suffix).
+- **No roadmap yet?** Scan `docs/specs/` for existing prefixes and use `max(existing) + 1`, zero-padded to 3 digits. When a roadmap is later added, do **not** renumber — existing spec paths may be referenced by commits, PRs, and issues.
+- **Scan, don't renumber.** Never change the prefix of an existing spec. Commits, PRs, and issues reference specs by path.
+- **Separator is underscore** (`002_jira-sync.md`), matching roadmap convention.
+- **Sliced specs use the directory form** with the same prefix: `docs/specs/NNN_<feature>/` containing `README.md` (index) and `MMM_<slice>.md` files (zero-padded, dependency order). The directory vs. file distinction is how sliced specs are identified — no extra suffix needed.
 
 ## Context Gathering
 
@@ -14,6 +26,8 @@ Before interviewing, read what already exists:
    - Read `docs/TECHNICAL_DESIGN_DOCUMENT.md` for testing strategy
    - Read `docs/THREAT_MODEL.md` for security context
    - Read `README.md`, `CLAUDE.md`
+   - **Check `docs/roadmap/`** — list phase files to determine the correct `NNN` prefix for this spec (see **Spec Numbering** above). If a phase file references this feature as a task, mirror that phase's number.
+   - **List `docs/specs/`** — collect existing prefixes so you don't collide, and see whether a letter suffix (`NNN.A`, `NNN.B`) is needed.
 
 2. **If no docs exist (inherited project):**
    - Read `README.md` for project overview
@@ -43,8 +57,8 @@ Build on existing architecture, TDD, and security docs if they exist — referen
 
 Before writing, estimate the implementation size (lines of code + tests). Per the global **Trunk-Based Workflow** (see root `CLAUDE.md`), each PR targets ≤200 lines.
 
-- **≤200 lines:** one spec, one PR. Proceed to **Write** below with a single file.
-- **>200 lines:** slice the feature into N independently mergeable vertical slices, each ≤200 lines. Write one sub-spec per slice under `docs/specs/<feature_name>/NNN_<slice>.md` (zero-padded, dependency order) plus an index `docs/specs/<feature_name>/README.md`.
+- **≤200 lines:** one spec, one PR. Proceed to **Write** below with a single file at `docs/specs/NNN_<feature_name>.md`.
+- **>200 lines:** slice the feature into N independently mergeable vertical slices, each ≤200 lines. Create directory `docs/specs/NNN_<feature_name>/` (same `NNN` as the single-file form would have used) containing one sub-spec per slice at `MMM_<slice>.md` (zero-padded, dependency order within the feature) plus an index `README.md`.
 
 **Slicing rules:**
 - Every slice must leave `main` deployable. If a slice adds user-visible behavior that isn't ready to ship, call out a **feature flag** in its spec (name the flag, default off).
@@ -52,7 +66,7 @@ Before writing, estimate the implementation size (lines of code + tests). Per th
 - No slice depends on an unmerged slice. If B truly needs A's code merged first, mark the dependency explicitly in B's spec and do not start B until A is merged.
 - Each slice is its own branch, its own PR, deleted after merge. Branch naming is `<type>/<issue-number>-<slice-slug>` once `/issues` has filed the issue (e.g., `feat/42-jira-sync`); before then, `<type>/<slice-slug>` is acceptable.
 
-**Index file** (`docs/specs/<feature_name>/README.md`) — the Slices table is the **source of truth for `/issues`**:
+**Index file** (`docs/specs/NNN_<feature_name>/README.md`) — the Slices table is the **source of truth for `/issues`**:
 
 ```markdown
 # Feature: [Name]
@@ -93,7 +107,7 @@ Then write each slice spec using the single-file template below. In each sub-spe
 
 ## Write
 
-For a single (≤200 line) spec, write to `docs/specs/<feature_name>.md`:
+For a single (≤200 line) spec, write to `docs/specs/NNN_<feature_name>.md` (use the prefix computed in **Spec Numbering** above):
 
 ```markdown
 # Feature: [Name]
@@ -149,5 +163,5 @@ For a single (≤200 line) spec, write to `docs/specs/<feature_name>.md`:
    - No architecture doc? → "Define system structure with `/architecture`"
    - No TDD? → "Define testing and dev workflow with `/tdd`"
    - No threat model and there are security concerns? → "Consider `/security`"
-   - Spec approved? → "File GitHub issues with `/issues docs/specs/<name>.md` (or `/issues docs/specs/<name>/README.md` for a sliced spec). This populates the `Issue` column and unlocks `<type>/<issue-number>-<slug>` branch naming."
-   - Issues filed? → "Ready for `/feature docs/specs/<name>.md` (single) or `/feature docs/specs/<name>/NNN_<slice>.md` (one slice at a time)."
+   - Spec approved? → "File GitHub issues with `/issues docs/specs/NNN_<name>.md` (or `/issues docs/specs/NNN_<name>/README.md` for a sliced spec). This populates the `Issue` column and unlocks `<type>/<issue-number>-<slug>` branch naming."
+   - Issues filed? → "Ready for `/feature docs/specs/NNN_<name>.md` (single) or `/feature docs/specs/NNN_<name>/MMM_<slice>.md` (one slice at a time)."
