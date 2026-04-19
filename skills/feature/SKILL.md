@@ -1,6 +1,6 @@
 ---
 name: feature
-description: "Implement a feature end-to-end from a spec file at docs/specs/<name>.md — code it and verify it. Stops with a working tree the user can review. Use when the user says 'implement the auth spec', 'build feature X', 'code up the Y spec', 'work through docs/specs/<name>.md', or points at a spec and asks to execute it."
+description: "Implement a feature end-to-end from a spec file at docs/specs/<name>.md — code it and verify it. Stops with a working tree the user can review. Supports --commit (auto-commit, output only log) and --pr (auto-commit + open PR, output only log + URL). Use when the user says 'implement the auth spec', 'build feature X', 'code up the Y spec', 'work through docs/specs/<name>.md', or points at a spec and asks to execute it."
 ---
 Implement the feature described in $ARGUMENTS.
 
@@ -8,6 +8,8 @@ Implement the feature described in $ARGUMENTS.
 
 - `/feature <name>` → resolve to `docs/specs/NNN_<name>.md` (or `docs/specs/NNN_<name>/` for a sliced spec) by matching the suffix after the prefix. Specs carry a roadmap-phase-aligned `NNN` prefix — see `/spec` for the numbering rules. If multiple specs match, ask which.
 - `/feature <path>.md` → use explicit path
+- **`--commit`** — after the feature is complete and verified, auto-commit without presenting a plan for approval. Apply the same grouping logic from `/commit` but skip step 5 (plan presentation). Output only the `git log --oneline -<N>` lines for the new commits. No other output.
+- **`--pr`** — implies `--commit`: auto-commit (as above), then immediately open a PR without presenting a draft for approval. Apply the same PR logic from `/pr` but skip step 7 (draft presentation). Output only the `git log --oneline -<N>` lines and the PR URL. No other output.
 
 If the spec doesn't exist, use **AskUserQuestion** to ask whether to create one via `/spec <name>` first or build without a spec (they describe the feature inline). For bugfixes, use `/fix` instead.
 
@@ -70,7 +72,17 @@ See the global **Trunk-Based Workflow** in root `CLAUDE.md` for worktree convent
 
    This is a self-check, not a trust boundary — you're the writer reading the reviewer. A fresh-session `/review` or a human reviewer is still expected before merge.
 
-7. **Report and stop.** Summarize for the user:
+7. **Report and stop.**
+
+   **If `--pr` or `--commit` was passed**, skip the summary below and go directly to the auto-commit/PR path described here:
+
+   - **Auto-commit (`--commit` or `--pr`):** Apply `/commit`'s grouping and message logic (steps 1–4 of that skill) but skip plan presentation. Stage and commit each group sequentially without asking. On pre-commit hook failure, stop and surface the error — never bypass with `--no-verify`. After all commits land, output only `git log --oneline -<N>` (where N = number of new commits). Nothing else.
+
+   - **Auto-PR (only when `--pr`):** After auto-commit, apply `/pr`'s push and body-drafting logic (steps 1–6 of that skill) but skip draft presentation. Push the branch and create the PR immediately. Output only the PR URL. Nothing else.
+
+   - **Combined output for `--pr`:** one `git log --oneline -<N>` block followed by one PR URL line. No headers, no summaries, no reminders.
+
+   **Otherwise (no flag),** summarize for the user:
    - **Files changed** — `git diff --stat` output, or a short list.
    - **Verification** — lint / typecheck / test commands run and their tail output.
    - **Self-review verdict** — `Security: PASS` / `REVIEW` / `FAIL` from step 6 (or `Security: PASS (no new inputs/auth/io surface)` when zero surface).

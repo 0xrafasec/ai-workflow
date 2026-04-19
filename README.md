@@ -193,7 +193,7 @@ Skills are multi-step workflows invoked as slash commands inside Claude Code.
 |-------|-------------|
 | `/spec <feature>` | Feature implementation spec with verification criteria |
 | `/roadmap` | Phased task breakdown from specs |
-| `/feature <spec>` | End-to-end feature implementation from a spec |
+| `/feature <spec>` | End-to-end feature implementation from a spec. `--commit` auto-commits after completion (outputs log only); `--pr` auto-commits + opens PR (outputs log + URL only) |
 | `/fix <issue>` | Diagnose and fix a bug from a description, stack trace, or GitHub issue |
 | `/autopilot` | Execute a full roadmap with parallel worktree agents |
 | `/factory` | End-to-end delivery pipeline — reads roadmap, generates specs, runs parallel `/feature` agents |

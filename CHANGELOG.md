@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.7] - 2026-04-19
+
+### Changed
+- `/feature` gains `--commit` and `--pr` flags for hands-free finishing. `--commit` auto-commits using `/commit`'s grouping logic but skips plan presentation — outputs only `git log --oneline -N`. `--pr` implies `--commit` and also pushes + opens a PR without draft presentation — outputs only the log lines and PR URL. All other output is suppressed when either flag is active. Intended for use in orchestrated flows or when the user trusts the implementation enough to skip the intermediate review step.
+
 ## [0.5.6] - 2026-04-18
 
 ### Fixed
