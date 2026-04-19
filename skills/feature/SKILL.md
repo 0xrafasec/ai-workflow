@@ -8,6 +8,7 @@ Implement the feature described in $ARGUMENTS.
 
 - `/feature <name>` → resolve to `docs/specs/NNN_<name>.md` (or `docs/specs/NNN_<name>/` for a sliced spec) by matching the suffix after the prefix. Specs carry a roadmap-phase-aligned `NNN` prefix — see `/spec` for the numbering rules. If multiple specs match, ask which.
 - `/feature <path>.md` → use explicit path
+- `/feature #<N>` → fetch the GitHub issue `#<N>` via `gh issue view <N>` (or the GitHub MCP), extract the title and body, then resolve the spec by scanning `docs/specs/` for a file whose `Issue: #<N>` field matches. If found, proceed with that spec. If not found, treat the issue title/body as the feature description and ask (via **AskUserQuestion**) whether to create a spec first or build inline.
 - **`--commit`** — after the feature is complete and verified, auto-commit without presenting a plan for approval. Apply the same grouping logic from `/commit` but skip step 5 (plan presentation). Output only the `git log --oneline -<N>` lines for the new commits. No other output.
 - **`--pr`** — implies `--commit`: auto-commit (as above), then immediately open a PR without presenting a draft for approval. Apply the same PR logic from `/pr` but skip step 7 (draft presentation). Output only the `git log --oneline -<N>` lines and the PR URL. No other output.
 
