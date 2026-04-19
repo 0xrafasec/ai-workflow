@@ -146,8 +146,10 @@ mkdir -p "$CLAUDE_DIR"/{agents,commands,skills}
 # Install the aiwf launcher so follow-up platform commands work from a clone.
 link_bin "aiwf" "aiwf"
 
-# Global config
-link "CLAUDE.md"                "CLAUDE.md"
+# Global config (the global Claude defaults — applies to every project).
+# Project-specific CLAUDE.md for working IN the ai-workflow repo lives at the
+# repo root and is NOT installed (it loads only when you cd into the repo).
+link "dotfiles/CLAUDE.md"       "CLAUDE.md"
 
 # settings.json is per-user (gitignored). Seed from the tracked example on
 # fresh clones so the symlink target exists before we link it into ~/.claude.

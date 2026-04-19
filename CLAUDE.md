@@ -1,56 +1,60 @@
-# Global Defaults
+# ai-workflow — Project-Specific Instructions
 
-## Verification
-- Always verify work before claiming completion: run lint/build/tests and check outputs against the stated design or spec references.
-- Before saying you're done, run lint, typecheck, and tests, and paste the tail of each output. If anything fails, fix and re-run.
+These rules apply **only when working inside the `ai-workflow` repo**. The global Claude defaults live at `dotfiles/CLAUDE.md` (symlinked to `~/.claude/CLAUDE.md` by `install.sh`) and apply to every project.
 
-## Workflow
-- Spec first, code second - read the spec before implementing
-- Commit messages use conventional commits: feat:, fix:, refactor:, chore:, test:, docs:, security:
-- Split commits by logical concern; each commit leaves the codebase working
-- Security-sensitive changes require /sec-review before PR
-- Use the writer/reviewer pattern: never review code in the same session that wrote it
+## Repo layout
 
-## UI Work
-- Before implementing UI work, always load and reference the Paper design source; do not proceed without it.
+This repo is the source of truth for everything installed under `~/.claude/`:
 
-## File Conventions
-- Prefer refactoring existing files over creating new ones; ask before introducing parallel docs/configs.
+- `dotfiles/CLAUDE.md` — global defaults, symlinked to `~/.claude/CLAUDE.md`
+- `CLAUDE.md` (this file) — project-specific rules, loaded only when `cwd` is this repo
+- `skills/<name>/SKILL.md` — slash-command skills, symlinked into `~/.claude/skills/`
+- `agents/`, `commands/`, `reviews/`, `settings.json` — symlinked similarly via `install.sh`
+- `adapters/codex/`, `adapters/cursor/` — compile the skills + global CLAUDE.md into formats those tools understand
+- `extras/` — opt-in personal skills, only installed via `./install.sh --extra`
 
-## Git Workflow
-- Check you are in the correct project directory and that it is a git repo before running commit/PR/bootstrap commands.
+## Editing rules
 
-## Trunk-Based Workflow
-- `main` is trunk; always deployable. No long-lived `develop` or `release/*` branches.
-- Branches are short-lived (hours to ~2 days). Name them by type: `feat/<slug>`, `fix/<slug>`, `refactor/<slug>`, `docs/<slug>`, `chore/<slug>`, `test/<slug>`, `perf/<slug>`, `security/<slug>`.
-- **One branch = one PR = one vertical slice.** Target ≤200 lines of diff (tests included). If larger, split before opening the PR.
-- Large features ship as N independently mergeable slices off `main`, not stacked on each other. If a slice isn't user-ready, merge it behind a feature flag so `main` stays deployable.
-- Worktrees live **outside the repo** (e.g., `../<repo>-<slug>`) to keep `git status` clean. If kept inside, add the directory to `.gitignore`.
-- After merge: delete the branch (local + remote) and remove the worktree. Never reuse a merged branch.
-- Canonical feature flow: `/spec` → (slice if >200 lines) → `/issues` (file milestones + issues on GitHub) → `/feature <spec>` → review the diff → `/commit` → `/pr` → `/review` (fresh session) → merge → delete branch + worktree.
-- Full guide (why, how, recipes, FAQ): `docs/TRUNK_BASED_WORKFLOW.md` in the ai-workflow repo.
+- **Edit the source in this repo, never the symlink in `~/.claude/`.** Edits to `~/.claude/<thing>` will either be lost on the next `install.sh` run or break the symlink. If you find yourself reading from `~/.claude/...` to make a change, stop and re-open the matching file in this repo.
+- **Re-run `install.sh` after adding, removing, or renaming any skill, agent, or command.** Editing existing files in place is fine — symlinks already point at them. Only the directory shape changes need a re-link.
 
-## Code Quality
-- No unnecessary abstractions - keep code as simple as it can be
-- No speculative features or premature generalization
-- Validate at system boundaries (user input, external APIs), trust internal code
-- Tests must cover verification criteria from the spec
+## Docs are part of the change — never ship a behavior change without doc updates
 
-## PR Structure
-- Keep PRs focused: one concern per PR, under 200 lines when possible (see **Trunk-Based Workflow** above for slicing rules and feature-flag expectations)
-- PR description must include: summary, link to spec, security checklist, test plan
+Any change to a skill, workflow, convention, or installer **must** update the relevant docs in the same change. Docs are not a follow-up. They are part of the change.
 
-## Context Management
-- /clear between unrelated tasks
-- /compact when context gets heavy mid-task
-- /rewind when an approach fails after 2 corrections
+When you change something in this list (left), update the docs on the right in the same commit/PR:
 
-## Toolkit (ai-workflow repo)
-- All global config (CLAUDE.md, settings.json, agents, skills, commands, reviews) is symlinked from ~/Projects/AI/ai-workflow into ~/.claude/
-- NEVER edit files directly in ~/.claude/ — changes will be lost or cause symlink conflicts
-- To modify any skill, agent, command, or config: edit the source in ~/Projects/AI/ai-workflow/, then commit and push
-- Available skills: /prd, /architecture, /tdd, /security, /adr, /rfc, /spec, /roadmap, /issues, /feature, /fix, /commit, /pr, /review, /autopilot, /new-project, /sec-review, /verify-design, /factory
-- Extras (opt-in): personal add-ons under `extras/`, installed only when `./install.sh --extra` is run. Current extras: `/rlabs-design` (personal brand design system — not part of the core workflow).
-- For stack-aware code review, use Anthropic's official `code-review` skill (from `claude-code-plugins`). The previous custom `/code-review` was deprecated after a benchmark showed no detection lift over baseline at ~1.5× cost. Language guides in `reviews/` are still loaded on demand by `/review`, `/feature`, `/fix`.
-- Run `install.sh` after adding new skills or agents to re-symlink
-- When adding, removing, or renaming skills/agents/commands: always update install.sh, uninstall.sh, and the "Available skills" list above to stay in sync
+| Change | Update |
+|--------|--------|
+| Skill behavior, args, or removal/rename | `skills/<name>/SKILL.md` (the source), `docs/REFERENCE.md` skill section, `README.md` Skills table + tree, `CHANGELOG.md` |
+| Workflow convention (trunk rules, commit style, etc.) | `dotfiles/CLAUDE.md`, `docs/WORKFLOW.md`, `docs/TRUNK_BASED_WORKFLOW.md`, `CHANGELOG.md` |
+| Adding/removing a skill | `install.sh`, `uninstall.sh`, `README.md` "Available skills" list, `dotfiles/CLAUDE.md` "Toolkit" section, adapters (codex/cursor), `CHANGELOG.md` |
+| Installer or symlink layout | `install.sh`, `uninstall.sh`, adapters, `README.md` install section, `docs/REFERENCE.md` layout section, `CHANGELOG.md` |
+| New or repurposed top-level convention file | `README.md` repo-tree section, `docs/REFERENCE.md` layout section |
+
+If you're not sure whether a change is doc-relevant, it is. Default to updating docs. The cost of a stale doc is much higher than the cost of a one-line CHANGELOG entry.
+
+## Versioning + releases
+
+- Version lives in `CHANGELOG.md` only — no `package.json`, `VERSION` file, or other source of truth.
+- Bump via SemVer:
+  - **patch** (`0.x.y` → `0.x.y+1`) — doc-only, typo, or internal cleanup with no behavior change
+  - **minor** (`0.x.y` → `0.x+1.0`) — new skill, new flag, repositioned skill, new convention, anything users can observe
+  - **major** (`0.x.y` → `1.0.0`) — breaking removal/rename of a skill, flag, or convention users may depend on
+- On bump: rename `[Unreleased]` → `[<version>] - <YYYY-MM-DD>`, leave a fresh empty `[Unreleased]` above it, commit, tag `v<version>`, push tag.
+
+## Commit + PR style for this repo
+
+- Conventional commits per global rule (`feat:`, `fix:`, `refactor:`, `chore:`, `docs:`, `test:`, `security:`).
+- Skill changes: `feat(skill-name): ...` or `fix(skill-name): ...`. Doc-only: `docs: ...`.
+- Splitting commits by concern is especially important here because skill, doc, installer, and adapter edits often land together — keep each commit independently revertible.
+
+## Testing changes locally
+
+- After editing a skill: in any project, invoke the slash command (e.g., `/factory --dry-run`) — Claude reads from `~/.claude/skills/<name>/SKILL.md`, which is the symlink to your edit.
+- After editing `install.sh` or `uninstall.sh`: run them in a throwaway shell and verify the symlinks land where expected.
+- After editing adapters: re-run the matching `aiwf install-codex` / `aiwf install-cursor` and check the generated output.
+
+## When in doubt, ask
+
+If a change touches multiple skills or shifts a convention, surface the plan before editing — don't make wide changes in one shot without confirmation.

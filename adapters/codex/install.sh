@@ -104,13 +104,15 @@ fi
     printf '<!-- Regenerate with: aiwf install-codex  or  ./adapters/codex/install.sh -->\n\n'
 
     # Global workflow conventions (strip the Claude-specific Toolkit section).
+    # Source is the global file under dotfiles/, not the project-specific
+    # CLAUDE.md at the repo root (which is for working in the ai-workflow repo).
     printf '# Global Workflow Conventions\n\n'
-    if [ -f "$REPO_DIR/CLAUDE.md" ]; then
+    if [ -f "$REPO_DIR/dotfiles/CLAUDE.md" ]; then
         awk '
             /^## Toolkit \(ai-workflow repo\)/ { skip=1; next }
             skip && /^## / { skip=0 }
             !skip { print }
-        ' "$REPO_DIR/CLAUDE.md"
+        ' "$REPO_DIR/dotfiles/CLAUDE.md"
     fi
     printf '\n'
 

@@ -63,8 +63,10 @@ echo ""
 
 mkdir -p "$CURSOR_RULES_DIR"
 
-# 1. Global rule from CLAUDE.md -------------------------------------------------
-global_src="$REPO_DIR/CLAUDE.md"
+# 1. Global rule from dotfiles/CLAUDE.md ---------------------------------------
+# Source is the global defaults file under dotfiles/, not the project-specific
+# CLAUDE.md at the repo root (which only applies inside the ai-workflow repo).
+global_src="$REPO_DIR/dotfiles/CLAUDE.md"
 global_dst="$CURSOR_RULES_DIR/aiwf-global.mdc"
 
 if [ -f "$global_src" ]; then
@@ -74,7 +76,7 @@ if [ -f "$global_src" ]; then
         "$(cat "$global_src")"
     info "Written $global_dst"
 else
-    warn "CLAUDE.md not found at $global_src — skipping global rule"
+    warn "dotfiles/CLAUDE.md not found at $global_src — skipping global rule"
 fi
 
 # 2. One rule per skill ---------------------------------------------------------
