@@ -67,11 +67,73 @@ See the global **Trunk-Based Workflow** in root `CLAUDE.md` for worktree convent
 
    **Feature flag wiring.** If the spec's `## Feature Flag` section names a flag, verify the new behavior is gated by it. If the flag doesn't exist yet in the project, create it (default off) as part of this slice.
 
-6. **Self-review (parallel).** Catch the obvious stuff before handing back. Fire security and architecture reviews as concurrent `Agent` calls in a single message — they are independent and should not serialize.
-   - Prefer Anthropic's official `code-review` skill (from `claude-code-plugins`) if installed.
-   - Otherwise run `/sec-review` for security, and spawn an **architecture-reviewer** subagent (pin `model: "sonnet"`) for architecture, handing it the matching language guide from `reviews/` (`go.md`, `rust.md`, `typescript.md`, `python.md`).
+6. **External review (fresh-context subagent, bounded fix loop).** You are the writer. You do **not** review your own work — that violates the writer/reviewer rule in CLAUDE.md and produces lower-quality reviews because your context is biased toward the choices you just made. Instead, spawn a single reviewer subagent with cold context.
 
-   This is a self-check, not a trust boundary — you're the writer reading the reviewer. A fresh-session `/review` or a human reviewer is still expected before merge.
+   **Do NOT use the `code-review` skill in this session** — skills run in your context, which defeats the purpose. Always use the Agent tool to spawn an external reviewer.
+
+   **Reviewer dispatch:**
+
+   ```
+   Agent(
+     subagent_type: "general-purpose",
+     model: "sonnet",
+     run_in_background: false,
+     description: "Review feature implementation",
+     prompt: <see below>
+   )
+   ```
+
+   Reviewer prompt (token-disciplined — do not let it explore the whole codebase):
+
+   ```
+   You are a code reviewer with fresh context. You DO NOT write code.
+
+   ## Project context (5 lines)
+   <name, stack, key conventions from CLAUDE.md>
+
+   ## Your inputs (read ONLY these)
+   1. The diff:        git diff <base>...HEAD   (or `git diff` if not yet committed)
+   2. The spec:        <spec-path>
+   3. Selective reads: only files the diff makes you doubt (e.g., a caller of a changed function). Cap: 3 files.
+
+   If you want to read more than 3 extra files, STOP and emit a LOW finding "review-coverage-limited". Do not actually read them.
+
+   ## Checklist (focused, not exhaustive)
+   - Spec compliance: does the diff implement what the spec says, no more, no less?
+   - Verification criteria: are all spec verification criteria covered by tests?
+   - Security: input validation at boundaries, authz, secrets, injection (where applicable)
+   - Correctness: obvious bugs, error handling at boundaries, race conditions
+   - Test quality: tests actually exercise the change (not tautological)
+   - Convention drift: respects nearby existing patterns
+
+   Out of scope: lint-style nits, unrelated refactors, hypothetical futures.
+
+   ## Output — exact format, nothing else
+
+   VERDICT: PASS | FIX_REQUIRED
+   FINDINGS:
+   - [HIGH] <one-line action item — "Add input validation for X in path/to/file.ts:42">
+   - [MED]  <one-line action item>
+   - [LOW]  <one-line nit>
+
+   (PASS with only LOW findings is allowed — they become user-facing nits, not fix-loop triggers.)
+   (No findings → "FINDINGS: none" and VERDICT: PASS.)
+
+   SUMMARY: <one sentence>
+   ```
+
+   **Process the verdict:**
+
+   - `PASS` with no findings → record `Review: PASS`. Continue to step 7.
+   - `PASS` with LOW findings only → record `Review: PASS_WITH_NITS` and surface the LOW list to the user verbatim in step 7. Continue.
+   - `FIX_REQUIRED` (HIGH/MED present) → fix exactly the listed action items in your current context (you're warm — you have the spec and files loaded; respawning a fresh fixer would be pure waste). After fixing, re-run the quality gate from step 5, then re-dispatch the reviewer with one extra line in its prompt: *"This is review cycle 2. Your previous findings were: <list>. Verify they are resolved. Find any new issues introduced by the fix."*
+
+   **Bounded loop: max 2 fix cycles.** If cycle 2 still returns `FIX_REQUIRED`:
+   - Record `Review: NEEDS_HUMAN — <count> HIGH/MED unresolved after 2 cycles`.
+   - If the SAME finding category surfaced in both cycles, also record `Spec ambiguity suspected at <spec-path>` — this usually means the spec, not the code, is the problem.
+   - Surface both to the user in step 7. Do NOT loop further.
+
+   **Token shape:** reviewer is small (diff + spec + ≤3 files), runs at most twice. Worst-case overhead vs. no-review is roughly +25–40% of writer cost; common case (PASS first try) is +10–15%.
 
 7. **Report and stop.**
 
@@ -86,7 +148,7 @@ See the global **Trunk-Based Workflow** in root `CLAUDE.md` for worktree convent
    **Otherwise (no flag),** summarize for the user:
    - **Files changed** — `git diff --stat` output, or a short list.
    - **Verification** — lint / typecheck / test commands run and their tail output.
-   - **Self-review verdict** — `Security: PASS` / `REVIEW` / `FAIL` from step 6 (or `Security: PASS (no new inputs/auth/io surface)` when zero surface).
+   - **Review verdict** — from step 6: `PASS` / `PASS_WITH_NITS` (list the LOW nits) / `NEEDS_HUMAN` (list the unresolved HIGH/MED, plus any "Spec ambiguity suspected" note).
    - **Slice metadata** — for the eventual PR body the user will write: spec link, `Closes #<N>` line from the spec's `Issue:` field (or `Closes: (none — ran before /issues)`), feature-flag state from `## Feature Flag`, and a one-paragraph test plan (which layers were touched, how to re-run them).
 
    Then stop. The user reviews the working tree and decides next steps (typically `/commit` then `/pr`).
