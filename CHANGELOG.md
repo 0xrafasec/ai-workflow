@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-04-18
+
+### Fixed
+- `/spec` now prefixes every spec with a zero-padded `NNN` that mirrors the roadmap phase number (`docs/specs/002_jira-sync.md`), with `.A`/`.B` letter suffixes when a phase has multiple specs. Sliced specs use the directory form `docs/specs/NNN_<feature>/` with `README.md` + `MMM_<slice>.md` inside — the directory itself is how "sliced" is identified, no extra marker. Previously spec filenames carried no ordering signal, so reading `docs/specs/` gave no hint which came first or how specs mapped back to roadmap phases. `/roadmap`, `/feature`, and `/issues` updated to reference the new prefixed paths.
+
 ## [0.5.3] - 2026-04-18
 
 ### Fixed
