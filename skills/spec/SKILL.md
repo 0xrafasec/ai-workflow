@@ -4,69 +4,66 @@ description: "Create a feature implementation spec at docs/specs/NNN_<feature>.m
 ---
 Create a feature implementation spec for: $ARGUMENTS
 
-## Spec Numbering
+## Spec Numbering & Path
 
-All spec files (and sliced-spec directories) get a zero-padded 3-digit prefix matching their **roadmap phase number**, so spec order mirrors roadmap order at a glance: `001_foundations.md`, `002_jira-sync/`, `003_frontend.md`, etc.
+Every spec path starts with a zero-padded 3-digit prefix mirroring its **roadmap phase number**, so spec order matches roadmap order at a glance.
 
-**Rules:**
-- **Mirror the roadmap phase.** If this spec implements a task in `docs/roadmap/NNN_<phase>.md`, the spec prefix is the same `NNN`. Check the roadmap file before picking a number.
-- **Multiple specs per phase → letter suffix.** When a phase has more than one task/spec, disambiguate with `NNN.A_<name>.md`, `NNN.B_<name>.md`, etc., assigned in task order within the phase. A lone spec in a phase stays `NNN_<name>.md` (no suffix).
-- **No roadmap yet?** Scan `docs/specs/` for existing prefixes and use `max(existing) + 1`, zero-padded to 3 digits. When a roadmap is later added, do **not** renumber — existing spec paths may be referenced by commits, PRs, and issues.
-- **Scan, don't renumber.** Never change the prefix of an existing spec. Commits, PRs, and issues reference specs by path.
-- **Separator is underscore** (`002_jira-sync.md`), matching roadmap convention.
-- **Sliced specs use the directory form** with the same prefix: `docs/specs/NNN_<feature>/` containing `README.md` (index) and `MMM_<slice>.md` files (zero-padded, dependency order). The directory vs. file distinction is how sliced specs are identified — no extra suffix needed.
+- **Single spec:** `docs/specs/NNN_<slug>.md`
+- **Sliced spec:** `docs/specs/NNN_<slug>/` containing `README.md` (index) and `MMM_<slice>.md` files. The directory-vs-file distinction is how sliced specs are identified — the `NNN` prefix stays on the directory, never moves to the children.
+- **Separator** between prefix and slug is `_`; within the slug, words are joined by `-` (e.g., `003_atlassian-integration.md`, never `atlassian_integration.md` and never without the prefix).
+
+**Picking `NNN`:**
+- If this spec implements a task in `docs/roadmap/NNN_<phase>.md`, use that same `NNN`. Check the roadmap file before picking.
+- Multiple specs in one phase → disambiguate with letter suffixes `NNN.A_<name>.md`, `NNN.B_<name>.md`, in task order. A lone spec in a phase has no suffix.
+- No roadmap yet → scan `docs/specs/` and use `max(existing) + 1`. Don't renumber later when a roadmap is added.
+- **Never renumber an existing spec** — commits, PRs, and issues reference specs by path.
+
+Before writing any file, state the target path and confirm it satisfies the rules above.
 
 ## Context Gathering
 
-Before interviewing, read what already exists:
+Read what already exists before interviewing:
 
-1. **Check for existing docs:**
-   - Read `docs/PRD.md` or `docs/prd/` if they exist
-   - Read `docs/ARCHITECTURE.md` for system structure
-   - Read `docs/TECHNICAL_DESIGN_DOCUMENT.md` for testing strategy
-   - Read `docs/THREAT_MODEL.md` for security context
-   - Read `README.md`, `CLAUDE.md`
-   - **Check `docs/roadmap/`** — list phase files to determine the correct `NNN` prefix for this spec (see **Spec Numbering** above). If a phase file references this feature as a task, mirror that phase's number.
-   - **List `docs/specs/`** — collect existing prefixes so you don't collide, and see whether a letter suffix (`NNN.A`, `NNN.B`) is needed.
-
-2. **If no docs exist (inherited project):**
-   - Read `README.md` for project overview
-   - Explore the directory structure to understand the codebase layout
-   - Read key entry points (main files, route definitions, config files)
-   - Check `git log --oneline -20` for recent direction
-   - Read `package.json`, `Cargo.toml`, `pyproject.toml`, or equivalent for dependencies and project metadata
-   - Summarize what you learned to the user before starting the interview — "Here's what I understand about this project so far: ..."
-
-3. **Read any existing spec for this feature** — if the user is revising, don't start from scratch.
+1. **Existing docs:** `docs/PRD.md` or `docs/prd/`, `docs/ARCHITECTURE.md`, `docs/TECHNICAL_DESIGN_DOCUMENT.md`, `docs/THREAT_MODEL.md`, `README.md`, `CLAUDE.md`.
+2. **Roadmap and specs directory:** list `docs/roadmap/` and `docs/specs/` to pick the correct `NNN` per the rules above.
+3. **Existing spec for this feature** — if the user is revising, don't start from scratch.
+4. **Inherited project with no docs:** read `README.md`, explore directory structure, read key entry points, check `git log --oneline -20`, read `package.json` / `Cargo.toml` / `pyproject.toml` / equivalent. Summarize what you learned to the user before the interview — "Here's what I understand about this project so far: ..."
 
 ## Interview
 
-Use AskUserQuestion to nail down the implementation details. This should be precise enough that the feature can be implemented without further clarification.
+Use AskUserQuestion to nail down implementation details — precise enough that the feature can be implemented without further clarification.
 
 1. **What exactly changes?** — Which components, APIs, data models are affected?
 2. **API contract** — Exact endpoints, request/response shapes, error codes, status codes
 3. **Data model** — Schema changes, migrations, new fields, new tables/collections
-4. **Edge cases** — What happens when input is invalid? When dependencies are down? When data is missing? When concurrent requests collide?
+4. **Edge cases** — Invalid input? Dependencies down? Missing data? Concurrent requests?
 5. **Security** — Auth requirements on new endpoints? Input validation rules? Data exposure risks?
 6. **Verification** — How do we prove this works? Concrete test cases with inputs and expected outputs.
-7. **Dependencies** — Does this depend on other work being done first? Does other work depend on this?
+7. **Dependencies** — Does this depend on other work? Does other work depend on this?
 
 Build on existing architecture, TDD, and security docs if they exist — reference them, don't repeat them.
 
 ## Slice (trunk-based)
 
-Before writing, estimate the implementation size (lines of code + tests). Per the global **Trunk-Based Workflow** (see root `CLAUDE.md`), each PR targets ≤200 lines.
+Estimate implementation size (code + tests). Per the global **Trunk-Based Workflow** (root `CLAUDE.md`), each PR targets ≤200 lines.
 
-- **≤200 lines:** one spec, one PR. Proceed to **Write** below with a single file at `docs/specs/NNN_<feature_name>.md`.
-- **>200 lines:** slice the feature into N independently mergeable vertical slices, each ≤200 lines. Create directory `docs/specs/NNN_<feature_name>/` (same `NNN` as the single-file form would have used) containing one sub-spec per slice at `MMM_<slice>.md` (zero-padded, dependency order within the feature) plus an index `README.md`.
+- **≤200 lines:** one spec, one PR. Single file at `docs/specs/NNN_<slug>.md`.
+- **>200 lines:** slice into N independently mergeable vertical slices, each ≤200 lines, under `docs/specs/NNN_<slug>/`.
 
 **Slicing rules:**
-- Every slice must leave `main` deployable. If a slice adds user-visible behavior that isn't ready to ship, call out a **feature flag** in its spec (name the flag, default off).
-- Slice vertically (DB → API → UI for *one* capability), not horizontally (all DB, then all API, then all UI). Vertical slices ship value; horizontal slices pile up un-shippable intermediate state.
-- No slice depends on an unmerged slice. If B truly needs A's code merged first, mark the dependency explicitly in B's spec and do not start B until A is merged.
-- Each slice is its own branch, its own PR, deleted after merge. Branch naming is `<type>/<issue-number>-<slice-slug>` once `/issues` has filed the issue (e.g., `feat/42-jira-sync`); before then, `<type>/<slice-slug>` is acceptable.
+- Every slice must leave `main` deployable. If a slice adds user-visible behavior that isn't ready to ship, name a **feature flag** (default off) in its spec.
+- Slice **vertically** (DB → API → UI for *one* capability), not horizontally. Vertical slices ship value; horizontal slices pile up un-shippable intermediate state.
+- No slice depends on an unmerged slice. If B truly needs A merged first, mark the dependency and don't start B until A is merged.
+- Each slice = its own branch, its own PR, deleted after merge. Branch naming: `<type>/<slice-slug>` before `/issues` runs, `<type>/<issue-number>-<slice-slug>` after (e.g., `feat/42-jira-sync`).
 
-**Index file** (`docs/specs/NNN_<feature_name>/README.md`) — the Slices table is the **source of truth for `/issues`**:
+**Trunk metadata fields** (used in both the Slices table and single-file specs):
+- **Type** — conventional-commit prefix (`feat`, `fix`, `refactor`, `chore`, `test`, `docs`, `perf`, `security`). Drives the branch prefix and the `type:*` label on GitHub.
+- **Flag** — exact flag name (default off), or `none` if the slice ships user-ready.
+- **Depends on** *(sliced only)* — other slice numbers that must merge first; `—` if independent.
+- **Complexity** — `low` / `med` / `high`. `high` is a smell that the slice should be re-sliced; if you keep it, include a `## Slicing` section explaining why one PR is still defensible.
+- **Issue** — `—` until `/issues` fills it with `#<number>`, which then unlocks the issue-numbered branch name.
+
+**Sliced index** (`docs/specs/NNN_<slug>/README.md`) — the Slices table is the **source of truth for `/issues`**:
 
 ```markdown
 # Feature: [Name]
@@ -85,16 +82,9 @@ Before writing, estimate the implementation size (lines of code + tests). Per th
 [When each flag flips on, who owns the decision, what verifies the rollout.]
 ```
 
-Column rules:
-- **Type** — one of the conventional-commit prefixes (`feat`, `fix`, `refactor`, `chore`, `test`, `docs`, `perf`, `security`). Drives the branch prefix and the `type:*` label on GitHub.
-- **Flag** — exact flag name (default off) or `none` if the slice ships user-ready.
-- **Depends on** — other slice numbers that must merge first; `—` if independent.
-- **Complexity** — `low` / `med` / `high`. `high` is a smell that the slice should be re-sliced; if you keep a `high` row, its sub-spec must contain a `## Slicing` section explaining why one PR is still defensible.
-- **Issue** — left as `—` when the spec is written. `/issues` fills this with `#<number>` after filing on GitHub, and the branch then becomes `<type>/<issue-number>-<slice-slug>`.
+Write each sub-spec using the single-file template below.
 
-Then write each slice spec using the single-file template below. In each sub-spec, add a `## Feature Flag` section naming the flag and default state (or state `None — slice is user-ready on merge`).
-
-**Single-file specs** (≤200 lines, no slicing) still need the trunk metadata so `/issues` can file an issue for them. Add a short frontmatter-style block near the top:
+**Single-file specs** add the same metadata as a short block near the top:
 
 ```markdown
 ## Trunk Metadata
@@ -107,7 +97,7 @@ Then write each slice spec using the single-file template below. In each sub-spe
 
 ## Write
 
-For a single (≤200 line) spec, write to `docs/specs/NNN_<feature_name>.md` (use the prefix computed in **Spec Numbering** above):
+Single (≤200 line) spec or sub-spec:
 
 ```markdown
 # Feature: [Name]
@@ -133,7 +123,7 @@ For a single (≤200 line) spec, write to `docs/specs/NNN_<feature_name>.md` (us
 [Auth requirements, input validation, data exposure risks. Reference THREAT_MODEL.md if it exists.]
 
 ## Feature Flag
-[Flag name and default state, or `None — slice is user-ready on merge`. Required when the slice merges before user-visible behavior is complete.]
+[Flag name and default state, or `None — slice is user-ready on merge`.]
 
 ## Verification Criteria
 
