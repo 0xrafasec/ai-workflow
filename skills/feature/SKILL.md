@@ -42,6 +42,18 @@ See the global **Trunk-Based Workflow** in root `CLAUDE.md` for worktree convent
 
 4. **Implement with tests, layer by layer.** Unit → integration → e2e. Run each layer and fix failures before moving on. Tests must cover every Verification Criterion.
 
+   **Parallel implementation (safe-by-default).** When step 3 produced a file placement table, use the `depends on` column to partition rows into **waves**: Wave 0 = rows with no deps; Wave N = rows depending only on Waves 0..N-1. Within a wave, a set of rows is **parallel-safe** only if *all* of these hold:
+   - 2+ rows in the wave.
+   - Source files are fully disjoint across rows (no two rows edit the same file).
+   - Test files are fully disjoint (no shared test module being mutated).
+   - No shared test fixtures/factories/mocks are being *modified* (read-only shared fixtures are fine).
+   - No row touches a shared config, schema, migration, or generated file (`package.json`, `pyproject.toml`, `go.mod`, `schema.sql`, OpenAPI, codegen outputs) — serialize those.
+   - Test infrastructure (runners, CI config, conftest) is already in place — if step 2 is setting it up, do that inline first, then parallelize.
+   If any check fails, implement that wave sequentially. When in doubt, serialize — a single retry costs less than a tangled merge.
+   For each parallel-safe row in a wave, spawn an implementer subagent with `Agent(subagent_type: "general-purpose", model: "sonnet", ...)`. The prompt must be self-contained: spec path + relevant excerpt, the exact files to create/edit (and "do not touch any other file"), test placement rules from step 2, verification commands, and coding conventions from CLAUDE.md. Use `isolation: "worktree"` when a wave has 3+ agents to prevent working-tree contention; for 2 agents on disjoint files, same-tree is fine.
+   After each wave: run the project's test suite, fix failures inline (do not respawn), then dispatch the next wave. Never pipeline waves — always barrier between them.
+   If no placement table was produced (scope <6 files) or the table has <2 parallel-safe rows in every wave, implement inline. Do not force parallelism.
+
 5. **Quality checks.** Run the project's lint, typecheck, and full test suite (check CLAUDE.md / Makefile for commands).
 
    **Slice-size gate (trunk-based).** Before reporting completion, run `git diff --stat main...HEAD` (or `git diff --stat` if working changes are unstaged). If the total diff exceeds **~200 lines** (tests included), stop and surface the overrun via **AskUserQuestion**:
@@ -52,9 +64,9 @@ See the global **Trunk-Based Workflow** in root `CLAUDE.md` for worktree convent
 
    **Feature flag wiring.** If the spec's `## Feature Flag` section names a flag, verify the new behavior is gated by it. If the flag doesn't exist yet in the project, create it (default off) as part of this slice.
 
-6. **Self-review.** Catch the obvious stuff before handing back.
+6. **Self-review (parallel).** Catch the obvious stuff before handing back. Fire security and architecture reviews as concurrent `Agent` calls in a single message — they are independent and should not serialize.
    - Prefer Anthropic's official `code-review` skill (from `claude-code-plugins`) if installed.
-   - Otherwise run `/sec-review` for security, and spawn an **architecture-reviewer** subagent for architecture, handing it the matching language guide from `reviews/` (`go.md`, `rust.md`, `typescript.md`, `python.md`).
+   - Otherwise run `/sec-review` for security, and spawn an **architecture-reviewer** subagent (pin `model: "sonnet"`) for architecture, handing it the matching language guide from `reviews/` (`go.md`, `rust.md`, `typescript.md`, `python.md`).
 
    This is a self-check, not a trust boundary — you're the writer reading the reviewer. A fresh-session `/review` or a human reviewer is still expected before merge.
 
