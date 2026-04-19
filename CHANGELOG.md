@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.5] - 2026-04-18
+
+### Fixed
+- `/spec` — collapsed the three restatements of the `NNN`-prefix rule (Hard Requirements, Spec Numbering, Slice section) into one **Spec Numbering & Path** section, and the two copies of the trunk-metadata field definitions (Slices table columns + single-file `## Trunk Metadata` block) into one shared subsection. Same rules, stated once each.
+- `/issues` — dependency references in issue bodies now use `{{issue:<slice-id>}}` placeholders during creation and get rewritten to real `#N` values in a second pass once the `slice-id → #N` mapping is known. Writing raw `#001`, `#002` during creation auto-linked those tokens to whatever issues already existed in the repo (issue #1, #2, …), silently producing wrong cross-references. The per-milestone loop now runs pass 2 before writing back to source spec files so downstream references use final issue numbers.
+
 ## [0.5.4] - 2026-04-18
 
 ### Fixed
