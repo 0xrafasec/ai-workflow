@@ -1,3 +1,4 @@
 *.bak.*
 .claude/
 /skills/feature-workspace/
+/settings.json

@@ -148,7 +148,15 @@ link_bin "aiwf" "aiwf"
 
 # Global config
 link "CLAUDE.md"                "CLAUDE.md"
+
+# settings.json is per-user (gitignored). Seed from the tracked example on
+# fresh clones so the symlink target exists before we link it into ~/.claude.
+if [ ! -e "$SCRIPT_DIR/settings.json" ] && [ -e "$SCRIPT_DIR/settings.example.json" ]; then
+    cp "$SCRIPT_DIR/settings.example.json" "$SCRIPT_DIR/settings.json"
+    info "Seeded settings.json from settings.example.json (edit freely; not tracked)"
+fi
 link "settings.json"            "settings.json"
+
 link "statusline-command.sh"    "statusline-command.sh"
 
 # Agents
