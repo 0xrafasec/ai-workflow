@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.6] - 2026-04-18
+
+### Fixed
+- `/rlabs-design` — surface-specific kit loading is now mandatory (slides → `slides/index.html`; website → all `ui_kits/website/` components; app → all `ui_kits/app/` components), and `assets/` + `preview/` specimen files are enumerated as first-class references rather than buried under "explore the other available files". Reading only `colors_and_type.css`/`tokens.css` was producing off-brand output because tokens alone don't convey component composition or spacing rhythm.
+- `/rlabs-design` — Playwright fidelity check is now required after applying the design: screenshot the matching reference `index.html` and the output at 1440×900 (and 390×844 if mobile in scope), compare against an explicit brand-rule checklist (typography, palette, radii, spacing, borders, motion, copy), fix drift in place, then report. Falls back to a stated manual check if Playwright is unavailable rather than silently skipping verification.
+
 ## [0.5.5] - 2026-04-18
 
 ### Fixed
