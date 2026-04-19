@@ -1,23 +1,33 @@
 ---
 name: factory
-description: "End-to-end feature delivery pipeline — reads the roadmap, generates missing specs, optionally creates GitHub issues, then launches up to 5 parallel worktree agents that each implement a feature on its own branch and open a PR. Use when the user says 'run the factory', 'ship the backlog', 'process the roadmap', 'build everything that's unstarted', or wants automated multi-feature delivery across parallel worktrees."
+description: "Single-milestone/phase delivery pipeline — implements every open issue in one GitHub milestone (or one roadmap phase) as parallel, conflict-free PRs, each pre-reviewed by a fresh-context reviewer agent. Stops with all PRs open for human merge. Use when the user says 'run factory on milestone N', 'ship phase 003_auth', 'open PRs for the auth milestone', or '/factory --milestone <N>'. For end-to-end multi-phase roadmap execution, use /autopilot instead."
 ---
 Run the factory pipeline for: $ARGUMENTS
 
 ## What this does
 
-Factory is an **end-to-end delivery pipeline**. It reads the roadmap, generates missing specs via speckit, optionally creates GitHub issues, then launches up to 5 parallel worktree agents — each implementing one feature on its own branch with lint+build+tests enforced as a hard gate before any PR is opened.
+Factory ships **one milestone (== one roadmap phase) at a time**. It scans the milestone's open issues, generates missing specs via speckit, then launches up to 5 parallel worktree writer agents — each implementing one issue on its own branch with lint+typecheck+tests as a hard gate before opening a PR. Every PR is then reviewed by a **separate, fresh-context reviewer agent** (writer/reviewer separation per CLAUDE.md). Reviewer findings are fixed via the writer agent resumed in-place (warm context, cheap), bounded to 2 fix cycles. The final review verdict is posted to the PR. Factory stops with PRs open for human merge — **no auto-merge**.
 
-You are the **orchestrator**. You do not implement anything yourself.
+For multi-phase roadmap execution use `/autopilot` instead. Factory is scoped to exactly one phase/milestone per invocation.
+
+You are the **orchestrator** (opus). You do not implement, review, or fix code yourself. You dispatch agents (sonnet) and aggregate their structured returns. You never read PR diffs or full review prose into your own context — only `{verdict, cycles, pr_url}` summaries.
+
+## Convention: phase ↔ milestone
+
+A roadmap phase file `docs/roadmap/<NNN>_<name>.md` corresponds to a GitHub milestone whose **title exactly equals `<NNN>_<name>`** (e.g., phase file `003_auth.md` ↔ milestone `003_auth`). This is how `/issues` files them and how factory resolves them. No frontmatter, no labels — title match only.
 
 ## Parse Arguments
 
-- **No argument:** `/factory` — process all unstarted features in `docs/roadmap/*.md`
-- **Phase name:** `/factory 003_auth` — process only features in that phase file
-- **Feature slug:** `/factory auth-login` — process only the feature whose spec slug matches
-- **`--no-issues`:** skip GitHub issue creation regardless of project board availability
-- **`--dry-run`:** scan and report what would run, without spawning any agents
-- **`--limit N`:** override the default 5-agent parallel cap (use carefully)
+Factory requires exactly one phase/milestone per invocation. Reject calls without a target.
+
+- **`/factory <phase-name>`** — e.g., `/factory 003_auth`. Resolves to roadmap file `docs/roadmap/003_auth.md` AND milestone titled `003_auth`. Both must exist (phase file is the source of truth for spec paths and file lists; milestone is the source of truth for which issues are still open).
+- **`/factory --milestone <N>`** — fetch milestone `<N>` via `gh api`, read its title, then resolve the matching `docs/roadmap/<title>.md`. Equivalent to `/factory <title>`.
+- **`--no-issues`:** skip GitHub issue creation if a spec exists but no issue is filed yet (still requires a milestone for scoping).
+- **`--dry-run`:** scan and report the planned batches + review-loop budget, spawn nothing.
+- **`--limit N`:** override the default 5-agent parallel cap (use carefully).
+
+If no argument is passed, **STOP** and tell the user:
+> Factory requires a phase or milestone. Use `/factory <phase-name>` or `/factory --milestone <N>`. For full-roadmap execution, use `/autopilot`.
 
 ## Phase 0: Preflight — Fix friction before it bites
 
@@ -101,38 +111,75 @@ If any command can't be resolved, note it — agents will be told to discover it
 
 ---
 
-## Phase 1: Roadmap Scan — What needs to be done
+## Phase 1: Milestone Scan — What needs to be done
 
-Read every `docs/roadmap/*.md` file (skip `README.md`). For each file, extract every task and classify it:
+### 1a. Resolve phase + milestone
 
-**Task states:**
-- `unstarted` — no spec exists at the spec path listed in the task, AND no open/merged PR references the task name or spec slug
-- `spec-only` — spec exists but no implementation PR found
-- `in-progress` — an open PR exists referencing this task
-- `done` — a merged PR exists, or the roadmap marks it complete (`[x]` checkbox)
+From the parsed argument, you have a phase name (e.g., `003_auth`).
 
-Check PR status with:
+1. Confirm the phase file exists: `docs/roadmap/<phase-name>.md`. If not → **STOP**: "Phase file `docs/roadmap/<phase-name>.md` not found. Run `/roadmap` or check the phase name."
+2. Resolve the milestone by title:
+   ```bash
+   gh api "repos/{owner}/{repo}/milestones?state=open" --jq ".[] | select(.title == \"<phase-name>\")"
+   ```
+   If not found → **STOP**: "No open milestone titled `<phase-name>`. Run `/issues <phase-name>` first to create the milestone and issues."
+
+### 1b. Pull open issues for the milestone
+
 ```bash
-gh pr list --state all --search "<task-slug>" --json number,title,state,url
+gh issue list --milestone "<phase-name>" --state open --json number,title,body,url,labels
 ```
 
-Build a table:
+**Closed issues are considered done — they are excluded from this run.** No PR-status check needed; closed = shipped.
+
+### 1c. Resolve spec path per issue
+
+For each open issue, grep the issue body for a spec path. Convention from `/issues`: the body contains a line like `Spec: docs/specs/003_auth/login.md` or a markdown link `[spec](docs/specs/...)`.
+
+- If the spec path is present and the file exists → state = `spec-ready`
+- If the spec path is present but the file is missing → state = `unstarted` (will spec-gen in Phase 2)
+- If no spec path is in the body → fall back to scanning the phase roadmap file for a task whose name matches the issue title; if found, use its spec path. If still nothing → state = `unstarted` with the issue title used as the feature slug
+
+### 1d. File-overlap analysis (NEW — borrowed from /autopilot)
+
+For each in-scope feature, extract the **files-touched list** from its spec (look for `## Files`, `## Files Touched`, or the roadmap task entry). Build a file→features map.
+
+Two features whose file sets intersect **must not run in the same batch**. Group features into the minimum number of batches such that:
+- Each batch has ≤5 features (or `--limit N`)
+- No two features in the same batch share any file in their touched-files list
+- Within a batch, no feature depends on another feature in the same batch (dependencies from spec/roadmap)
+
+Use a simple greedy bin-packer: sort features by files-touched count descending; place each into the first batch where it doesn't collide; create a new batch if no fit.
+
+If a feature's spec has no files list → place it alone in its own batch (treat unknown as "may collide with anything"). Note this in the report so the user can fix the spec.
+
+### 1e. Report scan + plan
 
 ```
-## Roadmap Scan
+## Milestone Scan — <phase-name> (milestone #<N>)
 
-| Phase | Feature | Spec | State | Action |
-|-------|---------|------|-------|--------|
-| 003_auth | auth-login | specs/003_auth/login.md | unstarted | gen-spec + implement |
-| 003_auth | auth-register | specs/003_auth/register.md | spec-only | implement |
-| 004_dashboard | overview | specs/004_dashboard/overview.md | in-progress | skip (PR #42 open) |
-| 002_foundation | db-schema | specs/002_foundation/db.md | done | skip |
+Open issues: 12
+In scope (open, not yet PR'd): 10
+Already has PR: 2 (skipped — see #45, #46)
+
+### Batches (file-overlap-aware, ≤5 per batch)
+
+Batch 1 (3 features, no file collisions):
+  • #12 auth-login        → docs/specs/003_auth/login.md       [spec-ready]
+  • #13 auth-register     → docs/specs/003_auth/register.md    [spec-ready]
+  • #15 password-reset    → docs/specs/003_auth/reset.md       [unstarted — will gen spec]
+
+Batch 2 (2 features, would collide with batch 1 on src/auth/middleware.ts):
+  • #14 auth-middleware   → docs/specs/003_auth/middleware.md  [spec-ready]
+  • #16 session-store     → docs/specs/003_auth/session.md     [spec-ready]
+
+Estimated review-loop budget: ~1.3× writer cost (best case 1.0×, worst 1.8× with 2 fix cycles).
 ```
 
-**Scope for this run:** only `unstarted` and `spec-only` tasks. Skip `in-progress` (a PR is already open) and `done`.
+**Scope for this run:** open issues with no existing PR. Skip issues that already have an open PR (search by `<feature-slug>` in PR title).
 
-If `--dry-run` is set: print the table and stop here.
-> Dry run complete. N features would be processed. Remove `--dry-run` to execute.
+If `--dry-run` is set: print the plan and stop here.
+> Dry run complete. N features would be processed in M batches. Remove `--dry-run` to execute.
 
 ---
 
@@ -363,15 +410,13 @@ Run each command in sequence and **paste the last 30 lines of output**:
 
 If you cannot fix a failure after 3 attempts, document the failure clearly and stop — do not create a PR.
 
-### Step 4 — Code review
-
-Run Anthropic's official `code-review` skill (from `claude-code-plugins`) if installed, otherwise run `/sec-review` and spawn the `architecture-reviewer` agent. Fix any HIGH severity findings. Re-run the quality gate after fixes.
-
-### Step 5 — Commit and push
+### Step 4 — Commit and push
 
 Commit with conventional commit messages, split by logical concern. Push the worktree branch.
 
-### Step 6 — Open PR
+**Do NOT run code review yourself.** Review happens in a separate fresh-context agent after the PR is open (writer/reviewer separation per CLAUDE.md). You may be resumed later with specific findings to fix — at that point, fix exactly what's listed and re-run the quality gate. Do not interpret, debate, or expand scope.
+
+### Step 5 — Open PR
 
 Create a PR targeting `main` (or the default branch):
 
@@ -421,7 +466,7 @@ EOF
 )"
 ```
 
-### Step 7 — Link issue
+### Step 6 — Link issue
 
 If a GitHub issue URL was provided, link the PR to it:
 ```bash
@@ -430,13 +475,19 @@ gh issue comment <issue-number> --body "Implemented in PR <pr-url>"
 
 ### Return to orchestrator
 
-Report back:
-- Feature name
-- Branch name
-- PR URL (or "no PR — quality gate failed")
-- Quality gate results (pass/fail per check)
-- Any blockers encountered
-- Design ref status
+Report back as a compact JSON-like block — the orchestrator does **not** want diffs or prose:
+
+```
+FEATURE: <feature-name>
+BRANCH: <branch-name>
+PR: <pr-url or "FAILED">
+GATE: lint=PASS typecheck=PASS test=PASS  (or fail-detail)
+DESIGN_REF: <ok|tbd|n/a>
+BLOCKERS: <none | one-line description>
+HEAD_SHA: <git rev-parse HEAD>
+```
+
+Do NOT paste full command output, full diffs, or full review prose. The orchestrator works from this summary only.
 
 ## Retry rules
 
@@ -483,6 +534,143 @@ Wait for user response before dispatching the next batch.
 
 ---
 
+## Phase 5.5: Review Loop — fresh-context reviewer per PR
+
+For each PR opened in the batch (skip features whose writer failed and produced no PR), run an independent reviewer agent. Reviewers can run **in parallel across PRs** (one per PR, single dispatch message), but each PR's loop is sequential within itself.
+
+### Token discipline (read this first)
+
+The whole point of this phase is high-quality PR review without burning the budget. The cheap path is:
+
+1. **Reviewer = sonnet, fresh context, NO worktree.** Reviewer reads only what it needs from the open repo + `gh`. Do not give it a worktree (it's not editing).
+2. **Reviewer scope is bounded** — explicit "do not read the whole codebase" in its prompt.
+3. **Fixer = the SAME writer agent resumed** via SendMessage. Writer's spec/files/test-pattern context is already loaded; respawning a fresh fixer would re-pay that read tax. This is the single biggest token saver in the whole skill — do not deviate.
+4. **Re-review reads only the new diff** since the last reviewed SHA, not the full PR.
+5. **LOW-only verdicts skip the fix loop** — post nits as PR comments, done.
+6. **Hard cap: 2 fix cycles per PR.** After that, post unresolved findings to the PR and hand back to the human.
+7. **Orchestrator never ingests review prose.** Reviewer returns a structured verdict block; you store and aggregate it. Never quote review prose into your own context.
+
+### 5.5a. Dispatch reviewer per PR
+
+For each PR in the batch, spawn a reviewer agent in a single message (parallel across PRs). All reviewers run with `model: "sonnet"`, `run_in_background: true`, **no `isolation: "worktree"`** (reviewer doesn't write).
+
+Reviewer prompt:
+
+```
+## Factory Reviewer — PR <pr-url>
+
+You are a code reviewer. You DO NOT write code. You produce a structured verdict.
+
+## Project context (5 lines max)
+
+<project name, stack, key conventions — same summary used by writers>
+
+## Your inputs (read ONLY these — do NOT explore the codebase)
+
+1. The PR diff:        gh pr diff <pr-number>
+2. The spec:           <spec-path>
+3. The PR body:        gh pr view <pr-number> --json body --jq .body
+4. Selective reads:    only files the diff makes you doubt (e.g., a caller of a changed function). Cap: 3 files.
+
+If you find yourself wanting to read more than 3 extra files, STOP and emit a LOW finding "review-coverage-limited: would benefit from broader read". Do not actually read them.
+
+## Review checklist (focused — not exhaustive)
+
+- Spec compliance: does the diff implement what the spec says, no more, no less?
+- Verification criteria: are all spec verification criteria covered by tests in the diff?
+- Security: input validation at boundaries, authz, secrets handling, injection surfaces (if applicable to the diff)
+- Correctness: obvious bugs, off-by-one, error handling at boundaries, race conditions
+- Test quality: do tests actually exercise the change, or are they tautological?
+- Convention drift: does the diff respect the patterns of nearby existing code?
+
+Out of scope (do NOT flag):
+- Style nits already covered by lint
+- Refactoring opportunities unrelated to the diff
+- Hypothetical future requirements
+
+## Output — exact format, nothing else
+
+VERDICT: PASS | FIX_REQUIRED
+CYCLES_USED: <set by orchestrator on re-review; ignore on first pass>
+REVIEWED_SHA: <git rev-parse the head SHA you reviewed against>
+
+FINDINGS:
+- [HIGH] <one-line action item — "Add input validation for X in path/to/file.ts:42">
+- [MED]  <one-line action item>
+- [LOW]  <one-line nit>
+
+(If VERDICT=PASS with only LOW findings, list them — they'll be posted as PR comments without triggering a fix cycle.)
+(If no findings at all, write "FINDINGS: none" and VERDICT: PASS.)
+
+SUMMARY: <one sentence — what's the PR doing and is it ready>
+```
+
+### 5.5b. Process reviewer verdicts
+
+For each reviewer return:
+
+| Verdict | Findings | Action |
+|---------|----------|--------|
+| PASS | none | Post `gh pr review <pr> --approve --body "Factory reviewer: PASS — no findings."`. Done. |
+| PASS | LOW only | Post `gh pr review <pr> --comment --body "Factory reviewer: PASS with nits:\n<bullet list of LOW findings>"`. Done. |
+| FIX_REQUIRED | HIGH/MED present | Trigger fix cycle (5.5c). |
+
+### 5.5c. Fix cycle (resume the writer agent)
+
+**Resume the writer agent via SendMessage** (not a new Agent call). Pass only the action items, not the reviewer's prose:
+
+```
+SendMessage to: <writer-agent-id>
+
+Reviewer found issues. Fix exactly these and nothing else:
+
+- [HIGH] <action item 1>
+- [HIGH] <action item 2>
+- [MED]  <action item 3>
+
+Do not refactor, do not expand scope. After fixing:
+1. Run the quality gate again (lint, typecheck, test) and confirm all PASS.
+2. Commit with message: "fix(<feature>): address reviewer findings (cycle <N>)"
+3. Push to the same branch.
+4. Return: NEW_HEAD_SHA: <sha>, GATE: <results>
+```
+
+When the writer returns, **re-dispatch the reviewer** with one extra instruction:
+
+```
+This is review cycle <N+1> for the same PR. Read ONLY the diff since the previously reviewed SHA:
+   gh pr diff <pr-number>  (full diff is fine — but focus on commits since <previous SHA>)
+   git diff <previous-SHA>..HEAD  (use this for laser focus on the fix)
+
+Your previous findings were:
+<list>
+
+Verify they are resolved. Find any new issues introduced by the fix. Output the same VERDICT block.
+```
+
+### 5.5d. Loop bounds + spec-ambiguity detection
+
+- **Max 2 fix cycles per PR.** After cycle 2, if reviewer still returns FIX_REQUIRED:
+  - Post unresolved findings as a PR review comment: `gh pr review <pr> --request-changes --body "Factory reviewer (after 2 fix cycles, escalating to human):\n<findings>"`
+  - Mark the PR as `NEEDS_HUMAN` in the summary table.
+- **Spec-ambiguity detection:** if the reviewer flags the **same finding category** in cycle 1 and cycle 2 (e.g., both cycles flag input validation in the same area), append to the PR comment: *"⚠ Spec ambiguity suspected — the same finding survived a fix cycle. Consider clarifying the spec at <spec-path> before re-running factory."*
+
+### 5.5e. Reviewer return to orchestrator
+
+Reviewer agents return this compact block (no prose into orchestrator context):
+
+```
+PR: <pr-url>
+VERDICT: PASS | PASS_WITH_NITS | NEEDS_HUMAN
+CYCLES: <0|1|2>
+HIGH_OPEN: <count>
+MED_OPEN: <count>
+LOW_POSTED: <count>
+SPEC_AMBIGUITY_FLAGGED: <true|false>
+```
+
+---
+
 ## Phase 6: Summary Table
 
 After all batches complete (or the user stops), post the full run summary:
@@ -498,27 +686,32 @@ After all batches complete (or the user stops), post the full run summary:
 
 ### Results
 
-| Feature | Phase | Spec | Issue | PR | Gate | Status |
-|---------|-------|------|-------|-----|------|--------|
-| auth-login | 003 | ✓ | #12 | #45 | ✓ | READY FOR REVIEW |
-| auth-register | 003 | ✓ | #13 | — | ✗ | BLOCKED — tests failing |
-| dashboard | 004 | ✓ | #14 | #46 | ✓ | READY FOR REVIEW |
+| Feature | Issue | PR | Gate | Review | Cycles | Status |
+|---------|-------|----|------|--------|--------|--------|
+| auth-login | #12 | #45 | ✓ | PASS | 0 | READY TO MERGE |
+| auth-register | #13 | #46 | ✓ | PASS_WITH_NITS | 0 | READY TO MERGE (3 nits posted) |
+| password-reset | #15 | #47 | ✓ | NEEDS_HUMAN | 2 | NEEDS HUMAN — 1 HIGH unresolved (spec ambiguity flagged) |
+| auth-middleware | #14 | — | ✗ | — | — | BLOCKED — tests failing |
 
 ### Open PRs (review these)
-- #45 feat(auth-login): implement login flow — <url>
-- #46 feat(dashboard): owner dashboard scaffold — <url>
+- #45 feat(auth-login): implement login flow — <url> — reviewer PASS
+- #46 feat(auth-register): registration flow — <url> — reviewer PASS with 3 nits
+- #47 feat(password-reset): reset flow — <url> — ⚠ NEEDS HUMAN, spec ambiguity
 
 ### Blocked (needs attention)
-- auth-register: Branch `feat/auth-register` — quality gate failed (tests). See branch for details.
+- auth-middleware: Branch `feat/auth-middleware` — quality gate failed (tests). See branch for details.
+
+### Spec ambiguity flagged (consider clarifying before re-running)
+- password-reset: same finding survived 2 fix cycles — see PR #47 review comment
 
 ### Design refs missing (run /verify-design before merging)
-- dashboard: no Paper artboard found — design ref marked TBD in PR
+- (none this run)
 
 ### Next steps
-1. Review and merge open PRs (in dependency order — see roadmap)
-2. Fix blocked features (or re-run `/factory auth-register` after fixing)
-3. For features with TBD design refs: run `/verify-design <feature>` and fix mismatches before merging
-4. After all PRs merged: run `/factory` again to pick up any remaining unstarted features
+1. Review and merge READY TO MERGE PRs (in dependency order — see roadmap)
+2. Address NEEDS_HUMAN PRs: read the reviewer comment, decide fix-or-clarify-spec
+3. Fix blocked features (or re-run `/factory <phase>` after fixing)
+4. After all PRs merged + closed issues: run `/factory <next-phase>` for the next milestone
 ```
 
 ---
@@ -554,13 +747,19 @@ These are the friction patterns this factory is hardened against. Each preflight
 
 ## Rules
 
-1. **Orchestrator stays thin.** You read the roadmap, dispatch agents, track results. You do not write code, review code, or fix failing tests yourself.
-2. **Preflight is mandatory.** Never skip Phase 0. Every Phase 0 failure that isn't caught costs 10+ minutes downstream.
-3. **Parallel = single message.** All agents in a batch must be dispatched in one response with `run_in_background: true`. Never dispatch one and wait before dispatching the next.
-4. **5-agent cap.** Never dispatch more than 5 worktree agents at once. This is a resource and reviewability limit, not a suggestion.
-5. **Quality gate is a hard block.** No PR is created by any agent while lint, typecheck, or tests are failing. This is non-negotiable.
-6. **Never retry automatically.** When an agent fails, present the failure to the user and wait for their decision. They may want to fix the spec or roadmap before retrying.
-7. **Design refs are warned, not blocked.** A missing design reference is a warning. It goes in the PR body as "Design ref: TBD". It never blocks spec generation or implementation.
-8. **Restore settings.json.** Always clean up the Stop hook in Phase 7, even if the run fails partway through.
-9. **Dependency order matters.** Do not dispatch an agent for a feature whose dependencies have not been merged into main. If a batch would include such a feature, skip it and note why.
-10. **Secrets stay out of issues.** When creating GitHub issues, never include env var values, tokens, API keys, or credentials — even as examples.
+1. **Orchestrator stays thin.** You scan the milestone, dispatch agents, aggregate compact return blocks. You do not write code, read PR diffs, ingest review prose, or fix failing tests yourself. If you ever find yourself reading a diff in your own context, stop — that's a writer/reviewer agent's job.
+2. **One milestone per invocation.** Factory does not loop across phases. For multi-phase execution use `/autopilot`. After a milestone's PRs merge, the user re-invokes factory for the next phase.
+3. **Writer/reviewer separation is non-negotiable.** Writers never review their own code. Reviewers are always fresh-context, separate agents. The in-context `code-review` skill branch was removed — never reintroduce it.
+4. **Fixer = writer resumed via SendMessage.** Never spawn a fresh fixer agent — the writer's loaded context is the cheapest path. The reviewer is fresh; the fixer is warm.
+5. **Preflight is mandatory.** Never skip Phase 0.
+6. **Parallel = single message.** All agents in a batch (writers OR reviewers) must be dispatched in one response with `run_in_background: true`.
+7. **5-agent cap per batch.** Hard limit on concurrent writers; reviewers also capped at 5 concurrent.
+8. **Quality gate is a hard block.** No PR is created while lint/typecheck/tests fail.
+9. **File-overlap-aware batching.** No two features in the same writer batch may touch the same file. Group via the greedy bin-packer in Phase 1d.
+10. **Review loop bounded at 2 cycles.** After cycle 2, escalate to human via PR comment. Never loop indefinitely.
+11. **No auto-merge, ever.** Factory's job ends when PRs are open and reviewed. Merging is the human's call.
+12. **Spec-ambiguity escalation.** When the same finding survives a fix cycle, surface it as a spec problem, not a code problem.
+13. **Never retry automatically on writer failure.** Present failures to the user; they decide.
+14. **Restore settings.json.** Always clean up the Stop hook in Phase 7.
+15. **Dependency order matters.** Do not dispatch a feature whose deps aren't merged into `main`.
+16. **Secrets stay out of issues, PR bodies, and review comments.**
