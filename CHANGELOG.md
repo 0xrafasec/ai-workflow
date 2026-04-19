@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.8] - 2026-04-19
+
+### Changed
+- `/feature #<N>` now resolves directly from a GitHub issue number: fetches the issue via `gh issue view` or GitHub MCP, scans `docs/specs/` for a matching `Issue: #<N>` field, and proceeds with that spec. If no spec is linked, treats the issue title/body as the feature description and asks whether to spec first or build inline.
+
 ## [0.5.7] - 2026-04-19
 
 ### Changed
