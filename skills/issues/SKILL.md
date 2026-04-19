@@ -143,7 +143,7 @@ Create via MCP `create_milestone` (preferred) or `gh api "repos/{owner}/{repo}/m
 <bullet list of files from the task's Files field>
 
 ## Dependencies
-<explicit task-ids or issue #s; `None` if independent>
+<one of: `None.` · `Blocked by {{issue:<slice-id>}}[, {{issue:<slice-id>}}...].` — see "Dependencies: two-pass resolution" below>
 
 ## Verification
 ```
@@ -164,6 +164,27 @@ Filed by `/issues` from `<source-file>`.
 ```
 
 Create via MCP `create_issue` (preferred; pass title/body/milestone/labels as fields) or `gh issue create --title "..." --body-file <tmp> --milestone "Phase NNN — <name>" --label "type:feat" --label "complexity:med" ...` (fallback).
+
+## Dependencies: two-pass resolution
+
+**Never write `#001`, `#002`, … in an issue body.** GitHub auto-links any `#N` to the real issue with that number — so `#001` resolves to issue #1 in the repo, not the slice you meant. This silently produces cross-linked, wrong references.
+
+GitHub issue numbers are assigned by the server at creation time and can't be predicted, so dependency references must be filled **after** each issue is created. Use a two-pass approach:
+
+**Pass 1 — write with placeholders.** In the body template's `Dependencies` section, reference other slices/tasks using a `{{issue:<slice-id>}}` token whose key is the source identifier (e.g., `{{issue:atlassian.001}}`, `{{issue:003.2}}`, `{{issue:004.2.1}}`), not a `#N`. Example body fragment:
+
+```markdown
+## Dependencies
+Blocked by {{issue:atlassian.001}}, {{issue:atlassian.004}}.
+```
+
+Any `#` token you write at this stage is a bug. If a dependency is external (already filed), write its real `#N` directly — those are stable.
+
+**Pass 2 — rewrite once the mapping is known.** After all issues in this batch are filed and you have a `slice-id → #N` map (e.g., `atlassian.001 → #48`), walk every filed issue in the batch, substitute each `{{issue:<slice-id>}}` token with the corresponding `#<N>`, and update the body via MCP `update_issue` / `gh issue edit --body-file <tmp>`. Pass 2 is also where you update the **source spec files' Dependencies fields** if they used slice-id references — the canonical form in the repo should match the canonical form on GitHub.
+
+**Idempotency.** On re-runs, any `{{issue:…}}` token still present in a filed issue body means pass 2 was interrupted; resolve it. Any `#N` already in place that matches the current mapping is left alone.
+
+**Applies to every source type** (roadmap index, phase file, sliced spec, single spec). Single-spec inputs with `None.` dependencies skip pass 2 entirely.
 
 ## Pacing: two-milestone horizon (default recommendation)
 
@@ -196,8 +217,9 @@ This rule does not apply to phase-file or single-spec inputs — those are alrea
 For roadmap/phase inputs, file **one milestone + its issues at a time**, in roadmap order. After each milestone batch:
 
 1. Print the created milestone URL + issue URLs and numbers.
-2. Patch the `Issue:` / `Issues:` columns in the source roadmap/spec files with the newly-minted `#<N>` values.
-3. Call `AskUserQuestion` with the `Next phase` question (Yes, continue / Stop here) — halt unless the user selects "Yes, continue". An "Other" response is also a halt: re-plan before continuing.
+2. **Run pass 2** (see "Dependencies: two-pass resolution"): build the `slice-id → #N` map from this batch, then rewrite every issue in the batch whose body contains `{{issue:…}}` tokens. Do this before the writeback in step 3 so downstream spec edits can reference final `#N` values.
+3. Patch the `Issue:` / `Issues:` columns in the source roadmap/spec files with the newly-minted `#<N>` values.
+4. Call `AskUserQuestion` with the `Next phase` question (Yes, continue / Stop here) — halt unless the user selects "Yes, continue". An "Other" response is also a halt: re-plan before continuing.
 
 This keeps a broken run recoverable (stop after any batch and fix the source file) and keeps writebacks atomic per phase.
 
