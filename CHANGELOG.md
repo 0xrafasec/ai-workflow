@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-04-19
+
+### Changed
+- `/factory` repositioned from "end-to-end roadmap pipeline" to **single-milestone/phase** pipeline. New required argument: `/factory <phase-name>` or `/factory --milestone <N>`. Convention: roadmap phase file `docs/roadmap/<NNN>_<name>.md` ↔ GitHub milestone titled `<NNN>_<name>` (filed by `/issues`). Source of work is now open issues in the milestone (closed = done, excluded). Bare `/factory` is rejected with a pointer to `/autopilot` for multi-phase runs. End-to-end roadmap orchestration remains `/autopilot`'s job.
+- `/factory` now batches features with **file-overlap awareness** (greedy bin-packer ported from `/autopilot`): no two features in the same writer batch may touch the same file, so 10 PRs from a milestone open as 2-3 conflict-free batches instead of one risky batch.
+- `/factory` writers no longer self-review. The previous in-context `code-review` skill call (Step 4 of the writer prompt) violated writer/reviewer separation and has been removed.
+
+### Added
+- `/factory` Phase 5.5 — **per-PR review loop** with token discipline: fresh-context sonnet reviewer per PR (parallel across PRs in the batch, no worktree, bounded scope = diff + spec + ≤3 files), structured `VERDICT: PASS | FIX_REQUIRED` output. On `FIX_REQUIRED`, the **writer agent is resumed via `SendMessage`** (warm context — re-spawning a fresh fixer would re-pay the spec/files read cost) with the action items only, fixes, re-pushes; reviewer re-runs on the new diff only. Hard cap of 2 fix cycles, then escalates to PR comment as `NEEDS_HUMAN`. Spec-ambiguity is auto-detected when the same finding survives a cycle. Final verdict posted to the PR via `gh pr review`. **No auto-merge** — factory stops with PRs open and reviewed for human merge.
+- `/feature` Step 6 rewritten with the same fresh-context reviewer + warm-fixer + 2-cycle pattern. The previous "self-review (parallel)" branch that ran the in-context `code-review` skill is gone — skills run in the writer's session, which defeats writer/reviewer separation. Reviewer always runs as a separate `Agent` call with cold context.
+- Project `CLAUDE.md` rule: any change to a skill, workflow, or convention must update the relevant docs (README, REFERENCE.md, CHANGELOG, WORKFLOW.md) in the same change.
+
 ## [0.5.8] - 2026-04-19
 
 ### Changed

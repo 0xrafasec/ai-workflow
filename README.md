@@ -196,7 +196,7 @@ Skills are multi-step workflows invoked as slash commands inside Claude Code.
 | `/feature <spec>` | End-to-end feature implementation from a spec. `--commit` auto-commits after completion (outputs log only); `--pr` auto-commits + opens PR (outputs log + URL only) |
 | `/fix <issue>` | Diagnose and fix a bug from a description, stack trace, or GitHub issue |
 | `/autopilot` | Execute a full roadmap with parallel worktree agents |
-| `/factory` | End-to-end delivery pipeline — reads roadmap, generates specs, runs parallel `/feature` agents |
+| `/factory <phase>` or `--milestone <N>` | Single-milestone/phase pipeline: implements every open issue as conflict-free parallel PRs, each pre-reviewed by a fresh-context reviewer agent (2-cycle bounded fix loop, no auto-merge) |
 | `/new-project <name>` | Scaffold a new project with the full workflow |
 
 ### Review
@@ -256,7 +256,7 @@ The typical flow from idea to shipped code:
   │   /verify-design       Diff running UI against Paper refs, fix in place
   │
   ├── /autopilot           Execute the roadmap automatically
-  ├── /factory             End-to-end: gen specs, parallel worktree agents, PRs
+  ├── /factory <phase>     Ship one milestone/phase: parallel PRs + per-PR review loop
   └── /feature <spec>      Or implement one feature at a time
         │
       /review              Independent review in a fresh session
@@ -289,7 +289,8 @@ Human review   →  Business logic, design decisions, edge cases
 
 ```
 ai-workflow/
-├── CLAUDE.md                  # Global conventions (symlinked to ~/.claude/)
+├── CLAUDE.md                  # Project-only rules (loads when working IN this repo)
+├── dotfiles/CLAUDE.md          # Global conventions (symlinked to ~/.claude/)
 ├── settings.json              # Hooks, permissions, model config (Claude Code)
 ├── statusline-command.sh      # Custom status line script (Claude Code)
 ├── aiwf                       # Toolkit manager CLI
@@ -339,9 +340,9 @@ ai-workflow/
 
 ## Configuration
 
-### Global Conventions (`CLAUDE.md`)
+### Global Conventions (`dotfiles/CLAUDE.md`)
 
-Installed at `~/.claude/CLAUDE.md`, these conventions apply to every Claude Code session:
+Source: `dotfiles/CLAUDE.md`. Installed at `~/.claude/CLAUDE.md` (symlink). Applies to every Claude Code session in every project. The repo-root `CLAUDE.md` is **separate** — it's the project-only rules for working inside the ai-workflow repo itself, and is not installed.
 
 - Conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 - Spec-first development

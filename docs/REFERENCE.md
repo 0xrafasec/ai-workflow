@@ -389,9 +389,9 @@ Skills are invoked as slash commands. They orchestrate multi-step workflows.
 4. Plans the implementation (enters Plan Mode if complex)
 5. Implements with tests at the right layers (unit, integration, e2e) based on the test strategy
 6. Runs lint, typecheck, and all test layers
-7. Runs stack-aware code review — prefers Anthropic's official `code-review` skill; falls back to `/sec-review` + architecture-reviewer agent with the matching language guide
-8. Fixes HIGH severity findings
-9. Reports files changed, verification output, self-review verdict, and slice metadata for the PR body — then stops
+7. Spawns a **fresh-context reviewer subagent** (sonnet, cold context — never the in-context `code-review` skill, which would violate writer/reviewer separation). Reviewer reads only the diff + spec + ≤3 files it doubts, returns a structured `VERDICT: PASS | FIX_REQUIRED` block with HIGH/MED/LOW findings
+8. If `FIX_REQUIRED`: fixes the listed action items in the warm writer context (no respawn — the writer already has the spec/files loaded), re-runs the quality gate, re-dispatches the reviewer on the new diff. Bounded to **2 fix cycles**; after that, reports `NEEDS_HUMAN` with unresolved items and a "Spec ambiguity suspected" note when the same finding survived a cycle
+9. Reports files changed, verification output, review verdict (`PASS` / `PASS_WITH_NITS` / `NEEDS_HUMAN`), and slice metadata for the PR body — then stops
 
 ---
 
@@ -711,28 +711,34 @@ This skill was removed after a benchmark (see `code-review-workspace/iteration-1
 
 **File:** `~/.claude/skills/factory/SKILL.md`
 
-**Purpose:** End-to-end delivery pipeline — reads the roadmap, generates missing specs via speckit, optionally creates GitHub issues, then launches up to 5 parallel worktree agents that each implement a feature on its own branch behind a lint+typecheck+tests quality gate and open a PR.
+**Purpose:** Single-milestone/phase delivery pipeline. Implements every open issue in **one** GitHub milestone (== one roadmap phase) as parallel, conflict-free PRs, each pre-reviewed by a fresh-context reviewer agent. Stops with all PRs open for human merge — **no auto-merge**. For multi-phase end-to-end execution, use `/autopilot`.
+
+**Convention:** roadmap phase file `docs/roadmap/<NNN>_<name>.md` corresponds to a GitHub milestone whose **title is exactly `<NNN>_<name>`**. `/issues` files them this way.
 
 **Usage:**
 ```
-/factory                     # every unstarted / spec-only feature in docs/roadmap/
-/factory 003_auth            # one phase file
-/factory auth-login          # one feature by slug
-/factory --dry-run           # scan only, show what would run
-/factory --no-issues         # skip GitHub issue creation
-/factory --limit 3           # override the 5-agent parallel cap
+/factory 003_auth            # phase name → resolves matching milestone by title
+/factory --milestone 5       # milestone number → resolves matching phase file
+/factory 003_auth --dry-run  # scan + plan batches, spawn nothing
+/factory 003_auth --no-issues
+/factory 003_auth --limit 3  # override the 5-agent parallel cap
 ```
 
-**What it does:**
-1. **Preflight** — verifies repo root, clean tree on main, `gh auth` + `project` scope, roadmap exists, resolves lint/typecheck/test commands
-2. **Scan** — classifies roadmap tasks as `unstarted | spec-only | in-progress | done`, processes only the first two
-3. **Spec generation** — runs `/speckit-spec`, `/speckit-plan`, `/speckit-tasks` sequentially via foreground subagents for each `unstarted` feature; warns-not-blocks on missing design refs
-4. **Issues (optional)** — creates GitHub issues on the project board with "Ready" status, one per feature
-5. **Quality gate** — registers a `Stop` hook in `.claude/settings.json` that runs `lint && typecheck && tests`; restored at the end
-6. **Parallel implementation** — batches of ≤5 `Agent` calls in a single message, `isolation: "worktree"`, `run_in_background: true`, `model: "sonnet"`. Each agent reads its spec, implements, passes the gate, runs the Anthropic `code-review` skill (or `/sec-review` + `architecture-reviewer`), commits, pushes, opens a PR
-7. **Summary + cleanup** — posts a per-feature results table, restores the previous `Stop` hook
+A phase/milestone is **required** — bare `/factory` is rejected with a pointer to `/autopilot` for multi-phase runs.
 
-**Hard rules:** orchestrator never writes code; no PR is opened while any gate check fails; never retry automatically — present failures and wait for the user.
+**What it does:**
+1. **Preflight** — repo root, clean tree, `gh auth`, lint/typecheck/test commands resolved
+2. **Milestone scan** — pulls open issues from the milestone (closed = done, excluded), greps spec path from each issue body, falls back to the phase roadmap file for unmapped issues
+3. **File-overlap batching** — greedy bin-packer groups features into batches of ≤5 such that no two features in a batch touch the same file (ported from `/autopilot`)
+4. **Spec generation** — for issues without a spec, runs `/speckit-spec` + `/speckit-plan` + `/speckit-tasks` sequentially
+5. **Quality-gate hook** — registers a `Stop` hook running `lint && typecheck && tests`; restored at end
+6. **Parallel writers** — per batch, ≤5 worktree agents (`sonnet`, `run_in_background: true`) implement, pass the gate, commit, push, open PR. Writers do **not** review themselves
+7. **Per-PR review loop** — fresh-context reviewer subagent (sonnet, no worktree) per PR, parallel across PRs in the batch. Reads only the diff + spec + ≤3 files. Returns structured `VERDICT: PASS | FIX_REQUIRED`. On `FIX_REQUIRED`, the **writer agent is resumed via `SendMessage`** (warm context — the cheap path) with the action items, fixes, re-pushes, and the reviewer re-runs on the new diff only. Bounded to 2 fix cycles, then escalates to PR comment as `NEEDS_HUMAN`. Spec-ambiguity is auto-detected when the same finding survives a cycle
+8. **Summary + cleanup** — posts a per-feature results table with review verdicts (PASS / PASS_WITH_NITS / NEEDS_HUMAN / BLOCKED), restores the `Stop` hook
+
+**Token discipline:** orchestrator (opus) never reads diffs or review prose — only compact `{verdict, cycles, pr_url}` returns. Reviewers are sonnet with bounded scope. Fixers are warm writers, never respawned. Estimated overhead vs. unreviewed: +20-30% common case, +60-80% worst case (2 cycles), with reviewers running parallel so wall-clock is barely affected.
+
+**Hard rules:** orchestrator never writes code, never reads diffs; no auto-merge; writers never review their own code; fixer = writer resumed (never a fresh agent); review loop capped at 2 cycles; one milestone per invocation.
 
 ---
 
@@ -776,9 +782,9 @@ Uses `notify-send` (Linux/Freedesktop). Fires on any notification event from Cla
 
 ## Global CLAUDE.md
 
-**File:** `~/.claude/CLAUDE.md`
+**Source:** `dotfiles/CLAUDE.md` in this repo. **Installed at:** `~/.claude/CLAUDE.md` (symlink created by `install.sh`).
 
-These defaults apply to **every project** unless overridden by a project-level CLAUDE.md.
+These defaults apply to **every project** unless overridden by a project-level CLAUDE.md. The ai-workflow repo itself has a separate project-level `CLAUDE.md` at the repo root (rules for editing skills, updating docs, version bumps); it loads only when working inside the repo and is not installed globally.
 
 **Key rules:**
 - Spec first, code second
@@ -1012,7 +1018,7 @@ The typical flow from idea to code:
   |
   +--→ /autopilot       "Execute the whole roadmap with parallel worktree agents"
   |
-  +--→ /factory         "End-to-end: gen specs, issues, parallel impl, PRs"
+  +--→ /factory <phase> "One milestone/phase: parallel PRs + per-PR review loop"
   |
   +--→ /feature <spec>  "Or implement one feature at a time manually"
        |
