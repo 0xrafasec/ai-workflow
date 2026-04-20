@@ -607,13 +607,17 @@ SUMMARY: <one sentence — what's the PR doing and is it ready>
 
 ### 5.5b. Process reviewer verdicts
 
+Factory **never approves a PR**. Approval is the human's call — and `gh pr review --approve` on a PR you authored fails anyway (`Can not approve your own pull request`). The factory's job is to record the verdict as a comment and hand off.
+
 For each reviewer return:
 
 | Verdict | Findings | Action |
 |---------|----------|--------|
-| PASS | none | Post `gh pr review <pr> --approve --body "Factory reviewer: PASS — no findings."`. Done. |
-| PASS | LOW only | Post `gh pr review <pr> --comment --body "Factory reviewer: PASS with nits:\n<bullet list of LOW findings>"`. Done. |
+| PASS | none | Post `gh pr comment <pr> --body "Factory verdict: READY FOR HUMAN REVIEW — no findings after N cycle(s)."`. Done. |
+| PASS | LOW only | Post `gh pr comment <pr> --body "Factory verdict: READY FOR HUMAN REVIEW with nits:\n<bullet list of LOW findings>"`. Done. |
 | FIX_REQUIRED | HIGH/MED present | Trigger fix cycle (5.5c). |
+
+Do NOT use `gh pr review --approve`, `--request-changes`, or any other state-changing review action. Comments are sufficient — they're visible in the PR timeline, don't interfere with branch-protection review requirements, and leave the approve/merge decision entirely with the human.
 
 ### 5.5c. Fix cycle (resume the writer agent)
 
@@ -651,7 +655,7 @@ Verify they are resolved. Find any new issues introduced by the fix. Output the 
 ### 5.5d. Loop bounds + spec-ambiguity detection
 
 - **Max 2 fix cycles per PR.** After cycle 2, if reviewer still returns FIX_REQUIRED:
-  - Post unresolved findings as a PR review comment: `gh pr review <pr> --request-changes --body "Factory reviewer (after 2 fix cycles, escalating to human):\n<findings>"`
+  - Post unresolved findings as a PR comment (NOT a state-changing review): `gh pr comment <pr> --body "Factory verdict: NEEDS HUMAN (after 2 fix cycles).\n\nUnresolved findings:\n<findings>\n\nEscalating to human reviewer."`
   - Mark the PR as `NEEDS_HUMAN` in the summary table.
 - **Spec-ambiguity detection:** if the reviewer flags the **same finding category** in cycle 1 and cycle 2 (e.g., both cycles flag input validation in the same area), append to the PR comment: *"⚠ Spec ambiguity suspected — the same finding survived a fix cycle. Consider clarifying the spec at <spec-path> before re-running factory."*
 
@@ -757,7 +761,7 @@ These are the friction patterns this factory is hardened against. Each preflight
 8. **Quality gate is a hard block.** No PR is created while lint/typecheck/tests fail.
 9. **File-overlap-aware batching.** No two features in the same writer batch may touch the same file. Group via the greedy bin-packer in Phase 1d.
 10. **Review loop bounded at 2 cycles.** After cycle 2, escalate to human via PR comment. Never loop indefinitely.
-11. **No auto-merge, ever.** Factory's job ends when PRs are open and reviewed. Merging is the human's call.
+11. **No auto-merge, ever. No auto-approve, ever.** Factory's job ends when PRs are open and the verdict is posted as a COMMENT (not a state-changing review). Approval and merge are the human's call. Do not use `gh pr review --approve` or `--request-changes`.
 12. **Spec-ambiguity escalation.** When the same finding survives a fix cycle, surface it as a spec problem, not a code problem.
 13. **Never retry automatically on writer failure.** Present failures to the user; they decide.
 14. **Restore settings.json.** Always clean up the Stop hook in Phase 7.

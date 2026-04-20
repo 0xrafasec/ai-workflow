@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-04-20
+
+### Fixed
+- `/factory` no longer attempts `gh pr review --approve` on the PRs it opens. On a PR authored by the current user that call fails with `Can not approve your own pull request`, leaving the verdict unrecorded. It also conflicts with the skill's own "no auto-merge, ever" rule — approval is a state-changing review action that belongs to the human, not the orchestrator. Phase 5.5b now posts the factory verdict as a PR **comment** (`gh pr comment`), which is visible in the timeline, doesn't interfere with branch protection, and leaves approve/merge entirely to the human. Rule 11 is extended to "no auto-approve, ever"; the cycle-2 escalation path likewise switched from `gh pr review --request-changes` to a comment.
+
 ## [0.6.0] - 2026-04-19
 
 ### Changed
