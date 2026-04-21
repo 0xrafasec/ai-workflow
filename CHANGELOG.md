@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-04-21
+
+### Fixed
+- `/verify-design` now documents itself as a **single-pass fidelity-fix skill**, not a review-only gate. Empirically, dispatching it as "review" then spawning a separate fix agent doubles Paper MCP and Playwright load for the same outcome — the skill is authored to mutate code and already does review + fix + re-verify in one pass. Writer/reviewer separation applies to *code-review* skills; this one is a reviewer-and-fixer, and calling it twice is a misuse. Adds a model-fit matrix for parent agents that dispatch to sub-agents (Sonnet for first-pass delta work, Haiku for re-verify against a known delta list, Opus only for from-scratch design + implementation). Direct user invocations run at the user's chosen model — no auto-downgrade for cost.
+
 ## [0.6.1] - 2026-04-20
 
 ### Fixed
