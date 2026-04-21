@@ -101,3 +101,19 @@ After edits:
 6. **Never skip responsive checks.** Every target is exercised at desktop (1440x900) AND mobile (390x844) via Playwright.
 7. **Never skip Playwright.** A static-only pass is not sufficient for this skill. If Playwright is unavailable, say so and stop.
 8. **Only ask the user when scope changes** or when a "mismatch" looks like an intentional deviation you can't verify from the spec.
+
+## Dispatch & model fit
+
+This skill is a **single-pass agent**: one invocation reviews + fixes + re-verifies. Do not split into a separate "review" and "fix" cycle — that duplicates the Paper MCP + Playwright load and doubles spend for the same result.
+
+Writer/reviewer separation (from global workflow rules) applies to *code-review* skills. `/verify-design` is a fidelity-fix skill, not a reviewer — it is authored to mutate code. Treating its output as a review-only gate is a misuse.
+
+Model guidance for agents that dispatch this skill to sub-agents:
+
+| Dispatch mode | Model | Rationale |
+|---------------|-------|-----------|
+| First-pass on a new/changed PR | Sonnet | Analytical comparison + targeted edits; Opus is overkill for rule-matching work |
+| Re-verify against a prior delta list | Haiku | Checklist walking on a known set of items |
+| Design + implementation from scratch in one shot | Opus | Wider synthesis, ambiguous token choice, layout decisions |
+
+If invoked directly by the user (not via a parent agent), run in the current session at whatever model the user has chosen — do not downgrade for cost.
