@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-04-23
+
+### Fixed
+- `/design` now enforces an **Implementation Fidelity Protocol** in every generated `docs/design/DESIGN_SYSTEM.md`. Problem: downstream skills (`/feature`, `/factory`, `/fix`) were reading the design system doc and implementing from the markdown + memory, producing pixel drift vs. Paper. Fix: the generated doc must now open with (a) a non-negotiable "read before writing any UI code" checklist that forces `mcp__paper__get_jsx` / `get_computed_styles` on the target node before implementation, (b) a **Paper Canvas Map** table listing every artboard + its node ID + what it covers, and (c) a `📐 Paper reference` line at the end of every component block pointing to its exact canvas location. Screenshots are explicitly demoted to lowest-trust input. The new Rule 1 in `/design` codifies this; all component templates in the doc now carry the reference line. Net effect: implementers stop eyeballing from PNGs and always resolve exact values from Paper.
+
 ## [0.6.2] - 2026-04-21
 
 ### Fixed
