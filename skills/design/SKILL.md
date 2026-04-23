@@ -115,7 +115,7 @@ Create the design system document and the corresponding design system artboard i
 
 ### 2a. Generate the Design System Document
 
-Write to `docs/design/DESIGN_SYSTEM.md`:
+Write to `docs/design/DESIGN_SYSTEM.md`. **The doc must always open with an Implementation Fidelity Protocol and a Paper Canvas Map before anything else.** Downstream skills (`/feature`, `/factory`, etc.) read this doc when implementing — the protocol is what makes them stop and consult Paper instead of eyeballing from screenshots.
 
 ```markdown
 # Design System
@@ -123,6 +123,42 @@ Write to `docs/design/DESIGN_SYSTEM.md`:
 **Project:** [name from PRD]
 **Last updated:** [date]
 **Brand direction:** [from interview]
+**Paper file:** [file name visible in `get_basic_info` — e.g. `Project Name`]
+
+---
+
+## Implementation Fidelity Protocol (read before writing any UI code)
+
+This document is the **rules and tokens** layer. The **pixel-perfect source of truth** is the Paper canvas. These two layers together — not either alone — define the design.
+
+**Non-negotiable checklist before you implement any component:**
+
+1. **Find the component in the Paper Canvas Map below.** It lists every artboard and which component lives where. Never implement from the markdown alone.
+2. **Pull exact values from Paper via MCP**, not from screenshots:
+   - `mcp__paper__get_basic_info` once per session (confirms you're on the right file)
+   - `mcp__paper__get_tree_summary` on the target artboard to locate nodes
+   - `mcp__paper__get_jsx` on the specific component node — returns exact JSX + styles
+   - `mcp__paper__get_computed_styles` — returns the resolved values (colors, sizes, shadows, etc.)
+   - `mcp__paper__get_fill_image` when the fill is an image/gradient
+3. **Screenshots are the lowest-trust input.** Use `mcp__paper__get_screenshot` to sanity-check your implementation visually, but never read sizes or colors off a PNG.
+4. **If Paper and this doc disagree, Paper wins.** Update the doc immediately with the correct value; don't silently diverge.
+5. **After implementing, run `/verify-design`** to diff the built UI against Paper and close any gaps before declaring done.
+
+Agents calling this from `/feature`, `/factory`, `/fix`, or any UI work **must** follow this protocol. Steps 1–3 are not optional — implementing from markdown + memory produces drift.
+
+## Paper Canvas Map
+
+Every component and screen has a named location on the Paper canvas. Cite the path when you reference it in specs or PRs.
+
+| Artboard | Node ID | What lives here | Consult for |
+|---|---|---|---|
+| `Design System` | [id] | Tokens, palette, type, spacing, status badges, icon rules, tooltip spec | Any token-level question (color, space, radius, type) |
+| `Component Library` | [id] | All reusable components in every state (buttons, inputs, controls, badges, avatars, nav, tables, overlays, tooltips, pane chrome, stat tile, memory row, etc.) | Any component implementation — pull JSX/styles from here |
+| `<Flow> / <Screen> / <Viewport>` | [id] | One screen or state in its flow group | Page-level layout, page-specific composition |
+
+Rule: **every component spec below ends with a `📐 Paper reference` line** pointing to its canvas location. No exceptions.
+
+---
 
 ## Color Palette
 
@@ -263,26 +299,33 @@ Write to `docs/design/DESIGN_SYSTEM.md`:
 
 [Updated as screens are created — each new screen adds its reusable components here]
 
+**Every component block below ends with a `📐 Paper reference` line pointing to the exact node on the canvas. Implementers MUST pull JSX/computed-styles from that node via MCP — do not translate from the markdown alone.**
+
 ### Buttons
 - **Primary:** [primary-500] bg, white text, radius-md, text-sm 500 weight, px-4 py-2
 - **Secondary:** transparent bg, [neutral-200] border, [neutral-800] text
 - **Ghost:** transparent bg, no border, [primary-500] text
 - **Destructive:** [error] bg, white text
+- 📐 **Paper reference:** `Component Library ▸ Buttons` — all variants × states live here. Pull with `get_jsx` per state.
 
 ### Inputs
 - [neutral-100] bg, [neutral-200] border, radius-md, text-base, px-3 py-2
 - Focus: [primary-500] border, [primary-50] bg
 - Error: [error] border, [error] text below
+- 📐 **Paper reference:** `Component Library ▸ Inputs` — default, focus, filled, error, disabled.
 
 ### Cards
 - [white or neutral-50] bg, shadow-md, radius-lg, p-6
 - Hover: shadow-lg, transition 200ms ease
+- 📐 **Paper reference:** `Component Library ▸ Cards`
 
 ### Navigation
 - [defined when first nav screen is created]
+- 📐 **Paper reference:** `Component Library ▸ Navigation`
 
 ### Tables / Data Display
 - [defined when first data screen is created]
+- 📐 **Paper reference:** `Component Library ▸ Table`
 
 ## Accessibility
 
@@ -626,16 +669,17 @@ Dark mode is generated per flow group, not as a separate pass. This keeps relate
 
 ## Rules
 
-1. **Docs are the source of truth.** Every screen must trace back to a PRD flow, spec, or user story. Don't invent screens.
-2. **Design system first.** Never create layouts without an approved design system. If none exists, create it.
-3. **Incremental HTML.** One visual group per `write_html` call. Never dump an entire page in one call.
-4. **Real content.** Use realistic text from the product domain. Never "Lorem ipsum".
-5. **Token discipline.** Every color, font size, spacing value must come from the design system. No magic numbers.
-6. **Review religiously.** Screenshot and evaluate after every 2-3 modifications. Fix before moving on.
-7. **Update the system.** Every new component pattern gets documented in `DESIGN_SYSTEM.md`.
-8. **Wait for approval.** After the design system phase, STOP and wait for user approval before layouts.
-9. **Mobile is not an afterthought.** Create mobile variants alongside desktop, not after all desktop screens.
-10. **Group by flow, not by component.** Auth screens together, Dashboard screens together — organized for stakeholder review.
-11. **Dark mode is not optional.** Every screen gets a dark variant. Generated per flow group, placed below light variants.
-12. **Fight the generic.** Every layout should feel deliberately designed for its context. Vary approaches across flows — not every page should use the same card grid. Avoid predictable, safe, "AI-generated" aesthetics.
-13. **Accessibility is not negotiable.** WCAG AA contrast on all text, 44px minimum touch targets, color-independent status indicators, visible focus states. Check every screen. Accessibility failures are design bugs — fix them before moving on.
+1. **Paper is the pixel-perfect source of truth; the doc is the rules layer.** The generated `DESIGN_SYSTEM.md` must open with the Implementation Fidelity Protocol + Paper Canvas Map sections (template above). Every component block must end with a `📐 Paper reference` line pointing to its canvas location. Downstream skills (`/feature`, `/factory`, `/fix`) read this doc — the protocol is what stops them from implementing from markdown alone.
+2. **Docs are the source of truth for *what* to build.** Every screen must trace back to a PRD flow, spec, or user story. Don't invent screens.
+3. **Design system first.** Never create layouts without an approved design system. If none exists, create it.
+4. **Incremental HTML.** One visual group per `write_html` call. Never dump an entire page in one call.
+5. **Real content.** Use realistic text from the product domain. Never "Lorem ipsum".
+6. **Token discipline.** Every color, font size, spacing value must come from the design system. No magic numbers.
+7. **Review religiously.** Screenshot and evaluate after every 2-3 modifications. Fix before moving on.
+8. **Update the system.** Every new component pattern gets documented in `DESIGN_SYSTEM.md` with its `📐 Paper reference` line.
+9. **Wait for approval.** After the design system phase, STOP and wait for user approval before layouts.
+10. **Mobile is not an afterthought.** Create mobile variants alongside desktop, not after all desktop screens.
+11. **Group by flow, not by component.** Auth screens together, Dashboard screens together — organized for stakeholder review.
+12. **Dark mode is not optional.** Every screen gets a dark variant. Generated per flow group, placed below light variants.
+13. **Fight the generic.** Every layout should feel deliberately designed for its context. Vary approaches across flows — not every page should use the same card grid. Avoid predictable, safe, "AI-generated" aesthetics.
+14. **Accessibility is not negotiable.** WCAG AA contrast on all text, 44px minimum touch targets, color-independent status indicators, visible focus states. Check every screen. Accessibility failures are design bugs — fix them before moving on.
