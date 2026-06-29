@@ -577,52 +577,50 @@ Skills are installed globally — no project-level copies needed.
 
 **File:** `~/.claude/skills/autopilot/SKILL.md`
 
-**Purpose:** Execute an entire roadmap automatically. Dispatches worktree subagents for each task, runs phases in order, parallelizes where possible, and pauses between phases for human review.
+**Purpose:** Execute an entire roadmap **autonomously, end to end**. For every task in every phase it runs the full pipeline — **develop → review → fix → merge to `main`** — and loops until the roadmap is delivered or a genuine blocker stops it. **No human gate by default; it self-merges.** This is the deliberate contrast with `/factory`, which builds one milestone's PRs and stops with them open for a human to merge — `/autopilot` *merges*. Pass `--supervised` to restore per-phase human checkpoints.
 
 **Usage:**
 ```
-/autopilot docs/roadmap.md
-/autopilot ROADMAP.md
+/autopilot docs/roadmap.md              # autonomous: build, review, fix, merge — all phases
+/autopilot docs/roadmap.md --supervised # stop at each phase boundary with PRs open for human merge
 ```
 
-**How it works:**
+**How it works (per task):**
 
 ```
-Orchestrator (you — stays thin, only tracks progress)
+Orchestrator (stays thin: parse, dispatch, triage, MERGE, track, loop)
   |
-  Phase 1:
-  |  ├── Worktree Agent: task-1 (reads spec, implements, reviews, creates PR)
-  |  └── [waits for completion]
-  |  → CHECKPOINT: "Review and merge PR, then say 'continue'"
-  |
-  Phase 2:
-  |  ├── Worktree Agent: task-2a (parallel) ──→ PR
-  |  ├── Worktree Agent: task-2b (parallel) ──→ PR
-  |  └── Worktree Agent: task-2c (sequential, depends on 2a) ──→ PR
-  |  → CHECKPOINT: "3 PRs ready. Review, merge, continue?"
-  |
-  Phase 3: ...
+  Phase N → waves of tasks (no shared files, deps merged first):
+  |  for each task:
+  |    1. Writer agent (worktree, sonnet) ── implements + tests + verifies ──→ PR
+  |    2. Reviewer agent (FRESH context, sonnet, own worktree) ── re-runs the
+  |         build itself, checks spec compliance ──→ VERDICT: PASS | FIX_REQUIRED
+  |    3. Security gate (/sec-review, opus) ── only for risky diffs ──→ HIGH blocks merge
+  |    4. Fix loop ── resume the writer via SendMessage with action items, max 2 cycles,
+  |         else park as NEEDS_HUMAN
+  |    5. MERGE ── orchestrator runs `gh pr merge --rebase --delete-branch`, removes worktrees
+  |    6. Tick roadmap status, commit (docs:), continue
+  |  → autonomous: roll straight into Phase N+1 (its deps are now on main)
+  |  → --supervised: stop at the phase boundary for human review + merge
 ```
 
-**Each worktree subagent independently:**
-1. Reads the spec file for its task
-2. Implements with tests
-3. Runs lint, typecheck, tests
-4. Spawns security-reviewer and architecture-reviewer subagents
-5. Fixes HIGH severity findings
-6. Commits, pushes, creates PR
+**Writer ≠ reviewer.** Review always runs as a separate agent with cold context — never the writing session, never the orchestrator. The reviewer **runs the verification itself**; a green claim from the writer is not evidence.
 
-**Checkpoint commands:**
+**Merge authority.** Invoking autopilot in the default mode grants it authority to merge to `main`. It will not squash (preserves the writer's logical commit split), waits for a dependency's **merge** before branching dependent work, and never puts two file-overlapping tasks in the same parallel wave. If `main` is protected against direct/auto merge, it switches to `--supervised` and says so.
+
+**Checkpoint commands (`--supervised` only):**
 - `continue` — proceed to next phase
 - `retry <task>` — re-run a failed task
 - `skip <task>` — skip a task and continue
 - `stop` — halt and summarize progress
 
-**Why context isn't lost:** The orchestrator never reads implementation files. Each subagent gets its own context window with only its task's spec. The orchestrator only tracks: task name, status, PR URL, blockers.
+**Stops (even autonomous) on:** a build/finding that survives 2 fix cycles, an unresolvable merge conflict, a missing/contradictory spec, a HIGH+ security finding it can't safely fix, an unmergeable protected `main`, or any destructive/irreversible action outside the roadmap's scope.
+
+**Why context isn't lost:** The orchestrator never reads implementation files. Each writer/reviewer gets its own context window with only its task's spec + diff. The orchestrator tracks task name, status, PR URL, verdict, blockers — and keeps roadmap status committed so an interrupted run is resumable.
 
 **Requirements for the roadmap:**
-- Phases in dependency order
-- Each task needs: spec path, files to modify, dependencies, verification command
+- Specs committed and on `main` (worktree agents can't see untracked files)
+- Phases in dependency order; each task names spec path, files, dependencies, verification command
 - Parallel tasks must touch different files
 
 ---
