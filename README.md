@@ -195,7 +195,7 @@ Skills are multi-step workflows invoked as slash commands inside Claude Code.
 | `/roadmap` | Phased task breakdown from specs |
 | `/feature <spec>` | End-to-end feature implementation from a spec. `--commit` auto-commits after completion (outputs log only); `--pr` auto-commits + opens PR (outputs log + URL only) |
 | `/fix <issue>` | Diagnose and fix a bug from a description, stack trace, or GitHub issue |
-| `/autopilot` | Execute a full roadmap with parallel worktree agents |
+| `/autopilot` | Execute a full roadmap **autonomously** — develop → review → fix → **merge to main**, phase after phase, no human gate. `--supervised` restores per-phase checkpoints |
 | `/factory <phase>` or `--milestone <N>` | Single-milestone/phase pipeline: implements every open issue as conflict-free parallel PRs, each pre-reviewed by a fresh-context reviewer agent (2-cycle bounded fix loop, no auto-merge) |
 | `/new-project <name>` | Scaffold a new project with the full workflow |
 
@@ -255,7 +255,7 @@ The typical flow from idea to shipped code:
   │   /design [flow]       UI designs in Paper (for UI features)
   │   /verify-design       Diff running UI against Paper refs, fix in place
   │
-  ├── /autopilot           Execute the roadmap automatically
+  ├── /autopilot           Execute the roadmap autonomously (build, review, fix, merge to main)
   ├── /factory <phase>     Ship one milestone/phase: parallel PRs + per-PR review loop
   └── /feature <spec>      Or implement one feature at a time
         │
@@ -273,7 +273,7 @@ claude --worktree feature-auth
 claude --worktree feature-dashboard
 ```
 
-`/autopilot` takes this further — it reads a roadmap and dispatches parallel worktree agents for independent tasks, then sequences dependent ones.
+`/autopilot` takes this further — it reads a roadmap and runs the full pipeline for every task (develop in a worktree → review in a fresh context → fix → **merge to `main`**), dispatching independent tasks in parallel waves and sequencing dependent ones after their merge. It is autonomous by default (no human gate); `--supervised` stops at each phase boundary for human merge.
 
 ### Quality Gates
 

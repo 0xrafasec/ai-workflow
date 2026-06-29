@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `/autopilot` repositioned from "dispatch worktree agents, pause between phases for human merge" to **fully autonomous end-to-end delivery**. It now runs the complete pipeline for every task itself — **develop (writer worktree agent) → review (fresh-context reviewer agent that re-runs the build) → bounded 2-cycle fix loop (writer resumed via `SendMessage`) → merge to `main`** — and loops through every phase with **no human gate by default**. The orchestrator performs the merge directly (`gh pr merge --rebase --delete-branch`, never `--squash`, to preserve the writer's logical commit split). This is the deliberate counterpart to `/factory` (which stops with PRs open for human merge): autopilot *merges*. A new `--supervised` flag restores the previous behaviour (stop at each phase boundary with PRs open). Adds: a pre-flight gate (specs committed to `main`, toolchain on PATH, `gh` auth, merge authority, clean tree), file-overlap-aware parallel waves, a security gate (`/sec-review`) for risky diffs, feature-flag-off-until-phase-end discipline, committed roadmap-status updates for resumability, and explicit stop conditions (unresolvable conflict, surviving finding, missing/contradictory spec, protected `main`, destructive out-of-scope actions). Writer/reviewer separation is enforced — review always runs as a separate cold-context agent, never the writer and never the orchestrator.
+
 ## [0.6.3] - 2026-04-23
 
 ### Fixed
