@@ -19,6 +19,7 @@
 
 ## Git Workflow
 - Check you are in the correct project directory and that it is a git repo before running commit/PR/bootstrap commands.
+- Sync with the remote before starting work: `git fetch origin` at the start of every session and before each new task/phase, and check for divergence from the tracking branch — the user works from parallel sessions/machines, so the remote may have moved. If histories have diverged, reconcile before building (published history wins by default); never force-push over unseen remote commits.
 
 ## Trunk-Based Workflow
 - `main` is trunk; always deployable. No long-lived `develop` or `release/*` branches.
