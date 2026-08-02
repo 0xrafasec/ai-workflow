@@ -10,7 +10,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "notify-send 'Claude Code' \"$(jq -r '.message // \"Claude Code notification\"')\""
+            "command": "MSG=$(jq -r '.message // \"Claude Code notification\"' | tr -d '\"\\\\'); if command -v notify-send >/dev/null 2>&1; then notify-send 'Claude Code' \"$MSG\"; elif command -v osascript >/dev/null 2>&1; then osascript -e \"display notification \\\"$MSG\\\" with title \\\"Claude Code\\\"\"; fi"
           }
         ]
       }
