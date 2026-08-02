@@ -775,6 +775,7 @@ Uses `notify-send` (Linux/Freedesktop). Fires on any notification event from Cla
 | `defaultMode` | `bypassPermissions` | No permission prompts |
 | `model` | `opus` | Default to Opus model |
 | `statusLine` | custom command | Custom status line script |
+| `statusLine.refreshInterval` | `30` | Re-runs the status line every 30s so the rate-limit reset countdown stays live while idle |
 
 ---
 
