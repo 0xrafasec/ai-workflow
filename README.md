@@ -84,7 +84,7 @@ The workflow uses a tiered model strategy — Opus for decisions, Sonnet for exe
 
 - At least one of: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://www.cursor.com/), or [Codex CLI](https://openai.com/codex)
 - `git`, `bash`
-- Claude Code extras: `jq` (status line), `notify-send` or equivalent (desktop notifications)
+- Claude Code extras: `jq` (status line — required), `notify-send` (Linux) or `osascript` (macOS, built in) for desktop notifications
 
 ### Install (recommended — one-liner)
 
