@@ -39,7 +39,7 @@ Each phase of development has dedicated tooling:
 - **Parallel execution** — worktree-based development with `/autopilot` for full roadmap execution
 - **Writer/reviewer separation** — never review code in the same session that wrote it
 - **Notification hooks** — desktop notifications when Claude needs attention (Claude Code)
-- **Custom status line** — model, context usage, cost, git branch at a glance (Claude Code)
+- **Custom status line** — model, context usage, cost, git branch, and rate limits with their reset times at a glance (Claude Code)
 - **Composable with other tools** — works alongside [GitHub Spec Kit](https://github.com/github/spec-kit) and other SDD toolkits ([integration guide](docs/speckit-integration.md))
 
 ## Platform Support
@@ -355,7 +355,25 @@ Desktop notification hooks, permission mode, and model preference. See `settings
 
 ### Status Line
 
-The bundled `statusline-command.sh` shows model name, context usage percentage, estimated session cost, pending tasks, and git branch — directly in Claude Code's status bar.
+The bundled `statusline-command.sh` renders two colour-coded rows in Claude Code's status bar:
+
+```
+ai-workflow · main ✚2 · Opus 5 (1M) · high · ctx ███░░░░░ 34% · $2.19 · 16m · +320/-49
+5h ██░░░░░░  22% ↻ Sun 22:00 (4h35m)   7d ████░░░░  47% ↻ Mon 05:00 (11h35m)
+```
+
+**Row 1 — session:** directory, git branch + uncommitted count, model, reasoning effort (plus `⚡` in fast mode and any non-default output style), context-window bar, real session cost, elapsed time, and lines added/removed.
+
+**Row 2 — rate limits:** the 5-hour and 7-day windows, each with a usage bar and **the weekday + local clock time the allowance resets**, followed by a countdown. The second row is omitted entirely when the API reports no rate limits (e.g. API-key billing).
+
+Bars and percentages are green below 70%, amber from 70–89%, and red at 90%+.
+
+Details worth knowing:
+
+- **Cost comes from `cost.total_cost_usd`**, the figure Claude Code reports — it is not re-derived from token counts against a hardcoded price table, so it stays correct across models.
+- **Set `refreshInterval`** in `settings.json` (30s is a good default) so the reset countdown keeps ticking while the session is idle. Status lines are otherwise event-driven and the clock would freeze.
+- **Width-adaptive** via `$COLUMNS` (needs Claude Code ≥ 2.1.153): countdowns drop below 90 columns, bars below 70, and the context bar below 80.
+- Honours `NO_COLOR`, runs a single `jq` pass, caches `git status` for 3s, and always exits 0 — a broken status line is worse than a plain one.
 
 ## Documentation
 
