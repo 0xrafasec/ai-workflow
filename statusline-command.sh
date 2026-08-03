@@ -155,6 +155,29 @@ epoch_fmt() {
     date -d "@$ts" +"$fmt" 2>/dev/null
 }
 
+# reset_label <reset-epoch> <now-epoch> -> "today 22:00" / "tomorrow 05:00" /
+# "Mon 10 Aug 05:00"
+#
+# A bare weekday is ambiguous for the 7-day window: it can land up to a week
+# out, so "Mon 05:00" reads as *this* Monday when it usually is not. Anchor on
+# today/tomorrow when the reset is that close, and carry the full date when it
+# is not.
+reset_label() {
+    local reset=$1 now=$2 reset_day now_day tomorrow_day
+    reset_day=$(epoch_fmt "$reset" '%Y-%m-%d')
+    now_day=$(epoch_fmt "$now" '%Y-%m-%d')
+    tomorrow_day=$(epoch_fmt "$(( now + 86400 ))" '%Y-%m-%d')
+
+    if [ -n "$reset_day" ] && [ "$reset_day" = "$now_day" ]; then
+        printf 'today %s' "$(epoch_fmt "$reset" '%H:%M')"
+    elif [ -n "$reset_day" ] && [ "$reset_day" = "$tomorrow_day" ]; then
+        printf 'tomorrow %s' "$(epoch_fmt "$reset" '%H:%M')"
+    else
+        # %d not %-d: BSD strftime does not support the glibc '-' padding flag.
+        epoch_fmt "$reset" '%a %d %b %H:%M'
+    fi
+}
+
 # human_eta <seconds> -> "4h39m" / "39m" / "<1m"
 human_eta() {
     local s=$1 h m
@@ -279,8 +302,7 @@ limit_segment() {
     if [ -n "$reset" ] && [ "$reset" -gt 0 ] 2>/dev/null; then
         now=$(date +%s)
         eta=$(( reset - now ))
-        # Weekday + 24h local time: the "day and hour" the allowance returns.
-        when=$(epoch_fmt "$reset" '%a %H:%M')
+        when=$(reset_label "$reset" "$now")
         if [ -n "$when" ]; then
             seg+=" ${DIM}↻${RESET} ${RESET_C}${when}${RESET}"
             [ "$width" -ge 90 ] && seg+=" ${DIM}($(human_eta "$eta"))${RESET}"
