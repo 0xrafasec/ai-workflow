@@ -72,10 +72,14 @@ HOT=$(c 203)        # red    — nearly exhausted
 SEP=" ${DIM}·${RESET} "
 
 # ---------------------------------------------------------------------------
-# Parse — a single jq pass emitting tab-separated fields
+# Parse — a single jq pass emitting US-separated (0x1f) fields.
+#
+# Not @tsv: tab is IFS whitespace, so `read` collapses runs of it and any empty
+# field (no effort level, no output style, no model id) silently shifts every
+# later field by one. 0x1f is not IFS whitespace, so empty fields survive.
 # ---------------------------------------------------------------------------
 
-IFS=$'\t' read -r \
+IFS=$'\x1f' read -r \
     model_name model_id cur_dir proj_dir top_cwd \
     ctx_pct ctx_size in_tok out_tok \
     cost dur_ms lines_add lines_del \
@@ -104,7 +108,7 @@ IFS=$'\t' read -r \
           (.thinking.enabled // false | tostring),
           .output_style.name // "",
           (.exceeds_200k_tokens // false | tostring)
-        ] | @tsv' 2>/dev/null)"
+        ] | map(tostring) | join("\u001f")' 2>/dev/null)"
 
 # If jq failed the fields are empty — fall back rather than print garbage.
 if [ -z "$model_name" ] && [ -z "$cur_dir" ] && [ -z "$top_cwd" ]; then
@@ -182,7 +186,12 @@ if [ -n "$lookup_dir" ] && [ -d "$lookup_dir" ]; then
     now_s=$(date +%s)
     cache_age=999
     if [ -f "$git_cache" ]; then
-        cache_mtime=$(stat -f %m "$git_cache" 2>/dev/null || stat -c %Y "$git_cache" 2>/dev/null || echo 0)
+        # GNU first: on GNU coreutils `stat -f` means --file-system and exits 0
+        # with a filesystem dump, so a BSD-first probe never falls through.
+        cache_mtime=$(stat -c %Y "$git_cache" 2>/dev/null || stat -f %m "$git_cache" 2>/dev/null)
+        case "$cache_mtime" in
+            ''|*[!0-9]*) cache_mtime=0 ;;
+        esac
         cache_age=$(( now_s - cache_mtime ))
     fi
     if [ "$cache_age" -lt 3 ]; then
