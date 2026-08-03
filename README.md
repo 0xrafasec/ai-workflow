@@ -359,12 +359,14 @@ The bundled `statusline-command.sh` renders two colour-coded rows in Claude Code
 
 ```
 ai-workflow · main ✚2 · Opus 5 (1M) · high · ctx ███░░░░░ 34% · $2.19 · 16m · +320/-49
-5h ██░░░░░░  22% ↻ Sun 22:00 (4h35m)   7d ████░░░░  47% ↻ Mon 05:00 (11h35m)
+5h ██░░░░░░  22% ↻ today 22:00 (4h35m)   7d ████░░░░  47% ↻ Mon 10 Aug 05:00 (166h)
 ```
 
 **Row 1 — session:** directory, git branch + uncommitted count, model, reasoning effort (plus `⚡` in fast mode and any non-default output style), context-window bar, real session cost, elapsed time, and lines added/removed.
 
-**Row 2 — rate limits:** the 5-hour and 7-day windows, each with a usage bar and **the weekday + local clock time the allowance resets**, followed by a countdown. The second row is omitted entirely when the API reports no rate limits (e.g. API-key billing).
+**Row 2 — rate limits:** the 5-hour and 7-day windows, each with a usage bar and **the local clock time the allowance resets**, followed by a countdown. The second row is omitted entirely when the API reports no rate limits (e.g. API-key billing).
+
+The reset stamp is anchored so it can't be misread: `today 22:00` and `tomorrow 05:00` when the reset is that close, and the full `Mon 10 Aug 05:00` otherwise. A bare weekday would be ambiguous for the 7-day window, which can land up to a week out.
 
 Bars and percentages are green below 70%, amber from 70–89%, and red at 90%+.
 
