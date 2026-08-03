@@ -359,7 +359,7 @@ The bundled `statusline-command.sh` renders two colour-coded rows in Claude Code
 
 ```
 ai-workflow · main ✚2 · Opus 5 (1M) · high · ctx ███░░░░░ 34% · $2.19 · 16m · +320/-49
-5h ██░░░░░░  22% ↻ today 22:00 (4h35m)   7d ████░░░░  47% ↻ Mon 10 Aug 05:00 (166h)
+5h ██░░░░░░  22% ↻ today 22:00 (4h35m)   7d ████░░░░  47% ↻ Mon 10 Aug 05:00 (166h00m)
 ```
 
 **Row 1 — session:** directory, git branch + uncommitted count, model, reasoning effort (plus `⚡` in fast mode and any non-default output style), context-window bar, real session cost, elapsed time, and lines added/removed.
