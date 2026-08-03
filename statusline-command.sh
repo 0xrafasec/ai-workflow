@@ -77,6 +77,10 @@ SEP=" ${DIM}·${RESET} "
 # Not @tsv: tab is IFS whitespace, so `read` collapses runs of it and any empty
 # field (no effort level, no output style, no model id) silently shifts every
 # later field by one. 0x1f is not IFS whitespace, so empty fields survive.
+#
+# The gsub replaces the escaping @tsv gave away for free: a directory name may
+# legally contain a newline, and an unescaped one makes `read` stop mid-record
+# and print a truncated line.
 # ---------------------------------------------------------------------------
 
 IFS=$'\x1f' read -r \
@@ -108,7 +112,7 @@ IFS=$'\x1f' read -r \
           (.thinking.enabled // false | tostring),
           .output_style.name // "",
           (.exceeds_200k_tokens // false | tostring)
-        ] | map(tostring) | join("\u001f")' 2>/dev/null)"
+        ] | map(tostring | gsub("[\n\r\t]"; " ")) | join("\u001f")' 2>/dev/null)"
 
 # If jq failed the fields are empty — fall back rather than print garbage.
 if [ -z "$model_name" ] && [ -z "$cur_dir" ] && [ -z "$top_cwd" ]; then
@@ -147,35 +151,62 @@ bar() {
 }
 
 # strftime for an epoch, portable across BSD (macOS) and GNU date.
+#
+# GNU first, for the same reason as the stat probe below: a wrong-platform flag
+# that happens to exit 0 would poison every caller. GNU `date -r` means
+# --reference=FILE and fails on a bare epoch, BSD `date -d` wants a DST value
+# and fails on "@<epoch>", so either ordering works — but only one of them
+# fails loudly, and this one is the loud one on the platform we can test.
 epoch_fmt() {
     local ts=$1 fmt=$2
-    if date -r "$ts" +"$fmt" 2>/dev/null; then
-        return 0
-    fi
-    date -d "@$ts" +"$fmt" 2>/dev/null
+    date -d "@$ts" +"$fmt" 2>/dev/null && return 0
+    date -r "$ts" +"$fmt" 2>/dev/null
 }
 
-# reset_label <reset-epoch> <now-epoch> -> "today 22:00" / "tomorrow 05:00" /
+# days_from_civil <y> <m> <d> -> days since 1970-01-01 (Hinnant's algorithm).
+#
+# Pure shell arithmetic. Used to diff two *local calendar dates*, which is what
+# "is this tomorrow" actually means. Adding 86400 to an epoch does not answer
+# that question: on a 23-hour spring-forward day it skips a calendar day, and on
+# a 25-hour fall-back day it lands back on today.
+days_from_civil() {
+    local y=$((10#$1)) m=$((10#$2)) d=$((10#$3)) era yoe doy doe
+    [ "$m" -le 2 ] && y=$(( y - 1 ))
+    era=$(( (y >= 0 ? y : y - 399) / 400 ))
+    yoe=$(( y - era * 400 ))
+    doy=$(( (153 * (m + (m > 2 ? -3 : 9)) + 2) / 5 + d - 1 ))
+    doe=$(( yoe * 365 + yoe / 4 - yoe / 100 + doy ))
+    printf '%d' $(( era * 146097 + doe - 719468 ))
+}
+
+# reset_label <reset-epoch> <now-ymd> -> "today 22:00" / "tomorrow 05:00" /
 # "Mon 10 Aug 05:00"
 #
 # A bare weekday is ambiguous for the 7-day window: it can land up to a week
 # out, so "Mon 05:00" reads as *this* Monday when it usually is not. Anchor on
 # today/tomorrow when the reset is that close, and carry the full date when it
 # is not.
+#
+# One `date` call: this runs on every status-line render, and the file's whole
+# design is about not forking per field.
 reset_label() {
-    local reset=$1 now=$2 reset_day now_day tomorrow_day
-    reset_day=$(epoch_fmt "$reset" '%Y-%m-%d')
-    now_day=$(epoch_fmt "$now" '%Y-%m-%d')
-    tomorrow_day=$(epoch_fmt "$(( now + 86400 ))" '%Y-%m-%d')
+    local reset=$1 now_ymd=$2 stamp reset_ymd hhmm long delta
+    # %d not %-d: BSD strftime has no glibc '-' padding flag.
+    stamp=$(epoch_fmt "$reset" '%Y-%m-%d|%H:%M|%a %d %b %H:%M')
+    [ -z "$stamp" ] && return 0
 
-    if [ -n "$reset_day" ] && [ "$reset_day" = "$now_day" ]; then
-        printf 'today %s' "$(epoch_fmt "$reset" '%H:%M')"
-    elif [ -n "$reset_day" ] && [ "$reset_day" = "$tomorrow_day" ]; then
-        printf 'tomorrow %s' "$(epoch_fmt "$reset" '%H:%M')"
-    else
-        # %d not %-d: BSD strftime does not support the glibc '-' padding flag.
-        epoch_fmt "$reset" '%a %d %b %H:%M'
+    IFS='|' read -r reset_ymd hhmm long <<<"$stamp"
+    if [ -z "$now_ymd" ]; then
+        printf '%s' "$long"
+        return 0
     fi
+
+    delta=$(( $(days_from_civil ${reset_ymd//-/ }) - $(days_from_civil ${now_ymd//-/ }) ))
+    case "$delta" in
+        0) printf 'today %s' "$hhmm" ;;
+        1) printf 'tomorrow %s' "$hhmm" ;;
+        *) printf '%s' "$long" ;;
+    esac
 }
 
 # human_eta <seconds> -> "4h39m" / "39m" / "<1m"
@@ -289,9 +320,13 @@ echo -e "$row1"
 # Row 2 — rate limits, with the day + hour they reset
 # ---------------------------------------------------------------------------
 
+# Both segments share one clock read — two `date` forks per render, not one per
+# segment per field.
+read -r now_epoch now_ymd <<<"$(date '+%s %Y-%m-%d')"
+
 # limit_segment <label> <used-pct> <resets-at-epoch>
 limit_segment() {
-    local label=$1 pct=$2 reset=$3 seg now eta when
+    local label=$1 pct=$2 reset=$3 seg eta when
     [ -z "$pct" ] && return 0
     [ "$pct" -lt 0 ] 2>/dev/null && return 0
 
@@ -300,9 +335,8 @@ limit_segment() {
     seg+=" $(heat "$pct")$(printf '%3d%%' "$pct")${RESET}"
 
     if [ -n "$reset" ] && [ "$reset" -gt 0 ] 2>/dev/null; then
-        now=$(date +%s)
-        eta=$(( reset - now ))
-        when=$(reset_label "$reset" "$now")
+        eta=$(( reset - now_epoch ))
+        when=$(reset_label "$reset" "$now_ymd")
         if [ -n "$when" ]; then
             seg+=" ${DIM}↻${RESET} ${RESET_C}${when}${RESET}"
             [ "$width" -ge 90 ] && seg+=" ${DIM}($(human_eta "$eta"))${RESET}"
