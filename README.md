@@ -37,7 +37,7 @@ Each phase of development has dedicated tooling:
 - **Specialized review agents** — architecture and security reviewers spawned as subagents
 - **Language-aware code review** — auto-detects Go, Rust, TypeScript, or Python and loads stack-specific best practices
 - **Parallel execution** — worktree-based development with `/autopilot` for full roadmap execution
-- **Writer/reviewer separation** — never review code in the same session that wrote it
+- **Writer/reviewer separation** — a fresh-context reviewer is always spawned for every branch, never the session that wrote it; merging stays a separate, human-gated decision
 - **Notification hooks** — desktop notifications when Claude needs attention (Claude Code)
 - **Custom status line** — model, context usage, cost, git branch, and rate limits with their reset times at a glance (Claude Code)
 - **Composable with other tools** — works alongside [GitHub Spec Kit](https://github.com/github/spec-kit) and other SDD toolkits ([integration guide](docs/speckit-integration.md))

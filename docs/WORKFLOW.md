@@ -466,7 +466,9 @@ repos:
 
 ### Writer/Reviewer Pattern
 
-Never review code in the same session that wrote it. Claude won't be biased toward its own code in a fresh session.
+**Always trigger a fresh reviewer.** This is an obligation, not just the prohibition it's often stated as. "Don't review your own code" is true but insufficient — the point is that a reviewer with clean context is *actively spawned* every time an implementation lands on a branch, whether that's a subagent that did not write the code or a genuine fresh session. Never skip it because the diff is small, test-only, or looks obviously fine.
+
+Merging stays a separate decision. Default: report the review findings and stop — the human merges. Merge autonomously only when they've said so for that specific piece of work ("autonomous", "merge if it passes", `/autopilot`, `/factory`); the authorization is per-task and never carries to the next one.
 
 ```
 Session A (Writer):   Implements the feature in worktree

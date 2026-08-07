@@ -9,7 +9,8 @@
 - Commit messages use conventional commits: feat:, fix:, refactor:, chore:, test:, docs:, security:
 - Split commits by logical concern; each commit leaves the codebase working
 - Security-sensitive changes require /sec-review before PR
-- Use the writer/reviewer pattern: never review code in the same session that wrote it
+- **Writer/reviewer pattern — ALWAYS trigger a fresh reviewer.** This is an obligation, not just a prohibition. "Don't review your own code" is true but insufficient: once an implementation is on a branch, actively spawn a reviewer with clean context — a subagent that did not write the code, or a fresh session. Do this every time, unprompted. Never skip it because the diff is small, test-only, or "obviously fine".
+- **Merging is gated on me, not on the review passing.** Default: after the review, report the findings and stop — I merge. Merge autonomously only when I have said so for that specific piece of work ("autonomous", "you can merge", "merge if it passes", `/autopilot`, `/factory`). That authorization is per-task and never carries to the next one.
 
 ## UI Work
 - Before implementing UI work, always load and reference the Paper design source; do not proceed without it.
@@ -28,7 +29,7 @@
 - Large features ship as N independently mergeable slices off `main`, not stacked on each other. If a slice isn't user-ready, merge it behind a feature flag so `main` stays deployable.
 - Worktrees live **outside the repo** (e.g., `../<repo>-<slug>`) to keep `git status` clean. If kept inside, add the directory to `.gitignore`.
 - After merge: delete the branch (local + remote) and remove the worktree. Never reuse a merged branch.
-- Canonical feature flow: `/spec` → (slice if >200 lines) → `/issues` (file milestones + issues on GitHub) → `/feature <spec>` → review the diff → `/commit` → `/pr` → `/review` (fresh session) → merge → delete branch + worktree.
+- Canonical feature flow: `/spec` → (slice if >200 lines) → `/issues` (file milestones + issues on GitHub) → `/feature <spec>` → review the diff → `/commit` → `/pr` → **fresh reviewer (subagent or fresh session) — always, never optional** → report findings → merge (mine to call unless I declared the task autonomous) → delete branch + worktree.
 - Full guide (why, how, recipes, FAQ): `docs/TRUNK_BASED_WORKFLOW.md` in the ai-workflow repo.
 
 ## Code Quality
