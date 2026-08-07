@@ -59,7 +59,7 @@ See the global **Trunk-Based Workflow** in root `CLAUDE.md` for worktree convent
 
 5. **Quality checks.** Run the project's lint, typecheck, and full test suite (check CLAUDE.md / Makefile for commands).
 
-   **Slice-size gate (trunk-based).** Before reporting completion, run `git diff --stat main...HEAD` (or `git diff --stat` if working changes are unstaged). If the total diff exceeds **~200 lines** (tests included), stop and surface the overrun via **AskUserQuestion**:
+   **Slice-size gate (trunk-based).** Before reporting completion, run `git diff --stat main...HEAD -- . ':(exclude)**/tests/**' ':(exclude)**/*_test.*' ':(exclude)**/*.test.*' ':(exclude)**/test_*'` (or the same pathspec against `git diff` if working changes are unstaged). If the **non-test** diff exceeds **~200 lines**, stop and surface the overrun via **AskUserQuestion**:
    - If the spec is a single file: include a "ship as-is" override option plus 1–2 concrete split proposals (e.g., "Split into N sub-slices under `docs/specs/NNN_<name>/MMM_*.md`"). Recommend the option that best matches the diff shape — recommend "ship as-is" only when the bulk is mechanical (formatter reflow, generated lockfile, mass rename) and the substantive review surface is small.
    - If the spec is already one slice of a sliced feature: include "ship as-is", "defer hunks X/Y to a follow-up slice", and any other relevant choice for the user.
 

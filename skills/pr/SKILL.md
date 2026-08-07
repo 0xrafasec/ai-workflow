@@ -32,7 +32,7 @@ A few things that matter, and why:
    - **Dirty tree?** Stop and tell the user: *"Working tree has uncommitted changes. Run `/commit` first, then re-run `/pr`."*
    - **On `main` / `master`?** Stop and tell the user: *"You're on `<base>`. Create a feature branch first."*
    - **Branch name doesn't match the trunk-based convention?** (`feat/*`, `fix/*`, `refactor/*`, `docs/*`, `chore/*`, `test/*`, `perf/*`, `security/*`) Warn the user and offer to rename before pushing. The convention lives in root `CLAUDE.md` → **Trunk-Based Workflow**.
-   - **Diff >200 lines?** Run `git diff --stat <base>...HEAD`; if it exceeds ~200 lines (tests included), warn the user and suggest splitting. Proceed only if the user explicitly confirms ("ship it anyway") — this is a warning, not a hard block, since `/pr` runs after commits already exist.
+   - **Diff >200 lines?** Run `git diff --stat <base>...HEAD -- . ':(exclude)**/tests/**' ':(exclude)**/*_test.*' ':(exclude)**/*.test.*' ':(exclude)**/test_*'`; if the **non-test** diff exceeds ~200 lines, warn the user and suggest splitting. Proceed only if the user explicitly confirms ("ship it anyway") — this is a warning, not a hard block, since `/pr` runs after commits already exist.
    - Record the base branch name (usually `main`, sometimes `master` or `develop`).
 
 2. **Gather the commit range** — with the base branch resolved:

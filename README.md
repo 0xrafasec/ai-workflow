@@ -347,7 +347,7 @@ Source: `dotfiles/CLAUDE.md`. Installed at `~/.claude/CLAUDE.md` (symlink). Appl
 - Conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
 - Spec-first development
 - Writer/reviewer separation
-- PRs under 200 lines, one concern each
+- PRs under 200 lines of non-test diff, one concern each
 
 ### Settings (`settings.json`)
 

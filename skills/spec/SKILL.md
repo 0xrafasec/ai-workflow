@@ -45,7 +45,7 @@ Build on existing architecture, TDD, and security docs if they exist — referen
 
 ## Slice (trunk-based)
 
-Estimate implementation size (code + tests). Per the global **Trunk-Based Workflow** (root `CLAUDE.md`), each PR targets ≤200 lines.
+Estimate implementation size in **source lines only** — tests are written in full regardless and never count toward the budget. Per the global **Trunk-Based Workflow** (root `CLAUDE.md`), each PR targets ≤200 non-test lines.
 
 - **≤200 lines:** one spec, one PR. Single file at `docs/specs/NNN_<slug>.md`.
 - **>200 lines:** slice into N independently mergeable vertical slices, each ≤200 lines, under `docs/specs/NNN_<slug>/`.

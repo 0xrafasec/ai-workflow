@@ -794,7 +794,7 @@ These defaults apply to **every project** unless overridden by a project-level C
 - No unnecessary abstractions
 - Validate at system boundaries only
 - Tests must cover spec verification criteria
-- PRs: one concern, under 200 lines, with summary + spec link + security checklist + test plan
+- PRs: one concern, under 200 lines **excluding tests**, with summary + spec link + security checklist + test plan
 - `/clear` between tasks, `/compact` mid-task, `/rewind` after 2 failed corrections
 
 ---

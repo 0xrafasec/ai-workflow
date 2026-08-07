@@ -89,7 +89,7 @@ These live in root `CLAUDE.md` → **Trunk-Based Workflow**. Every skill in this
 
 3. **Typed branch names.** `feat/<slug>`, `fix/<slug>`, `refactor/<slug>`, `docs/<slug>`, `chore/<slug>`, `test/<slug>`, `perf/<slug>`, `security/<slug>`. The prefix tells reviewers what lens to apply.
 
-4. **One branch = one PR = one vertical slice.** ≤200 lines of diff (tests included). Exceed this and you've conflated two concerns; split.
+4. **One branch = one PR = one vertical slice.** ≤200 lines of diff **excluding tests** — source lines only; test lines never count toward the budget. Exceed this and you've conflated two concerns; split.
 
 5. **Vertical slicing.** A "feature" that's too big becomes N slices, each end-to-end (DB → API → UI for *one* capability), each independently mergeable. Never horizontal (all DB first, then all API). Horizontal slices pile up un-shippable state.
 

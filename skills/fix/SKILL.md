@@ -53,7 +53,7 @@ Before writing code, ensure you are on a short-lived branch named `fix/<slug>`. 
 
 6. **Run quality checks** — Run the project's lint, typecheck, and test commands (check CLAUDE.md or Makefile for the right commands). Run ALL test layers, not just unit tests.
 
-   **Slice-size gate (trunk-based).** Before reporting completion, run `git diff --stat main...HEAD` (or `git diff --stat` if working changes are unstaged). If the total diff exceeds **~200 lines** (tests included), stop and propose a split via **AskUserQuestion** — a "fix" that balloons into a refactor is two slices, not one. Never silently leave a >200-line fix in the working tree without the user's explicit override.
+   **Slice-size gate (trunk-based).** Before reporting completion, run `git diff --stat main...HEAD -- . ':(exclude)**/tests/**' ':(exclude)**/*_test.*' ':(exclude)**/*.test.*' ':(exclude)**/test_*'` (or the same pathspec against `git diff` if working changes are unstaged). If the **non-test** diff exceeds **~200 lines**, stop and propose a split via **AskUserQuestion** — a "fix" that balloons into a refactor is two slices, not one. Never silently leave a >200-line fix in the working tree without the user's explicit override.
 
 7. **Stack-aware code review** — Prefer Anthropic's official `code-review` skill (from `claude-code-plugins`) if installed. Otherwise, run `/sec-review` for security and spawn an **architecture-reviewer** subagent for architecture, passing the matching language guide from `reviews/` as stack-specific criteria.
 
