@@ -139,9 +139,11 @@ heat() {
     fi
 }
 
-# bar <pct> <width> — block progress bar, filled portion coloured by heat.
+# bar <pct> <width> [colour] — block progress bar. The filled portion is
+# coloured by heat() unless an explicit colour is passed; the context bar passes
+# one because it grades on absolute tokens rather than percent (see ctx_heat).
 bar() {
-    local pct=$1 w=$2 filled i out=""
+    local pct=$1 w=$2 col=${3:-} filled i out=""
     [ "$pct" -lt 0 ] && pct=0
     [ "$pct" -gt 100 ] && pct=100
     filled=$(( pct * w / 100 ))
@@ -150,7 +152,60 @@ bar() {
     for ((i = 0; i < w; i++)); do
         if [ "$i" -lt "$filled" ]; then out+="█"; else out+="░"; fi
     done
-    printf '%s%s%s' "$(heat "$pct")" "$out" "$RESET"
+    [ -z "$col" ] && col=$(heat "$pct")
+    printf '%s%s%s' "$col" "$out" "$RESET"
+}
+
+# ctx_heat <tokens> <window-size> — colour for the context readout.
+#
+# Deliberately not heat(): that grades on percent of the window, which says
+# nothing useful at 1M. 150k tokens is 75% of a 200k window and 15% of a 1M one,
+# yet it is the same amount of context for the model to hold in its head — so a
+# percentage-graded bar sits green through an entire working session on Opus and
+# only reddens when truncation is imminent, which is far too late to act on.
+#
+# Claude Code itself ships no "ideal context" threshold. Its only built-in
+# levels are end-of-window buffers — warn at window-33k, auto-compact at
+# window-13k, blocked at window-3k — which answer "am I about to run out", not
+# "am I still sharp".
+#
+# So amber is anchored on the one first-party long-context figure in the
+# product, the rate-limit attribution bucket:
+#
+#     long_context: `${e}% of your usage was at >150k context`
+#
+# That is Anthropic flagging >150k as the band that measurably costs more of
+# your limit, and it is the same band where recall over a long context starts
+# slipping. Treat it as a well-sourced heuristic, not a published performance
+# guarantee — it is a prompt to compact, not a cliff.
+#
+# Red is Claude Code's own warn level (window-33k): past there, auto-compact is
+# about to take the decision away from you.
+#
+# Tune with CLAUDE_STATUSLINE_CTX_IDEAL (tokens).
+ctx_heat() {
+    local tok=$1 win=$2 ideal=${CLAUDE_STATUSLINE_CTX_IDEAL:-150000} redline
+
+    # No usable window size — fall back to grading the percentage.
+    if [ "${win:-0}" -le 0 ] 2>/dev/null; then
+        heat "$3"
+        return
+    fi
+
+    redline=$(( win - 33000 ))
+    # Only degenerate windows (smaller than the buffer itself, via a
+    # CLAUDE_CODE_MAX_CONTEXT_TOKENS override) need a fallback. Do not clamp
+    # this upward in general: on a 200k window the redline is 167k, and
+    # rounding it to a percentage of the window would move it off the level
+    # Claude Code actually warns at.
+    [ "$redline" -le 0 ] && redline=$(( win * 85 / 100 ))
+    # Keep amber strictly below red on small windows.
+    [ "$ideal" -ge "$redline" ] && ideal=$(( redline * 80 / 100 ))
+
+    if   [ "$tok" -ge "$redline" ]; then printf '%s' "$HOT"
+    elif [ "$tok" -ge "$ideal" ];   then printf '%s' "$WARN"
+    else                                 printf '%s' "$OK"
+    fi
 }
 
 # strftime for an epoch, portable across BSD (macOS) and GNU date.
@@ -312,10 +367,13 @@ flags=""
 # CLAUDE_CODE_MAX_CONTEXT_TOKENS override, decided per session) and guessing it
 # is exactly how this readout goes wrong.
 if [ -n "$ctx_pct" ]; then
+    # Graded on absolute tokens, so the colour means "still sharp / past the
+    # recommended range / about to be compacted" rather than "fraction full".
+    ctx_col=$(ctx_heat "${in_tok:-0}" "${ctx_size:-0}" "$ctx_pct")
     if [ "$width" -ge 80 ]; then
-        row1+="${SEP}${LABEL}ctx${RESET} $(bar "$ctx_pct" 8) $(heat "$ctx_pct")${ctx_pct}%${RESET}"
+        row1+="${SEP}${LABEL}ctx${RESET} $(bar "$ctx_pct" 8 "$ctx_col") ${ctx_col}${ctx_pct}%${RESET}"
     else
-        row1+="${SEP}${LABEL}ctx${RESET} $(heat "$ctx_pct")${ctx_pct}%${RESET}"
+        row1+="${SEP}${LABEL}ctx${RESET} ${ctx_col}${ctx_pct}%${RESET}"
     fi
     # Absolute counts, so a low percentage on a 1M window is legible as "69k of
     # 1M" rather than an implausible-looking 7%.
