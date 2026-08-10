@@ -175,9 +175,24 @@ bar() {
 #     long_context: `${e}% of your usage was at >150k context`
 #
 # That is Anthropic flagging >150k as the band that measurably costs more of
-# your limit, and it is the same band where recall over a long context starts
-# slipping. Treat it as a well-sourced heuristic, not a published performance
-# guarantee — it is a prompt to compact, not a cliff.
+# your limit. It is a cost signal, not a quality one — do not read it as a
+# published performance threshold.
+#
+# There is no such threshold to read. Anthropic's own context-engineering
+# guidance is deliberately principle-based (context is "a finite resource with
+# diminishing marginal returns"; models have an "attention budget" that "every
+# new token" depletes) and names no number. Chroma's Context Rot study, the
+# reference work here, declines to name one too: across 18 frontier models
+# degradation is continuous and non-uniform from the start, varying by task
+# rather than tripping at a boundary — it is already measurable at ~113k on
+# LongMemEval.
+#
+# So 150k is not a cliff and nothing gets fast again below it. It is picked to
+# be a useful *alert*: low enough to sit above where degradation is real,
+# high enough to stay quiet on ordinary sessions. Calibrated against actual
+# usage here it lands near the 75th percentile of peak session context
+# (median ~99k, p75 ~156k, p90 ~286k), so it fires on the long sessions and
+# not the routine ones. A signal that is always on is not a signal.
 #
 # Red is Claude Code's own warn level (window-33k): past there, auto-compact is
 # about to take the decision away from you.
