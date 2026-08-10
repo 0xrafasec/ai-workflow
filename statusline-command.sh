@@ -3,7 +3,7 @@
 #
 # Reads the session JSON on stdin and prints two rows:
 #
-#   ▸ ai-workflow  main ✚2   Opus 5 (1M)  high   ███░░░░░  6%  $0.76  12m
+#   ▸ ai-workflow  main ✚2   Opus 5  high   ctx █░░░░░░░ 7% 69k/1M  $0.76  12m
 #   5h ██░░░░░░  1% ↻ Sun 22:00 (4h39m)   7d ██░░░░░░ 18% ↻ Mon 05:00 (11h39m)
 #
 # The second row is the point of this script: rate limits are shown with the
@@ -221,6 +221,26 @@ human_eta() {
     fi
 }
 
+# tok_short <tokens> -> "812" / "69k" / "1M" / "1.4M"
+#
+# The percentage alone is unreadable on a 1M-context model: 69k tokens in reads
+# as 7%, which looks broken next to a session that clearly has a lot of history
+# in it. Printing the absolute count next to it makes the ratio self-evident.
+tok_short() {
+    local n=$1 whole frac
+    if [ "$n" -ge 1000000 ]; then
+        whole=$(( n / 1000000 ))
+        frac=$(( (n % 1000000) / 100000 ))
+        if [ "$frac" -eq 0 ]; then printf '%dM' "$whole"
+        else                       printf '%d.%dM' "$whole" "$frac"
+        fi
+    elif [ "$n" -ge 1000 ]; then
+        printf '%dk' $(( n / 1000 ))
+    else
+        printf '%d' "$n"
+    fi
+}
+
 # ---------------------------------------------------------------------------
 # Row 1 — where you are, what you're driving, what it costs
 # ---------------------------------------------------------------------------
@@ -280,12 +300,24 @@ flags=""
 [ -n "$style" ] && [ "$style" != "default" ] && flags+=" ${style}"
 [ -n "$flags" ] && row1+="${SEP}${EFFORT_C}${flags# }${RESET}"
 
-# Context window
+# Context window.
+#
+# ctx_pct is context_window.used_percentage straight from the payload — the same
+# figure Claude Code computes for itself, round((input + cache_creation +
+# cache_read) / context_window_size * 100). Do not re-derive it from the token
+# fields: the denominator is not a constant (200k, 1M, or a
+# CLAUDE_CODE_MAX_CONTEXT_TOKENS override, decided per session) and guessing it
+# is exactly how this readout goes wrong.
 if [ -n "$ctx_pct" ]; then
     if [ "$width" -ge 80 ]; then
         row1+="${SEP}${LABEL}ctx${RESET} $(bar "$ctx_pct" 8) $(heat "$ctx_pct")${ctx_pct}%${RESET}"
     else
         row1+="${SEP}${LABEL}ctx${RESET} $(heat "$ctx_pct")${ctx_pct}%${RESET}"
+    fi
+    # Absolute counts, so a low percentage on a 1M window is legible as "69k of
+    # 1M" rather than an implausible-looking 7%.
+    if [ "$width" -ge 100 ] && [ "${ctx_size:-0}" -gt 0 ] 2>/dev/null; then
+        row1+=" ${DIM}$(tok_short "${in_tok:-0}")/$(tok_short "$ctx_size")${RESET}"
     fi
 fi
 
