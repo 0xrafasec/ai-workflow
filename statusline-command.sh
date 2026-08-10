@@ -3,7 +3,10 @@
 #
 # Reads the session JSON on stdin and prints two rows:
 #
-#   ▸ ai-workflow  main ✚2   Opus 5  high   ctx █░░░░░░░ 7% 69k/1M  $0.76  12m
+#   ▸ ai-workflow  main ✚2   Opus 5  high   ctx █░░░░░░░ 7% 69k/1M  12m
+#
+# The dollar cost appears only on API-key billing; on a Claude.ai subscription
+# the figure is notional and row 2's rate limits are the real budget.
 #   5h ██░░░░░░  1% ↻ Sun 22:00 (4h39m)   7d ██░░░░░░ 18% ↻ Mon 05:00 (11h39m)
 #
 # The second row is the point of this script: rate limits are shown with the
@@ -321,8 +324,26 @@ if [ -n "$ctx_pct" ]; then
     fi
 fi
 
-# Cost — taken straight from the payload, not re-derived from token counts.
-if [ -n "$cost" ] && [ "$cost" != "0" ]; then
+# Cost — only on usage-based billing.
+#
+# cost.total_cost_usd is always populated, but on a Claude.ai subscription it is
+# a notional API-list-price valuation of the tokens, not money owed: the plan is
+# a flat fee and what actually constrains you is the rate limits in row 2. Shown
+# next to a $100/mo plan the figure reads as a bill and badly misleads — a
+# session can show $139 while sitting at 23% of the 5h window.
+#
+# Claude Code's own /cost does exactly this: for subscribers it prints "You are
+# currently using your subscription to power your Claude Code usage" and never
+# renders a dollar amount, falling through to the "Total cost:" block only on
+# API-key billing. Match that.
+#
+# rate_limits is the documented discriminator — "only present for subscribers
+# after first API response" — and parses to -1 here when absent.
+on_subscription=0
+[ "${h5_pct:--1}" -ge 0 ] 2>/dev/null && on_subscription=1
+[ "${d7_pct:--1}" -ge 0 ] 2>/dev/null && on_subscription=1
+
+if [ "$on_subscription" = "0" ] && [ -n "$cost" ] && [ "$cost" != "0" ]; then
     cost_fmt=$(printf '$%.2f' "$cost" 2>/dev/null)
     [ "$cost_fmt" = "\$0.00" ] && cost_fmt=$(printf '$%.3f' "$cost" 2>/dev/null)
     row1+="${SEP}${COST_C}${cost_fmt}${RESET}"
