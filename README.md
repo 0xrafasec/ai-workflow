@@ -158,6 +158,25 @@ aiwf update && aiwf install-all
 
 The filter matches on path, destination, or basename.
 
+### Multiple Claude Code profiles
+
+Claude Code can run isolated profiles (separate login, settings, MCP servers, history) by pointing its own `CLAUDE_CONFIG_DIR` at a different directory:
+
+```bash
+alias claude-work='CLAUDE_CONFIG_DIR="$HOME/.claude-work" claude'
+```
+
+Each profile has its own `skills/`, `agents/` and `CLAUDE.md`, so each one needs its own install. Set `CLAUDE_DIR` to target it:
+
+```bash
+CLAUDE_DIR="$HOME/.claude-work" ./install.sh --no-settings
+# or: CLAUDE_DIR="$HOME/.claude-work" aiwf install --no-settings
+```
+
+`--no-settings` links everything **except** `settings.json`. Settings are per-profile — theme, enabled plugins, account-specific hooks — so a secondary profile usually wants the shared skills and conventions while keeping its own settings file. Drop the flag to share one `settings.json` across every profile.
+
+Uninstall the same way (`CLAUDE_DIR="$HOME/.claude-work" ./uninstall.sh`); it only removes symlinks, so a profile-local `settings.json` survives.
+
 ### Uninstall
 
 ```bash

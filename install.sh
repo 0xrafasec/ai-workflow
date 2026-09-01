@@ -9,6 +9,17 @@ set -euo pipefail
 #   ./install.sh --extra            Install core + everything under extras/
 #   ./install.sh settings.json      Install only matching target(s)
 #   ./install.sh --extra rlabs-design
+#   ./install.sh --no-settings      Install everything except settings.json
+#
+# CLAUDE_DIR selects which Claude config dir to install into (default
+# ~/.claude). Claude Code supports several isolated profiles via its own
+# CLAUDE_CONFIG_DIR, and each one needs its own copy of the symlinks:
+#
+#   CLAUDE_DIR="$HOME/.claude-work" ./install.sh --no-settings
+#
+# --no-settings exists for exactly that case: settings.json carries per-profile
+# state (account, theme, enabled plugins), so a secondary profile wants the
+# shared skills and conventions but keeps its own settings file.
 #
 # Extras are personal/optional add-ons (e.g. private brand systems) that live
 # under extras/ and are not part of the default workflow. They are only linked
@@ -19,14 +30,17 @@ set -euo pipefail
 # re-linking every skill and agent.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CLAUDE_DIR="$HOME/.claude"
+CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
 BIN_DIR="${AIWF_BIN_DIR:-$HOME/.local/bin}"
 
 INSTALL_EXTRAS=0
+INSTALL_SETTINGS=1
 FILTERS=()
 for arg in "$@"; do
     if [ "$arg" = "--extra" ] || [ "$arg" = "--extras" ]; then
         INSTALL_EXTRAS=1
+    elif [ "$arg" = "--no-settings" ]; then
+        INSTALL_SETTINGS=0
     else
         FILTERS+=("$arg")
     fi
@@ -133,6 +147,9 @@ fi
 if [ "$INSTALL_EXTRAS" -eq 1 ]; then
     echo "  (--extra: extras/ add-ons included)"
 fi
+if [ "$INSTALL_SETTINGS" -eq 0 ]; then
+    echo "  (--no-settings: settings.json left alone)"
+fi
 echo "  $SCRIPT_DIR"
 echo "into:"
 echo "  $CLAUDE_DIR"
@@ -153,11 +170,15 @@ link "dotfiles/CLAUDE.md"       "CLAUDE.md"
 
 # settings.json is per-user (gitignored). Seed from the tracked example on
 # fresh clones so the symlink target exists before we link it into ~/.claude.
-if [ ! -e "$SCRIPT_DIR/settings.json" ] && [ -e "$SCRIPT_DIR/settings.example.json" ]; then
-    cp "$SCRIPT_DIR/settings.example.json" "$SCRIPT_DIR/settings.json"
-    info "Seeded settings.json from settings.example.json (edit freely; not tracked)"
+if [ "$INSTALL_SETTINGS" -eq 1 ]; then
+    if [ ! -e "$SCRIPT_DIR/settings.json" ] && [ -e "$SCRIPT_DIR/settings.example.json" ]; then
+        cp "$SCRIPT_DIR/settings.example.json" "$SCRIPT_DIR/settings.json"
+        info "Seeded settings.json from settings.example.json (edit freely; not tracked)"
+    fi
+    link "settings.json"        "settings.json"
+else
+    skip "settings.json (--no-settings)"
 fi
-link "settings.json"            "settings.json"
 
 link "statusline-command.sh"    "statusline-command.sh"
 
