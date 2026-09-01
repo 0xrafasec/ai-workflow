@@ -160,22 +160,34 @@ The filter matches on path, destination, or basename.
 
 ### Multiple Claude Code profiles
 
-Claude Code can run isolated profiles (separate login, settings, MCP servers, history) by pointing its own `CLAUDE_CONFIG_DIR` at a different directory:
+Claude Code can run isolated profiles — separate login, settings, MCP servers, history — by pointing its own `CLAUDE_CONFIG_DIR` at a different directory:
 
 ```bash
 alias claude-work='CLAUDE_CONFIG_DIR="$HOME/.claude-work" claude'
 ```
 
-Each profile has its own `skills/`, `agents/` and `CLAUDE.md`, so each one needs its own install. Set `CLAUDE_DIR` to target it:
+Each profile carries its own `skills/`, `agents/`, `commands/` and `CLAUDE.md`, so a new profile starts with none of the toolkit. Set `CLAUDE_DIR` to install into it:
 
 ```bash
-CLAUDE_DIR="$HOME/.claude-work" ./install.sh --no-settings
-# or: CLAUDE_DIR="$HOME/.claude-work" aiwf install --no-settings
+CLAUDE_DIR="$HOME/.claude-work" ./install.sh
+# or: CLAUDE_DIR="$HOME/.claude-work" aiwf install
 ```
 
-`--no-settings` links everything **except** `settings.json`. Settings are per-profile — theme, enabled plugins, account-specific hooks — so a secondary profile usually wants the shared skills and conventions while keeping its own settings file. Drop the flag to share one `settings.json` across every profile.
+**`settings.json` is not shared.** Account, theme, model, status line and enabled plugins are the reason to run separate profiles in the first place, so only the primary `~/.claude` gets the repo's `settings.json` — a secondary `CLAUDE_DIR` keeps its own file untouched. That follows from `CLAUDE_DIR`, not from a flag, so it still holds when `aiwf update` or `aiwf reinstall` re-runs the install for you. Override with `--with-settings` (share one settings file everywhere) or `--no-settings` (skip it even for the primary dir).
 
-Uninstall the same way (`CLAUDE_DIR="$HOME/.claude-work" ./uninstall.sh`); it only removes symlinks, so a profile-local `settings.json` survives.
+If a profile wants the status line, add it to that profile's own `settings.json` — the path resolves per profile:
+
+```json
+"statusLine": {
+  "type": "command",
+  "command": "bash \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/statusline-command.sh\"",
+  "refreshInterval": 30
+}
+```
+
+Uninstall the same way (`CLAUDE_DIR="$HOME/.claude-work" ./uninstall.sh`). It only removes symlinks, so a profile-local `settings.json` survives, and it leaves `~/.local/bin/aiwf` in place because the launcher is shared by every profile.
+
+`install-all` is **not** profile-scoped — the Cursor and Codex adapters write to `~/.cursor` and `~/.codex`, which have no profile concept. Use `aiwf install` for a profile.
 
 ### Uninstall
 

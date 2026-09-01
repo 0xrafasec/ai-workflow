@@ -21,7 +21,8 @@ set -euo pipefail
 #   - Wraps install.sh/uninstall.sh rather than duplicating their logic, so
 #     there is still a single source of truth for each platform's symlink set.
 
-export CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
+PRIMARY_CLAUDE_DIR="$HOME/.claude"
+export CLAUDE_DIR="${CLAUDE_DIR:-$PRIMARY_CLAUDE_DIR}"
 BIN_DIR="${AIWF_BIN_DIR:-$HOME/.local/bin}"
 
 resolve_self() {
@@ -80,9 +81,14 @@ cmd_uninstall() {
         error "uninstall.sh not found or not executable at $INSTALL_DIR"
         exit 1
     fi
-    "$INSTALL_DIR/uninstall.sh" "${passthru[@]}"
+    if [ ${#passthru[@]} -gt 0 ]; then
+        "$INSTALL_DIR/uninstall.sh" "${passthru[@]}"
+    else
+        "$INSTALL_DIR/uninstall.sh"
+    fi
 
-    if [ -L "$BIN_DIR/aiwf" ]; then
+    # Shared by every profile — only the primary uninstall takes it away.
+    if [ "$CLAUDE_DIR" = "$PRIMARY_CLAUDE_DIR" ] && [ -L "$BIN_DIR/aiwf" ]; then
         rm "$BIN_DIR/aiwf"
         info "Removed $BIN_DIR/aiwf"
     fi
@@ -156,7 +162,7 @@ cmd_update() {
 
 cmd_reinstall() {
     cmd_uninstall
-    cmd_install
+    cmd_install "$@"
 }
 
 # --- Platform adapters -------------------------------------------------------
@@ -252,9 +258,10 @@ aiwf — AI Workflow toolkit manager
 
 Usage:
   Claude Code (default):
-    aiwf install [FILTER...]   Symlink config into ~/.claude.
-                               --no-settings skips settings.json (use with
-                               CLAUDE_DIR for a secondary Claude profile).
+    aiwf install [FILTER...]   Symlink config into \$CLAUDE_DIR (~/.claude).
+                               A secondary CLAUDE_DIR keeps its own
+                               settings.json; --with-settings / --no-settings
+                               force the decision either way.
     aiwf reinstall             Uninstall then re-install (repair broken links).
     aiwf uninstall [--purge]   Remove symlinks. --purge also deletes the clone.
 

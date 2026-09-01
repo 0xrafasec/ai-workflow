@@ -9,7 +9,8 @@ set -euo pipefail
 # a profile that kept its own settings.json (install.sh --no-settings) is left
 # untouched.
 
-CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
+PRIMARY_CLAUDE_DIR="$HOME/.claude"
+CLAUDE_DIR="${CLAUDE_DIR:-$PRIMARY_CLAUDE_DIR}"
 BIN_DIR="${AIWF_BIN_DIR:-$HOME/.local/bin}"
 
 RED='\033[0;31m'
@@ -85,7 +86,14 @@ for f in "${EXTRA_SKILLS[@]}"; do
     unlink_if_symlink "$CLAUDE_DIR/$f"
 done
 
-unlink_if_symlink "$BIN_DIR/aiwf"
+# The aiwf launcher is shared by every profile, so only the primary uninstall
+# takes it away. Otherwise cleaning up one profile would strip the command the
+# others still rely on.
+if [ "$CLAUDE_DIR" = "$PRIMARY_CLAUDE_DIR" ]; then
+    unlink_if_symlink "$BIN_DIR/aiwf"
+else
+    warn "Left $BIN_DIR/aiwf in place (shared by all profiles)"
+fi
 
 echo ""
 info "Done! Symlinks removed. Original backups restored where available."
