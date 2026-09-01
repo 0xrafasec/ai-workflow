@@ -9,17 +9,21 @@ set -euo pipefail
 #   ./install.sh --extra            Install core + everything under extras/
 #   ./install.sh settings.json      Install only matching target(s)
 #   ./install.sh --extra rlabs-design
-#   ./install.sh --no-settings      Install everything except settings.json
+#   ./install.sh --no-settings      Never link settings.json
+#   ./install.sh --with-settings    Always link settings.json
 #
 # CLAUDE_DIR selects which Claude config dir to install into (default
 # ~/.claude). Claude Code supports several isolated profiles via its own
 # CLAUDE_CONFIG_DIR, and each one needs its own copy of the symlinks:
 #
-#   CLAUDE_DIR="$HOME/.claude-work" ./install.sh --no-settings
+#   CLAUDE_DIR="$HOME/.claude-work" ./install.sh
 #
-# --no-settings exists for exactly that case: settings.json carries per-profile
-# state (account, theme, enabled plugins), so a secondary profile wants the
-# shared skills and conventions but keeps its own settings file.
+# Skills, agents, commands, review guides and the global CLAUDE.md are shared
+# toolkit — every profile gets them. settings.json is not: it carries the
+# profile's account, theme, model, status line and enabled plugins, which is
+# the whole reason to run separate profiles. So it is linked only into the
+# primary dir; a secondary CLAUDE_DIR keeps its own file. The two flags force
+# the decision either way.
 #
 # Extras are personal/optional add-ons (e.g. private brand systems) that live
 # under extras/ and are not part of the default workflow. They are only linked
@@ -30,21 +34,35 @@ set -euo pipefail
 # re-linking every skill and agent.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
+PRIMARY_CLAUDE_DIR="$HOME/.claude"
+CLAUDE_DIR="${CLAUDE_DIR:-$PRIMARY_CLAUDE_DIR}"
 BIN_DIR="${AIWF_BIN_DIR:-$HOME/.local/bin}"
 
 INSTALL_EXTRAS=0
-INSTALL_SETTINGS=1
+INSTALL_SETTINGS=auto
 FILTERS=()
 for arg in "$@"; do
     if [ "$arg" = "--extra" ] || [ "$arg" = "--extras" ]; then
         INSTALL_EXTRAS=1
     elif [ "$arg" = "--no-settings" ]; then
         INSTALL_SETTINGS=0
+    elif [ "$arg" = "--with-settings" ]; then
+        INSTALL_SETTINGS=1
     else
         FILTERS+=("$arg")
     fi
 done
+
+# Unflagged: the primary dir gets settings.json, a secondary profile keeps its
+# own. Deriving this from CLAUDE_DIR rather than a flag is what makes it hold
+# across `aiwf update` and `aiwf reinstall`, which re-run the install for you.
+if [ "$INSTALL_SETTINGS" = "auto" ]; then
+    if [ "$CLAUDE_DIR" = "$PRIMARY_CLAUDE_DIR" ]; then
+        INSTALL_SETTINGS=1
+    else
+        INSTALL_SETTINGS=0
+    fi
+fi
 
 # Colors
 RED='\033[0;31m'
@@ -148,7 +166,7 @@ if [ "$INSTALL_EXTRAS" -eq 1 ]; then
     echo "  (--extra: extras/ add-ons included)"
 fi
 if [ "$INSTALL_SETTINGS" -eq 0 ]; then
-    echo "  (--no-settings: settings.json left alone)"
+    echo "  (settings.json left alone — profile-local)"
 fi
 echo "  $SCRIPT_DIR"
 echo "into:"
@@ -177,7 +195,7 @@ if [ "$INSTALL_SETTINGS" -eq 1 ]; then
     fi
     link "settings.json"        "settings.json"
 else
-    skip "settings.json (--no-settings)"
+    skip "settings.json (profile-local)"
 fi
 
 link "statusline-command.sh"    "statusline-command.sh"
@@ -224,6 +242,6 @@ if [ ${#FILTERS[@]} -gt 0 ] && [ "$MATCHED" -eq 0 ]; then
     exit 1
 fi
 info "Done! $MATCHED target(s) linked."
-info "Edit files in $SCRIPT_DIR and changes apply to ~/.claude/ automatically."
+info "Edit files in $SCRIPT_DIR and changes apply to $CLAUDE_DIR/ automatically."
 info "For Cursor: aiwf install-cursor | For Codex: aiwf install-codex | For all: aiwf install-all"
 echo ""

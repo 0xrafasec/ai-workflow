@@ -836,7 +836,7 @@ ai-workflow/
 
 ### Claude Code install (`~/.claude/`)
 
-The install directory is `~/.claude` unless `CLAUDE_DIR` says otherwise. Claude Code supports isolated profiles through its own `CLAUDE_CONFIG_DIR`, and each profile carries its own `skills/`, `agents/`, `commands/` and `CLAUDE.md` — so each one needs a separate `install.sh` run with `CLAUDE_DIR` pointed at it. `install.sh --no-settings` skips `settings.json` for those secondary profiles, whose settings are profile-local (account, theme, enabled plugins) rather than shared. `uninstall.sh` reads the same `CLAUDE_DIR` and only removes symlinks, so a profile-local `settings.json` is never touched.
+The install directory is `~/.claude` unless `CLAUDE_DIR` says otherwise. Claude Code supports isolated profiles through its own `CLAUDE_CONFIG_DIR`, and each profile carries its own `skills/`, `agents/`, `commands/` and `CLAUDE.md` — so each one needs a separate `install.sh` run with `CLAUDE_DIR` pointed at it. Everything in the table below is shared toolkit and installs into every profile **except `settings.json`**, which is profile-local (account, theme, model, status line, enabled plugins): only the primary `~/.claude` gets the repo's copy. That is derived from `CLAUDE_DIR` rather than a flag so it survives `aiwf update` / `aiwf reinstall`; `--with-settings` and `--no-settings` force it either way. `uninstall.sh` reads the same `CLAUDE_DIR`, removes only symlinks (a profile-local `settings.json` is never touched), and leaves the shared `~/.local/bin/aiwf` launcher alone unless it is cleaning the primary dir.
 
 ```
 ~/.claude/
