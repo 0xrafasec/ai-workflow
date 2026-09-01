@@ -773,7 +773,7 @@ Uses `notify-send` (Linux/Freedesktop). Fires on any notification event from Cla
 | Setting | Value | Purpose |
 |---------|-------|---------|
 | `defaultMode` | `bypassPermissions` | No permission prompts |
-| `model` | `opus` | Default to Opus model |
+| `model` | `claude-opus-4-8[1m]` | Default model. Per-profile — set it in each profile's own `settings.json`. Use a full model id (`claude-opus-4-8[1m]`, `claude-opus-5`, `claude-sonnet-5`) rather than an alias when you want a specific variant such as the 1M-context window. |
 | `statusLine` | custom command | Custom status line script |
 | `statusLine.refreshInterval` | `30` | Re-runs the status line every 30s so the rate-limit reset countdown stays live while idle |
 

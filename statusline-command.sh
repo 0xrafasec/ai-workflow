@@ -25,7 +25,7 @@
 # Set a refreshInterval in settings.json so the countdown stays live while the
 # session is idle:
 #   "statusLine": { "type": "command",
-#                   "command": "bash ~/.claude/statusline-command.sh",
+#                   "command": "bash \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/statusline-command.sh\"",
 #                   "refreshInterval": 30 }
 
 input=$(cat)
