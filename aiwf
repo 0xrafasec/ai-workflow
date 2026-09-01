@@ -21,7 +21,7 @@ set -euo pipefail
 #   - Wraps install.sh/uninstall.sh rather than duplicating their logic, so
 #     there is still a single source of truth for each platform's symlink set.
 
-CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
+export CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
 BIN_DIR="${AIWF_BIN_DIR:-$HOME/.local/bin}"
 
 resolve_self() {
@@ -253,6 +253,8 @@ aiwf — AI Workflow toolkit manager
 Usage:
   Claude Code (default):
     aiwf install [FILTER...]   Symlink config into ~/.claude.
+                               --no-settings skips settings.json (use with
+                               CLAUDE_DIR for a secondary Claude profile).
     aiwf reinstall             Uninstall then re-install (repair broken links).
     aiwf uninstall [--purge]   Remove symlinks. --purge also deletes the clone.
 
@@ -280,6 +282,8 @@ Environment:
   AIWF_INSTALL_DIR             Override install directory.
   AIWF_BIN_DIR                 Override bin directory (default: ~/.local/bin).
   CLAUDE_DIR                   Override Claude config dir (default: ~/.claude).
+                               Set it to install into a secondary Claude Code
+                               profile (see Claude's own CLAUDE_CONFIG_DIR).
   CURSOR_RULES_DIR             Override Cursor rules dir (default: ~/.cursor/rules).
   CODEX_DIR                    Override Codex config dir (default: ~/.codex).
 EOF

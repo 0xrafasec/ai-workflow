@@ -3,8 +3,13 @@ set -euo pipefail
 
 # AI Workflow Uninstaller
 # Removes symlinks created by install.sh and restores backups if they exist.
+#
+# CLAUDE_DIR selects which Claude config dir to clean (default ~/.claude), and
+# must match the one install.sh was run against. Only symlinks are removed, so
+# a profile that kept its own settings.json (install.sh --no-settings) is left
+# untouched.
 
-CLAUDE_DIR="$HOME/.claude"
+CLAUDE_DIR="${CLAUDE_DIR:-$HOME/.claude}"
 BIN_DIR="${AIWF_BIN_DIR:-$HOME/.local/bin}"
 
 RED='\033[0;31m'
