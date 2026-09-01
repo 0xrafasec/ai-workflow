@@ -21,8 +21,18 @@ set -euo pipefail
 #   - Wraps install.sh/uninstall.sh rather than duplicating their logic, so
 #     there is still a single source of truth for each platform's symlink set.
 
-PRIMARY_CLAUDE_DIR="$HOME/.claude"
-export CLAUDE_DIR="${CLAUDE_DIR:-$PRIMARY_CLAUDE_DIR}"
+# Resolve a directory to its canonical form so that ~/.claude, ~/.claude/,
+# ~/./.claude and a symlinked ~/.claude all compare equal. The primary-dir
+# comparison below decides whether settings.json is shared, so a spelling
+# difference must never flip it.
+canonical_dir() {
+    local d="${1%/}"
+    [ -z "$d" ] && d="/"
+    if [ -d "$d" ]; then (cd -P "$d" && pwd); else printf '%s\n' "$d"; fi
+}
+
+PRIMARY_CLAUDE_DIR="$(canonical_dir "$HOME/.claude")"
+export CLAUDE_DIR="$(canonical_dir "${CLAUDE_DIR:-$HOME/.claude}")"
 BIN_DIR="${AIWF_BIN_DIR:-$HOME/.local/bin}"
 
 resolve_self() {
@@ -91,6 +101,15 @@ cmd_uninstall() {
     if [ "$CLAUDE_DIR" = "$PRIMARY_CLAUDE_DIR" ] && [ -L "$BIN_DIR/aiwf" ]; then
         rm "$BIN_DIR/aiwf"
         info "Removed $BIN_DIR/aiwf"
+    fi
+
+    # The clone is what every profile's symlinks point at, so purging it from a
+    # profile-scoped uninstall would leave every other profile dangling with no
+    # launcher left to repair them.
+    if [ $purge -eq 1 ] && [ "$CLAUDE_DIR" != "$PRIMARY_CLAUDE_DIR" ]; then
+        error "Refusing --purge: CLAUDE_DIR is $CLAUDE_DIR, not $PRIMARY_CLAUDE_DIR."
+        error "The clone is shared by every profile. Purge from the primary dir."
+        exit 1
     fi
 
     if [ $purge -eq 1 ]; then

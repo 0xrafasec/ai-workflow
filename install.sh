@@ -34,12 +34,22 @@ set -euo pipefail
 # re-linking every skill and agent.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PRIMARY_CLAUDE_DIR="$HOME/.claude"
-CLAUDE_DIR="${CLAUDE_DIR:-$PRIMARY_CLAUDE_DIR}"
+# Resolve a directory to its canonical form so that ~/.claude, ~/.claude/,
+# ~/./.claude and a symlinked ~/.claude all compare equal. The primary-dir
+# comparison below decides whether settings.json is shared, so a spelling
+# difference must never flip it.
+canonical_dir() {
+    local d="${1%/}"
+    [ -z "$d" ] && d="/"
+    if [ -d "$d" ]; then (cd -P "$d" && pwd); else printf '%s\n' "$d"; fi
+}
+
+PRIMARY_CLAUDE_DIR="$(canonical_dir "$HOME/.claude")"
+CLAUDE_DIR="$(canonical_dir "${CLAUDE_DIR:-$HOME/.claude}")"
 BIN_DIR="${AIWF_BIN_DIR:-$HOME/.local/bin}"
 
 INSTALL_EXTRAS=0
-INSTALL_SETTINGS=auto
+INSTALL_SETTINGS=""
 FILTERS=()
 for arg in "$@"; do
     if [ "$arg" = "--extra" ] || [ "$arg" = "--extras" ]; then
@@ -56,7 +66,7 @@ done
 # Unflagged: the primary dir gets settings.json, a secondary profile keeps its
 # own. Deriving this from CLAUDE_DIR rather than a flag is what makes it hold
 # across `aiwf update` and `aiwf reinstall`, which re-run the install for you.
-if [ "$INSTALL_SETTINGS" = "auto" ]; then
+if [ -z "$INSTALL_SETTINGS" ]; then
     if [ "$CLAUDE_DIR" = "$PRIMARY_CLAUDE_DIR" ]; then
         INSTALL_SETTINGS=1
     else
@@ -238,6 +248,11 @@ chmod +x \
 
 echo ""
 if [ ${#FILTERS[@]} -gt 0 ] && [ "$MATCHED" -eq 0 ]; then
+    if [ "$INSTALL_SETTINGS" -eq 0 ] && should_install "settings.json" "settings.json"; then
+        info "Nothing to do: settings.json stays profile-local for $CLAUDE_DIR."
+        info "Pass --with-settings to link it anyway."
+        exit 0
+    fi
     error "No targets matched filter(s): ${FILTERS[*]}"
     exit 1
 fi

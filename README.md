@@ -175,19 +175,28 @@ CLAUDE_DIR="$HOME/.claude-work" ./install.sh
 
 **`settings.json` is not shared.** Account, theme, model, status line and enabled plugins are the reason to run separate profiles in the first place, so only the primary `~/.claude` gets the repo's `settings.json` — a secondary `CLAUDE_DIR` keeps its own file untouched. That follows from `CLAUDE_DIR`, not from a flag, so it still holds when `aiwf update` or `aiwf reinstall` re-runs the install for you. Override with `--with-settings` (share one settings file everywhere) or `--no-settings` (skip it even for the primary dir).
 
-If a profile wants the status line, add it to that profile's own `settings.json` — the path resolves per profile:
+What each profile sets for itself, in its own `settings.json` — model, permission mode, theme, status line:
 
 ```json
-"statusLine": {
-  "type": "command",
-  "command": "bash \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/statusline-command.sh\"",
-  "refreshInterval": 30
+{
+  "model": "claude-opus-4-8[1m]",
+  "theme": "dark",
+  "permissions": { "defaultMode": "bypassPermissions" },
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/statusline-command.sh\"",
+    "refreshInterval": 30
+  }
 }
 ```
 
+`model` takes a full model id, not just an alias, when you want a specific variant — `claude-opus-4-8[1m]` for the 1M-context window, `claude-opus-5`, `claude-sonnet-5`. The status line path resolves per profile, so each one runs the shared script against its own config dir.
+
+`--with-settings` and `--no-settings` are last-wins if you pass both.
+
 Uninstall the same way (`CLAUDE_DIR="$HOME/.claude-work" ./uninstall.sh`). It only removes symlinks, so a profile-local `settings.json` survives, and it leaves `~/.local/bin/aiwf` in place because the launcher is shared by every profile.
 
-`install-all` is **not** profile-scoped — the Cursor and Codex adapters write to `~/.cursor` and `~/.codex`, which have no profile concept. Use `aiwf install` for a profile.
+`install-all` and `uninstall-all` are only **half** profile-scoped: the Claude half honours `CLAUDE_DIR`, but the Cursor and Codex adapters write to `~/.cursor` and `~/.codex`, which have no profile concept — so an `uninstall-all` run from a profile still wipes those globally. Use plain `aiwf install` / `aiwf uninstall` for a profile. `aiwf uninstall --purge` deletes the shared clone every profile links against, so it is refused unless `CLAUDE_DIR` is the primary dir.
 
 ### Uninstall
 

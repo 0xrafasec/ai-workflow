@@ -9,8 +9,18 @@ set -euo pipefail
 # a profile that kept its own settings.json (install.sh --no-settings) is left
 # untouched.
 
-PRIMARY_CLAUDE_DIR="$HOME/.claude"
-CLAUDE_DIR="${CLAUDE_DIR:-$PRIMARY_CLAUDE_DIR}"
+# Resolve a directory to its canonical form so that ~/.claude, ~/.claude/,
+# ~/./.claude and a symlinked ~/.claude all compare equal. The primary-dir
+# comparison below decides whether settings.json is shared, so a spelling
+# difference must never flip it.
+canonical_dir() {
+    local d="${1%/}"
+    [ -z "$d" ] && d="/"
+    if [ -d "$d" ]; then (cd -P "$d" && pwd); else printf '%s\n' "$d"; fi
+}
+
+PRIMARY_CLAUDE_DIR="$(canonical_dir "$HOME/.claude")"
+CLAUDE_DIR="$(canonical_dir "${CLAUDE_DIR:-$HOME/.claude}")"
 BIN_DIR="${AIWF_BIN_DIR:-$HOME/.local/bin}"
 
 RED='\033[0;31m'
