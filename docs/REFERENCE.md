@@ -587,14 +587,16 @@ The six execution skills — `/feature`, `/fix`, `/review`, `/pr`, `/autopilot`,
 /plugin install superpowers@claude-plugins-official
 ```
 
-Plugins are **Claude Code only**. Cursor and Codex installs get the planning skills and no execution skills.
+`feature-dev` and `pr-review-toolkit` are **Claude Code only**; `superpowers` also ships Codex and Cursor installs (see its own README). The Cursor and Codex adapters in this repo install the planning skills and no execution skills.
+
+**`superpowers` changes every session it is enabled in.** Its session-start hook tells Claude to look for an applicable superpowers skill before any task, and its `brainstorming` skill overlaps `/prd` and `/spec`. If that competes with your own conventions, leave it out: it is only needed for the debugging and multi-task replacements.
 
 | Retired skill | Use instead | What it does |
 |---------------|-------------|--------------|
 | `/feature` | `/feature-dev:feature-dev` (`feature-dev`) | Guided 7-phase workflow: discovery → codebase exploration (code-explorer agents) → clarifying questions → architecture design (code-architect agents) → implementation → quality review (code-reviewer agents) → summary. Interactive: it waits for your answers and for explicit approval before implementing. Not spec-file driven by itself — pass the issue and its spec path as the argument: `/feature-dev:feature-dev implement issue #42 per docs/specs/003_auth.md`. Does not commit or open a PR. |
 | `/fix` | `systematic-debugging` skill (`superpowers`) | Four phases, root-cause investigation first — no fix is proposed before the cause is found. Triggers when you describe a bug, test failure, or unexpected behaviour. |
 | `/review` | `/pr-review-toolkit:review-pr` (`pr-review-toolkit`) | Runs specialized review agents over the changed files (`code-reviewer`, `pr-test-analyzer`, `silent-failure-hunter`, `comment-analyzer`, `type-design-analyzer`, `code-simplifier`) and aggregates findings as critical / important / suggestions. Optional aspects: `comments`, `tests`, `errors`, `types`, `code`, `simplify`, `all`; add `parallel` to run them at once. |
-| `/pr` | `gh pr create` (or ask Claude to open the PR), then `/pr-review-toolkit:review-pr` | No dedicated replacement. `superpowers` also has `finishing-a-development-branch`: verifies tests, then offers merge locally / push + PR / keep the branch. |
+| `/pr` | `/pr-review-toolkit:review-pr` before committing (it reads uncommitted changes), then `git push` + `gh pr create` (or ask Claude to open the PR) | No dedicated replacement. `superpowers` also has `finishing-a-development-branch`: verifies tests, then offers merge locally / push + PR / keep the branch. |
 | `/autopilot`, `/factory` | `subagent-driven-development`, `executing-plans`, `dispatching-parallel-agents` skills (`superpowers`) | `subagent-driven-development` dispatches a fresh implementer subagent per task with a review after each and a whole-branch review at the end; `executing-plans` runs the same plan inline in one session; `dispatching-parallel-agents` fans independent problems out to concurrent agents. **There is no longer a one-command "run the whole roadmap/milestone and merge" pipeline in this toolkit.** |
 
 The global rules in `dotfiles/CLAUDE.md` still apply to whatever implements the work — typed short-lived branch, ≤200 non-test lines per PR, always a fresh reviewer, merge gated on the human. The plugins do not enforce these themselves.
@@ -690,8 +692,6 @@ ai-workflow/
     prd / architecture / tdd / security / adr / rfc /
     spec / roadmap / issues / commit / new-project /
     design / verify-design
-    # (feature-workspace/ exists alongside but is benchmarking data, not a skill —
-    #  it has no top-level SKILL.md so install adapters skip it.)
 ```
 
 ### Claude Code install (`~/.claude/`)
@@ -818,7 +818,7 @@ claude --worktree task-b --tmux        # Terminal 2
 ### Reviewing work
 ```
 # In a FRESH session (not the one that wrote the code):
-/pr-review-toolkit:review-pr            # Review the current branch's changes (all aspects)
+/pr-review-toolkit:review-pr            # Review the uncommitted changes (all aspects); run before /commit
 /pr-review-toolkit:review-pr tests errors   # Only test coverage + error handling
 ```
 

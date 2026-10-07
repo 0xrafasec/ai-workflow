@@ -125,7 +125,7 @@ For one issue, the `feature-dev` plugin drives the read → plan → implement �
 /feature-dev:feature-dev implement issue #42 per docs/specs/003_auth.md
 ```
 
-It explores the codebase, asks clarifying questions, proposes approaches, implements after your approval, and runs its own quality review. Commit (`/commit`), open the PR (`gh pr create`) and run a fresh reviewer (`/pr-review-toolkit:review-pr`) afterwards. For a bug, the `superpowers` plugin's `systematic-debugging` skill replaces the spec step with a root-cause investigation.
+It explores the codebase, asks clarifying questions, proposes approaches, implements after your approval, and runs its own quality review. Run a fresh reviewer on the diff (`/pr-review-toolkit:review-pr`, which reads uncommitted changes), then commit (`/commit`), push and open the PR (`gh pr create`). For a bug, the `superpowers` plugin's `systematic-debugging` skill replaces the spec step with a root-cause investigation.
 
 ### Executing Several Tasks
 

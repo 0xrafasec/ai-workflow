@@ -134,10 +134,10 @@ cd ../myrepo-avatar
 
 # 3. Implement, then ship
 /feature-dev:feature-dev implement docs/specs/user-avatar-upload.md
-# review the diff, then:
-/commit
-gh pr create
+# review the diff (review-pr reads uncommitted changes), then commit and open the PR:
 /pr-review-toolkit:review-pr
+/commit
+git push && gh pr create
 
 # 4. After merge, clean up
 git checkout main && git pull
@@ -165,7 +165,7 @@ git worktree remove ../myrepo-avatar
 git worktree add -b feat/oauth-provider-config ../myrepo-oauth-1 main
 cd ../myrepo-oauth-1
 /feature-dev:feature-dev implement docs/specs/oauth-integration/001_provider-config.md
-# review the diff, then `/commit` + `gh pr create` + `/pr-review-toolkit:review-pr`
+# `/pr-review-toolkit:review-pr` on the diff, then `/commit` + `git push` + `gh pr create`
 # merge, delete, repeat for 002, 003, 004
 
 # 3. Flip the flag when 004 merges (or on product's timeline)
@@ -179,7 +179,7 @@ Note: slices 002–004 are cut from `main` *after* 001 is merged — never stack
 git checkout -b fix/login-semicolon
 # Describe the bug: "login fails when password contains ';'" — the superpowers
 # `systematic-debugging` skill finds the root cause before any fix is proposed.
-# Review the diff, then `/commit` + `gh pr create` + `/pr-review-toolkit:review-pr`.
+# `/pr-review-toolkit:review-pr` on the diff, then `/commit` + `git push` + `gh pr create`.
 ```
 
 ### Emergency rollback

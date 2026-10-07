@@ -103,7 +103,9 @@ The toolkit covers planning — PRD → architecture → roadmap → spec → Gi
 | `pr-review-toolkit` | Reviewing a branch or PR | `/pr-review-toolkit:review-pr` |
 | `superpowers` | Debugging, multi-task execution, finishing a branch | skills: `systematic-debugging`, `subagent-driven-development`, `executing-plans`, `dispatching-parallel-agents`, `finishing-a-development-branch` |
 
-Plugins are **Claude Code only**. Cursor and Codex installs get the planning skills and no execution skills.
+`feature-dev` and `pr-review-toolkit` are **Claude Code only**; `superpowers` also ships Codex and Cursor installs (see its own README). The Cursor and Codex adapters in this repo install the planning skills and no execution skills.
+
+**`superpowers` changes every session it is enabled in.** Its session-start hook tells Claude to look for an applicable superpowers skill before any task, and its `brainstorming` skill overlaps `/prd` and `/spec`. If that competes with your own conventions, leave it out: it is only needed for the debugging and multi-task replacements.
 
 ### Install (recommended — one-liner)
 
@@ -278,7 +280,7 @@ The six execution skills (`/feature`, `/fix`, `/review`, `/pr`, `/autopilot`, `/
 | `/feature <spec>` | `/feature-dev:feature-dev` (`feature-dev` plugin) — a guided 7-phase workflow (discovery, codebase exploration, clarifying questions, architecture design, implementation, quality review, summary). It is not spec-file driven by itself: give it the issue and its spec path as the argument, e.g. `/feature-dev:feature-dev implement issue #42 per docs/specs/003_auth.md` |
 | `/fix <issue>` | `superpowers` plugin's `systematic-debugging` skill — root-cause investigation before any fix is proposed. It triggers when you describe a bug, test failure, or unexpected behaviour |
 | `/review` | `/pr-review-toolkit:review-pr` (`pr-review-toolkit` plugin) — runs specialized review agents (code, tests, error handling, comments, types, simplification) over the current diff and aggregates findings by severity |
-| `/pr` | No dedicated replacement: open the PR with `gh pr create` (or ask Claude to), then run `/pr-review-toolkit:review-pr`. `superpowers` also has `finishing-a-development-branch` (verify tests, then merge / push + PR / keep) |
+| `/pr` | No dedicated replacement: run `/pr-review-toolkit:review-pr` before committing (it reads uncommitted changes), then `git push` + `gh pr create` (or ask Claude to open the PR). `superpowers` also has `finishing-a-development-branch` (verify tests, then merge / push + PR / keep) |
 | `/autopilot`, `/factory` | `superpowers` skills `subagent-driven-development` (fresh implementer subagent per task + review after each), `executing-plans` (same plan, inline in one session) and `dispatching-parallel-agents`. There is no longer a one-command "run the whole roadmap/milestone and merge" pipeline in this toolkit |
 
 ## Agents
@@ -327,9 +329,9 @@ The typical flow from idea to an issue ready to be implemented:
 
 Execution (Claude Code plugins):
 /feature-dev:feature-dev implement issue #N per docs/specs/NNN_<name>.md
+/pr-review-toolkit:review-pr     Independent review by fresh reviewer agents (reads uncommitted changes)
 /commit                          Logical conventional commits
-gh pr create                     Open the PR
-/pr-review-toolkit:review-pr     Independent review by fresh reviewer agents
+git push && gh pr create         Open the PR
 ```
 
 Bug fixes need no spec — describe the bug and the `superpowers` plugin's `systematic-debugging` skill takes it from there. `/adr` and `/rfc` can be used at any point to capture decisions or propose changes.

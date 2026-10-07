@@ -85,7 +85,7 @@ done
 # by marketplace plugins). Kept here so an install made before the removal
 # still gets its now-dangling symlinks cleaned up by uninstall / `aiwf reinstall`.
 # Only dangling links are removed: a live link under one of these names is a
-# skill from somewhere else, not ours.
+# skill from somewhere else. A dangling one is removed wherever it pointed.
 RETIRED_SKILLS=(
     "skills/feature/SKILL.md"
     "skills/fix/SKILL.md"

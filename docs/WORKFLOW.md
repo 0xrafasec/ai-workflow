@@ -326,7 +326,7 @@ This triggers a guided, interactive workflow which:
 6. Launches code-reviewer subagents and asks what to fix
 7. Summarizes what was built
 
-It does not commit, push, or open a PR — follow with `/commit`, `gh pr create`, and `/pr-review-toolkit:review-pr`.
+It does not commit, push, or open a PR — run `/pr-review-toolkit:review-pr` on the uncommitted diff, then `/commit`, `git push` and `gh pr create`.
 
 ### Fan-Out for Large Migrations
 
@@ -696,9 +696,9 @@ claude --worktree feature-x          # Start isolated work
 /design auth                         # UI features: mock in Paper first
 /verify-design owner                 # Then diff running UI vs Paper refs, fix in place
 /sec-review                          # Security check
+/pr-review-toolkit:review-pr         # Fresh reviewer agents on the uncommitted diff (pr-review-toolkit plugin)
 /commit                              # Stage + commit by logical concern
-gh pr create                         # Push + open PR (add --draft for WIP)
-/pr-review-toolkit:review-pr         # Fresh reviewer agents (pr-review-toolkit plugin)
+git push && gh pr create             # Open PR (add --draft for WIP)
 
 # Several tasks in one session (superpowers plugin skills — no one-command roadmap pipeline)
 # subagent-driven-development / executing-plans / dispatching-parallel-agents
