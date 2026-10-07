@@ -1,17 +1,24 @@
 #!/usr/bin/env bash
 # Claude Code status line.
 #
-# Reads the session JSON on stdin and prints two rows:
+# Reads the session JSON on stdin and prints one row, and a second only when a
+# rate limit needs attention:
 #
-#   ▸ ai-workflow  main ✚2   Opus 5  high   ctx █░░░░░░░ 7% 69k/1M  12m
+#   ai-workflow · main ✚2 · Opus 5 (1M) · high · ctx 69k/1M
+#   5h ███████░  88% ↻ today 22:00 (39m)
+#
+# Row 1 is identity: where you are and what you are driving. It holds nothing
+# that changes without you changing it, bar the context count, so it can be
+# read once and then ignored.
+#
+# Row 2 is an alert, not a dashboard. A window is drawn only once it passes
+# CLAUDE_STATUSLINE_LIMIT_SHOW percent (default 70, the level the bars turn
+# amber), with the local clock time it resets and a countdown, so you can tell
+# whether to keep going or wait it out. Below that there is nothing to decide
+# and the row is not printed. Set the variable to 0 to always show both windows.
 #
 # The dollar cost appears only on API-key billing; on a Claude.ai subscription
-# the figure is notional and row 2's rate limits are the real budget.
-#   5h ██░░░░░░  1% ↻ Sun 22:00 (4h39m)   7d ██░░░░░░ 18% ↻ Mon 05:00 (11h39m)
-#
-# The second row is the point of this script: rate limits are shown with the
-# weekday + local clock time they reset, plus a countdown, so you can tell at a
-# glance whether to keep going or wait it out.
+# the figure is notional and the rate limits are the real budget.
 #
 # Design notes
 #   - One jq pass. The status line re-runs on every event (debounced 300ms) and
@@ -64,7 +71,6 @@ GIT_DIRTY=$(c 215)  # orange — uncommitted work
 MODEL_C=$(c 208)    # amber  — model
 EFFORT_C=$(c 244)   # grey   — effort / mode flags
 COST_C=$(c 78)      # green  — money
-TIME_C=$(c 244)     # grey   — duration
 RESET_C=$(c 117)    # blue   — reset timestamps
 LABEL=$(c 250)      # labels (5h, 7d, ctx)
 
@@ -89,7 +95,7 @@ SEP=" ${DIM}·${RESET} "
 IFS=$'\x1f' read -r \
     model_name model_id cur_dir proj_dir top_cwd \
     ctx_pct ctx_size in_tok out_tok \
-    cost dur_ms lines_add lines_del \
+    cost \
     h5_pct h5_reset d7_pct d7_reset \
     effort fast thinking style over200k \
     <<<"$(printf '%s' "$input" | jq -r '
@@ -103,9 +109,6 @@ IFS=$'\x1f' read -r \
           .context_window.total_input_tokens // 0,
           .context_window.total_output_tokens // 0,
           .cost.total_cost_usd // 0,
-          .cost.total_duration_ms // 0,
-          .cost.total_lines_added // 0,
-          .cost.total_lines_removed // 0,
           (.rate_limits.five_hour.used_percentage // -1 | floor),
           .rate_limits.five_hour.resets_at // 0,
           (.rate_limits.seven_day.used_percentage // -1 | floor),
@@ -139,11 +142,9 @@ heat() {
     fi
 }
 
-# bar <pct> <width> [colour] — block progress bar. The filled portion is
-# coloured by heat() unless an explicit colour is passed; the context bar passes
-# one because it grades on absolute tokens rather than percent (see ctx_heat).
+# bar <pct> <width> — block progress bar, the filled portion coloured by heat().
 bar() {
-    local pct=$1 w=$2 col=${3:-} filled i out=""
+    local pct=$1 w=$2 filled i out=""
     [ "$pct" -lt 0 ] && pct=0
     [ "$pct" -gt 100 ] && pct=100
     filled=$(( pct * w / 100 ))
@@ -152,8 +153,7 @@ bar() {
     for ((i = 0; i < w; i++)); do
         if [ "$i" -lt "$filled" ]; then out+="█"; else out+="░"; fi
     done
-    [ -z "$col" ] && col=$(heat "$pct")
-    printf '%s%s%s' "$col" "$out" "$RESET"
+    printf '%s%s%s' "$(heat "$pct")" "$out" "$RESET"
 }
 
 # ctx_heat <tokens> <window-size> — colour for the context readout.
@@ -315,7 +315,7 @@ tok_short() {
 }
 
 # ---------------------------------------------------------------------------
-# Row 1 — where you are, what you're driving, what it costs
+# Row 1 — where you are and what you're driving
 # ---------------------------------------------------------------------------
 
 # Prefer the directory actually being worked in. project_dir can point at the
@@ -384,16 +384,15 @@ flags=""
 if [ -n "$ctx_pct" ]; then
     # Graded on absolute tokens, so the colour means "still sharp / past the
     # recommended range / about to be compacted" rather than "fraction full".
+    #
+    # No bar and no percentage. On a 1M window the percentage sits in single
+    # digits for a whole working session, so a bar of it is eight cells that
+    # never move; the token count is the figure that carries the meaning and
+    # the colour is what says whether to act on it.
     ctx_col=$(ctx_heat "${in_tok:-0}" "${ctx_size:-0}" "$ctx_pct")
-    if [ "$width" -ge 80 ]; then
-        row1+="${SEP}${LABEL}ctx${RESET} $(bar "$ctx_pct" 8 "$ctx_col") ${ctx_col}${ctx_pct}%${RESET}"
-    else
-        row1+="${SEP}${LABEL}ctx${RESET} ${ctx_col}${ctx_pct}%${RESET}"
-    fi
-    # Absolute counts, so a low percentage on a 1M window is legible as "69k of
-    # 1M" rather than an implausible-looking 7%.
-    if [ "$width" -ge 100 ] && [ "${ctx_size:-0}" -gt 0 ] 2>/dev/null; then
-        row1+=" ${DIM}$(tok_short "${in_tok:-0}")/$(tok_short "$ctx_size")${RESET}"
+    row1+="${SEP}${LABEL}ctx${RESET} ${ctx_col}$(tok_short "${in_tok:-0}")${RESET}"
+    if [ "$width" -ge 80 ] && [ "${ctx_size:-0}" -gt 0 ] 2>/dev/null; then
+        row1+="${DIM}/$(tok_short "$ctx_size")${RESET}"
     fi
 fi
 
@@ -422,29 +421,18 @@ if [ "$on_subscription" = "0" ] && [ -n "$cost" ] && [ "$cost" != "0" ]; then
     row1+="${SEP}${COST_C}${cost_fmt}${RESET}"
 fi
 
-# Wall-clock session duration
-if [ -n "$dur_ms" ] && [ "$dur_ms" -gt 0 ] 2>/dev/null; then
-    total_s=$(( dur_ms / 1000 ))
-    if [ "$total_s" -ge 3600 ]; then
-        dur_fmt=$(printf '%dh%02dm' $(( total_s / 3600 )) $(( (total_s % 3600) / 60 )))
-    else
-        dur_fmt=$(printf '%dm' $(( total_s / 60 )))
-    fi
-    row1+="${SEP}${TIME_C}${dur_fmt}${RESET}"
-fi
-
-# Lines changed, when there are any and there's room for them.
-if [ "$width" -ge 110 ]; then
-    if [ "${lines_add:-0}" -gt 0 ] 2>/dev/null || [ "${lines_del:-0}" -gt 0 ] 2>/dev/null; then
-        row1+="${SEP}${OK}+${lines_add}${RESET}${DIM}/${RESET}${HOT}-${lines_del}${RESET}"
-    fi
-fi
-
 echo -e "$row1"
 
 # ---------------------------------------------------------------------------
-# Row 2 — rate limits, with the day + hour they reset
+# Row 2 — rate limits that need attention, with the day + hour they reset
 # ---------------------------------------------------------------------------
+
+# A window is drawn once it reaches this percentage. 70 is where heat() turns
+# amber: the first point at which there is a decision to make.
+limit_show=${CLAUDE_STATUSLINE_LIMIT_SHOW:-70}
+case "$limit_show" in
+    ''|*[!0-9]*) limit_show=70 ;;
+esac
 
 # Both segments share one clock read — two `date` forks per render, not one per
 # segment per field.
@@ -455,6 +443,7 @@ limit_segment() {
     local label=$1 pct=$2 reset=$3 seg eta when
     [ -z "$pct" ] && return 0
     [ "$pct" -lt 0 ] 2>/dev/null && return 0
+    [ "$pct" -lt "$limit_show" ] 2>/dev/null && return 0
 
     seg="${LABEL}${label}${RESET}"
     [ "$width" -ge 70 ] && seg+=" $(bar "$pct" 8)"
@@ -481,8 +470,8 @@ if [ -n "$d7_seg" ]; then
     row2+="$d7_seg"
 fi
 
-# Only print a second row when the API actually reported limits (absent on
-# API-key billing, where there is nothing to reset).
+# Only print a second row when a window is past the threshold. Limits are
+# absent altogether on API-key billing, where there is nothing to reset.
 [ -n "$row2" ] && echo -e "$row2"
 
 exit 0
