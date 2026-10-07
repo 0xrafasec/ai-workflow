@@ -7,11 +7,11 @@
 #   ai-workflow · main ✚2 · Opus 5 (1M) · high · ctx 69k/1M
 #   5h ███████░  88% ↻ today 22:00 (39m)
 #
-# Row 1 is identity: where you are and what you are driving. It holds nothing
-# that changes without you changing it, bar the context count, so it can be
-# read once and then ignored.
+# Row 1 is identity: where you are and what you are driving. Only the dirty
+# count and the context count move while you work, so the rest can be read
+# once and then ignored.
 #
-# Row 2 is an alert, not a dashboard. A window is drawn only once it passes
+# Row 2 is an alert, not a dashboard. A window is drawn only once it reaches
 # CLAUDE_STATUSLINE_LIMIT_SHOW percent (default 70, the level the bars turn
 # amber), with the local clock time it resets and a countdown, so you can tell
 # whether to keep going or wait it out. Below that there is nothing to decide
@@ -430,8 +430,10 @@ echo -e "$row1"
 # A window is drawn once it reaches this percentage. 70 is where heat() turns
 # amber: the first point at which there is a decision to make.
 limit_show=${CLAUDE_STATUSLINE_LIMIT_SHOW:-70}
+# More than three digits is never a percentage, and a value past what bash can
+# compare would make the test below error out and draw every window.
 case "$limit_show" in
-    ''|*[!0-9]*) limit_show=70 ;;
+    ''|*[!0-9]*|????*) limit_show=70 ;;
 esac
 
 # Both segments share one clock read — two `date` forks per render, not one per
