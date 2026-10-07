@@ -39,7 +39,7 @@ Each phase of development has dedicated tooling:
 - **Parallel execution** — worktree-based development with `/autopilot` for full roadmap execution
 - **Writer/reviewer separation** — a fresh-context reviewer is always spawned for every branch, never the session that wrote it; merging stays a separate, human-gated decision
 - **Notification hooks** — desktop notifications when Claude needs attention (Claude Code)
-- **Custom status line** — model, context usage, cost, git branch, and rate limits with their reset times at a glance (Claude Code)
+- **Custom status line** — git branch, model and context on one quiet row; rate limits and their reset times appear only once they need attention (Claude Code)
 - **Composable with other tools** — works alongside [GitHub Spec Kit](https://github.com/github/spec-kit) and other SDD toolkits ([integration guide](docs/speckit-integration.md))
 
 ## Platform Support
@@ -395,26 +395,27 @@ Desktop notification hooks, permission mode, and model preference. See `settings
 
 ### Status Line
 
-The bundled `statusline-command.sh` renders two colour-coded rows in Claude Code's status bar:
+The bundled `statusline-command.sh` renders one row in Claude Code's status bar, and a second only when a rate limit needs attention:
 
 ```
-ai-workflow · main ✚2 · Opus 5 (1M) · high · ctx ███░░░░░ 34% · $2.19 · 16m · +320/-49
-5h ██░░░░░░  22% ↻ today 22:00 (4h35m)   7d ████░░░░  47% ↻ Mon 10 Aug 05:00 (166h00m)
+ai-workflow · main ✚2 · Opus 5 (1M) · high · ctx 69k/1M
+5h ███████░  88% ↻ today 22:00 (39m)
 ```
 
-**Row 1 — session:** directory, git branch + uncommitted count, model, reasoning effort (plus `⚡` in fast mode and any non-default output style), context-window bar, real session cost, elapsed time, and lines added/removed.
+**Row 1 — identity:** directory, git branch + uncommitted count, model, reasoning effort (plus `⚡` in fast mode and any non-default output style), and the context in absolute tokens. Nothing on it changes unless you change it, apart from the context count, so it can be read once and then ignored.
 
-**Row 2 — rate limits:** the 5-hour and 7-day windows, each with a usage bar and **the local clock time the allowance resets**, followed by a countdown. The second row is omitted entirely when the API reports no rate limits (e.g. API-key billing).
+**Row 2 — rate-limit alert:** a window (5-hour, 7-day) is drawn only once it passes 70% used, with a usage bar and **the local clock time the allowance resets**, followed by a countdown. Below that there is no decision to make, so the row is not printed. Set `CLAUDE_STATUSLINE_LIMIT_SHOW` to another percentage to move the threshold, or to `0` to always show both windows.
 
 The reset stamp is anchored so it can't be misread: `today 22:00` and `tomorrow 05:00` when the reset is that close, and the full `Mon 10 Aug 05:00` otherwise. A bare weekday would be ambiguous for the 7-day window, which can land up to a week out.
 
-Bars and percentages are green below 70%, amber from 70–89%, and red at 90%+.
+Limit bars and percentages are amber from 70–89% and red at 90%+. The context count is graded on absolute tokens instead: amber past 150k (`CLAUDE_STATUSLINE_CTX_IDEAL`), red once auto-compact is close.
 
 Details worth knowing:
 
-- **Cost comes from `cost.total_cost_usd`**, the figure Claude Code reports — it is not re-derived from token counts against a hardcoded price table, so it stays correct across models.
+- **No context bar or percentage.** On a 1M window the percentage stays in single digits for a whole working session, so the token count carries the meaning and its colour says whether to act.
+- **Cost appears only on API-key billing**, from `cost.total_cost_usd`. On a Claude.ai subscription the figure is notional and is not shown.
 - **Set `refreshInterval`** in `settings.json` (30s is a good default) so the reset countdown keeps ticking while the session is idle. Status lines are otherwise event-driven and the clock would freeze.
-- **Width-adaptive** via `$COLUMNS` (needs Claude Code ≥ 2.1.153): countdowns drop below 90 columns, bars below 70, and the context bar below 80.
+- **Width-adaptive** via `$COLUMNS` (needs Claude Code ≥ 2.1.153): countdowns drop below 90 columns, limit bars below 70, and the context window size below 80.
 - Honours `NO_COLOR`, runs a single `jq` pass, caches `git status` for 3s, and always exits 0 — a broken status line is worse than a plain one.
 
 ## Documentation
