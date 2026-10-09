@@ -266,7 +266,7 @@ Skills are multi-step workflows invoked as slash commands inside Claude Code.
 From GitHub, at the prompt of any session:
 
 ```
-/plugin install english-coach --marketplace 0xrafasec/ai-workflow
+/plugin install english-coach --marketplace rafagomes/ai-workflow
 ```
 
 From a local clone, once per profile (repeat with `CLAUDE_CONFIG_DIR="$HOME/.claude-work"` in front for each extra profile):
