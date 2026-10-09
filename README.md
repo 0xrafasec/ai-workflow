@@ -263,7 +263,9 @@ Skills are multi-step workflows invoked as slash commands inside Claude Code.
 |-----|--------------|
 | `english-coach` | Checks the grammar and fluency of every prompt you type, in a parallel Haiku call so the turn never waits. Corrections appear as colour-coded bullets (`[grammar]`/`[fluency]`, ~~original~~ → **improved**, reason) in a dismissable band above the prompt, plus a "Natural:" rewrite when a message has two or more issues. A bulleted copy goes to the transcript as history; the main model never sees it. Skips slash commands, `!` shell lines, pastes, code fences and prompts under four words. |
 
-From GitHub, at the prompt of any session:
+Each checked prompt is one extra Haiku request on your account (up to 3,000 characters of your text); `/plugin disable english-coach` turns it off for a profile.
+
+From GitHub, at the prompt of any session (Claude Code 2.1.275+; older versions: `/plugin marketplace add rafagomes/ai-workflow`, then `/plugin install english-coach@ai-workflow`):
 
 ```
 /plugin install english-coach --marketplace rafagomes/ai-workflow
@@ -277,6 +279,8 @@ claude plugin install english-coach@ai-workflow
 ```
 
 A local-folder marketplace is read straight from the checkout, so after `aiwf update` or an edit, `/reload-plugins` picks up the change in every profile with no reinstall. Profiles that share the repo's `settings.json` also share its `enabledPlugins`.
+
+To type-check a mod, load it once (any install above, or `claude --plugin-dir mods/<mod>`): the engine writes its types and a `tsconfig.json` into the mod folder (both gitignored), then run `npx tsc -p mods/<mod>`. `claude plugin test mods/<mod>` runs its tests without that step.
 
 ## Agents
 

@@ -23,24 +23,34 @@ export function ownWords(text: string): string {
     .trim()
 }
 
-export function shouldCheck(text: string): boolean {
-  if (text.startsWith('/') || text.startsWith('!')) return false
-  return text.split(/\s+/).filter(Boolean).length >= 4
+// `raw` is what the user typed; `own` is it with pastes and code removed.
+export function shouldCheck(raw: string, own: string): boolean {
+  const head = raw.trimStart()
+  if (head.startsWith('/') || head.startsWith('!')) return false
+  return own.split(/\s+/).filter(Boolean).length >= 4
 }
 
 const isStr = (v: unknown): v is string => typeof v === 'string' && v.trim() !== ''
 
-// The model's reply is untrusted: keep only well-formed issues.
-export function parseFeedback(reply: string): Feedback | null {
-  const start = reply.indexOf('{')
-  const end = reply.lastIndexOf('}')
-  if (start < 0 || end < start) return null
-  let raw: unknown
+function parseJson(reply: string): unknown {
   try {
-    raw = JSON.parse(reply.slice(start, end + 1))
+    return JSON.parse(reply.trim())
   } catch {
+    // Prose around the object: retry from the first '{' to each '}' after it.
+    const start = reply.indexOf('{')
+    for (let end = reply.lastIndexOf('}'); start >= 0 && end > start; end = reply.lastIndexOf('}', end - 1)) {
+      try {
+        return JSON.parse(reply.slice(start, end + 1))
+      } catch {}
+    }
     return null
   }
+}
+
+// The model's reply is untrusted: keep only well-formed issues, and the
+// rewrite only when the rules allow one.
+export function parseFeedback(reply: string, textLength: number): Feedback | null {
+  const raw = parseJson(reply)
   if (typeof raw !== 'object' || raw === null) return null
   const r = raw as { issues?: unknown; natural?: unknown }
   const issues: Issue[] = (Array.isArray(r.issues) ? r.issues : [])
@@ -52,7 +62,8 @@ export function parseFeedback(reply: string): Feedback | null {
     )
     .slice(0, 5)
     .map(i => ({ kind: i.kind, original: i.original, improved: i.improved, why: isStr(i.why) ? i.why : '' }))
-  return { issues, natural: issues.length > 0 && isStr(r.natural) ? r.natural : null }
+  const wantsNatural = issues.length >= 2 && textLength < 300
+  return { issues, natural: wantsNatural && isStr(r.natural) ? r.natural : null }
 }
 
 export function asText(f: Feedback): string {
@@ -63,7 +74,10 @@ export function asText(f: Feedback): string {
   return `✎ English\n${lines.join('\n')}`
 }
 
-async function check($: EngineInterface, text: string) {
+// Bumped per prompt so a slow reply for an older prompt is discarded.
+let generation = 0
+
+async function check($: EngineInterface, text: string, gen: number) {
   const r = await $.model.complete({
     model: 'haiku',
     system: SYSTEM,
@@ -74,7 +88,8 @@ async function check($: EngineInterface, text: string) {
     $.ui.log(`english-coach: no reply (${r.reason})`, { to: 'debug' })
     return
   }
-  const feedback = parseFeedback(r.text)
+  if (gen !== generation) return
+  const feedback = parseFeedback(r.text, text.length)
   if (feedback === null) {
     $.ui.log(`english-coach: unreadable reply: ${r.text.slice(0, 200)}`, { to: 'debug' })
     return
@@ -87,12 +102,15 @@ async function check($: EngineInterface, text: string) {
 export const register: Register = on => {
   on('prompt.submit', async ($, e, next) => {
     const kind = e.origin.kind
+    if (kind !== 'composer' && kind !== 'bridge') return next(e)
+
+    // Any new prompt makes the previous feedback, and any check in flight, stale.
+    const gen = ++generation
+    await update($, last, () => null)
     const text = ownWords(e.text)
-    if ((kind === 'composer' || kind === 'bridge') && shouldCheck(text)) {
-      // The previous feedback is stale once a new prompt is sent.
-      await update($, last, () => null)
+    if (shouldCheck(e.text, text)) {
       // Fire and forget: the turn starts right away; the check runs beside it.
-      check($, text).catch(err => $.ui.log(`english-coach: ${err}`, { to: 'debug' }))
+      check($, text, gen).catch(err => $.ui.log(`english-coach: ${err}`, { to: 'debug' }))
     }
     return next(e)
   })
