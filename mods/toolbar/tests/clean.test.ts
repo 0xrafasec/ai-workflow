@@ -101,7 +101,12 @@ const bar = (filled: number, width = 20) => '▉'.repeat(filled) + '░'.repeat(
 const run = (at: number) => '░'.repeat(at) + '▉'.repeat(4) + '░'.repeat(16 - at)
 const drawn = ($: Engine, component: string, props: unknown = {}) => shows($, component, props, ROW)
 
-const start = ($: Engine, turnId = 't1') => $.turn.start({ text: 'implement it', turnId })
+// A turn the person starts: their prompt, then the turn it opens.
+const start = async ($: Engine, turnId = 't1', text = 'implement it') => {
+  await $.prompt.submit({ text, wait: false, origin: { kind: 'composer' } } as never)
+
+  return $.turn.start({ text, turnId })
+}
 const end = ($: Engine, answer: string, extra: object = {}) =>
   $.turn.complete({ turnId: 't1', reason: 'answer', answer, durationMs: 10, ...extra } as never)
 const create = ($: Engine, subject: string) =>
@@ -227,7 +232,7 @@ test("a background task's own turn leaves the answer to the person drawn", async
 test('the band never reads the prompt back: no heading when the model gives none', async ($, on) => {
   world(on)
   await flip($)
-  await $.turn.start({ text: 'unnamed', turnId: 't1' })
+  await start($, 't1', 'unnamed')
 
   expect(await inBand($, 'working, no task list yet')).toBe(true)
   expect(await inBand($, 'unnamed')).toBe(false)
@@ -248,6 +253,16 @@ test('the heading is the model\'s words bare, and none is asked for while clean 
   const ui = await mount($, 'AbovePrompt', BAND)
   expect((await ui.find({ type: 'Text', text: 'Named' }))?.text).toBe('✳ Named implement it ')
   await ui.unmount()
+})
+
+test('a prompt whose sender is unknown is never sent for a heading', async ($, on) => {
+  world(on)
+  await flip($)
+  asked = 0
+  await $.turn.start({ text: 'who sent this', turnId: 't1' })
+
+  expect(asked).toBe(0)
+  expect(await inBand($, 'Named')).toBe(false)
 })
 
 test('only the latest answer stays drawn', async ($, on) => {

@@ -149,10 +149,13 @@ export const registerClean: Register = on => {
   on('turn.start', async ($, e, next) => {
     rest()
     pulse = $.clock.every(BEAT, () => void tick($))
-    isAsked = sent.get(e.text) ?? true
+    const isPerson = sent.get(e.text)
     sent.delete(e.text)
+    // A prompt whose sender is unknown (the module reloaded since it was sent)
+    // is drawn as the person's, but its text is not sent anywhere for that.
+    isAsked = isPerson ?? true
 
-    if (isAsked) {
+    if (isPerson === true) {
       // Not awaited: the turn does not wait for its heading.
       void entitle($, e.text, e.turnId)
     }
