@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-11
+
+Fixes for defects the review of 1.1.0 found after it shipped, and the 1.1.0 notes it was missing.
+
 ### Fixed
 - The size gate in `/feature` and `/fix` compared `origin/<base>...HEAD`, which ignores uncommitted work — and both skills stop at the working tree, so it measured nothing. It now diffs the working tree against the merge base and counts untracked source files.
 - `/pr`, re-run on a branch that already has an open PR, was told to continue at the step after the reviewer dispatch, which skipped the review.
@@ -239,7 +243,8 @@ The toolkit becomes the `wf` Claude Code plugin. Skills are invoked as `/wf:<nam
 
 Initial tagged release: full SDLC toolkit for AI-assisted coding — skills, agents, review guides, hooks, and the `aiwf` launcher for Claude Code.
 
-[Unreleased]: https://github.com/rafagomes/ai-workflow/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/rafagomes/ai-workflow/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/rafagomes/ai-workflow/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/rafagomes/ai-workflow/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/rafagomes/ai-workflow/compare/v0.6.3...v1.0.0
 [0.3.0]: https://github.com/rafagomes/ai-workflow/compare/v0.2.0...v0.3.0
