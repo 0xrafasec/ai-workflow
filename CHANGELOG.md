@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - `build` and `ci` are valid task types everywhere a type is listed (`/roadmap`, `/spec`, `/feature`, `/issues`, `/pr`, and the branch names in the global `CLAUDE.md` and the trunk guide), matching the commit types that already allowed them. `/issues` creates `type:build` and `type:ci` labels; before, a roadmap task of either type had no label colour to create.
-- `/issues` says how to write a dependency on a whole phase (`Needs all of <milestone>`) and one that is not a task (`Also needs: ...`), instead of leaving it to the run.
+- `/issues` says how to write a dependency on a whole phase (`Needs all of <milestone title>.`) and one that is not a task (`Also needs: <text>.`), in the issue body template and in the drift check of a re-run, instead of leaving it to the run.
 
 ## [1.1.1] - 2026-10-11
 
