@@ -51,7 +51,7 @@ That is the whole loop. Everything else in this README is detail.
 |---|---|
 | **15 skills** | One per step, from the first product interview to the merged pull request. All namespaced `/wf:<name>`. |
 | **A reviewer agent** | Read-only and fresh-context. It runs the project's checks itself and returns `PASS` or `FIX_REQUIRED`. By default every PR goes through it before it is marked ready. |
-| **Trunk-based by construction** | Short-lived branches, one PR per slice, slices of at most 200 non-test lines. [Why and how →](docs/TRUNK_BASED_WORKFLOW.md) |
+| **Trunk-based by construction** | Short-lived branches, one PR per slice, slices of at most 500 non-test lines. [Why and how →](docs/TRUNK_BASED_WORKFLOW.md) |
 | **Writer / reviewer separation** | The session that wrote the code never reviews it, and merging stays your decision unless you run `/wf:autopilot`. |
 | **Optional global conventions** | A `CLAUDE.md` applied to every project: verification, commit style, the trunk rules, review before merge. |
 
@@ -67,7 +67,7 @@ flowchart LR
         ARCH --> ROAD
         ARCH -.-> TM["/wf:threat-model<br/>when there are trust boundaries"]
         TM -.-> ROAD["/wf:roadmap<br/>phases and tasks"]
-        ROAD --> SPEC["/wf:spec<br/>one per task, ≤200 lines"]
+        ROAD --> SPEC["/wf:spec<br/>one per task, ≤500 lines"]
         SPEC --> ISS["/wf:issues<br/>milestones + issues"]
     end
     subgraph Build
@@ -107,7 +107,7 @@ flowchart LR
 | `/wf:threat-model` | `docs/THREAT_MODEL.md` — a STRIDE-style threat model |
 | `/wf:adr <title>` | `docs/adr/NNNN-<slug>.md` — an architecture decision record |
 | `/wf:roadmap` | `docs/roadmap/NNN_<phase>.md` — a phased roadmap, one file per phase |
-| `/wf:spec <feature>` | `docs/specs/NNN_<feature>.md` — a spec with verification criteria, sliced when it exceeds 200 source lines |
+| `/wf:spec <feature>` | `docs/specs/NNN_<feature>.md` — a spec with verification criteria, sliced when it exceeds 500 source lines |
 | `/wf:issues <roadmap or spec>` | GitHub milestones and issues — one milestone per phase, one issue per task or slice |
 
 ### Design
