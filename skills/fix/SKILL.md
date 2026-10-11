@@ -55,20 +55,13 @@ Before writing code, ensure you are on a short-lived branch named `fix/<slug>`. 
 
    **Slice-size gate (trunk-based).** Before reporting completion, run `git diff --stat main...HEAD -- . ':(exclude)**/tests/**' ':(exclude)**/*_test.*' ':(exclude)**/*.test.*' ':(exclude)**/test_*'` (or the same pathspec against `git diff` if working changes are unstaged). If the **non-test** diff exceeds **~200 lines**, stop and propose a split via **AskUserQuestion** — a "fix" that balloons into a refactor is two slices, not one. Never silently leave a >200-line fix in the working tree without the user's explicit override.
 
-7. **Stack-aware code review** — Prefer Anthropic's official `code-review` skill (from `claude-code-plugins`) if installed. Otherwise, run `/sec-review` for security and spawn an **architecture-reviewer** subagent for architecture, passing the matching language guide from `reviews/` as stack-specific criteria.
-
-   This is a self-check, not a trust boundary — reviewer subagents have fresh context, but *you* (the writer) are reading and acting on their findings. A fresh-session `/review` or a human reviewer is still expected before merge.
-
-8. **Address findings** — Fix any HIGH severity issues from the review. For MEDIUM issues, use your judgment.
-
-9. **Report and stop.** Summarize for the user:
+7. **Report and stop.** Do not review your own fix here — `/pr` dispatches the fresh-context `reviewer` agent once the commits exist. Summarize for the user:
    - **Root cause** — 1–2 sentences on what was actually broken.
    - **Files changed** — `git diff --stat` output, or a short list.
    - **Regression tests** — which layers (unit/integration/e2e) you added, where they live, how to re-run them.
    - **Verification** — lint / typecheck / test commands run and their tail output.
-   - **Self-review verdict** — `Security: PASS` / `REVIEW` / `FAIL` from step 7.
    - **Issue link** — if one was provided, so the user can reference it later.
 
    Suggested conventional-commit subject for when the user commits: `fix: <what was broken>` (describe the bug, not the change). Example: `fix: login fails when password contains special characters`.
 
-   Then stop. The user reviews the working tree and decides next steps (typically `/commit` then `/pr`).
+   Then stop. The user reviews the working tree and decides next steps (typically `/commit`, then `/pr`, which runs the review).
