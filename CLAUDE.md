@@ -4,18 +4,21 @@ These rules apply **only when working inside the `ai-workflow` repo**. The globa
 
 ## Repo layout
 
-This repo is the source of truth for everything installed under `~/.claude/`:
+This repo is two things: the `wf` Claude Code plugin, and the personal config files a plugin cannot carry.
 
-- `dotfiles/CLAUDE.md` — global defaults, symlinked to `~/.claude/CLAUDE.md`
+- `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` — the plugin manifest and the marketplace that serves it
+- `skills/<name>/SKILL.md` — the plugin's skills, invoked as `/wf:<name>`
+- `agents/reviewer.md` — the plugin's reviewer agent (`wf:reviewer`)
+- `dotfiles/CLAUDE.md` — global defaults, symlinked to `~/.claude/CLAUDE.md` by `install.sh`
+- `statusline-command.sh`, `settings.json` — symlinked into `~/.claude/` by `install.sh`
 - `CLAUDE.md` (this file) — project-specific rules, loaded only when `cwd` is this repo
-- `skills/<name>/SKILL.md` — slash-command skills, symlinked into `~/.claude/skills/`
-- `agents/`, `settings.json` — symlinked similarly via `install.sh`
 - `extras/` — opt-in personal skills, only installed via `./install.sh --extra`
 
 ## Editing rules
 
-- **Edit the source in this repo, never the symlink in `~/.claude/`.** Edits to `~/.claude/<thing>` will either be lost on the next `install.sh` run or break the symlink. If you find yourself reading from `~/.claude/...` to make a change, stop and re-open the matching file in this repo.
-- **Re-run `install.sh` after adding, removing, or renaming any skill, agent, or command.** Editing existing files in place is fine — symlinks already point at them. Only the directory shape changes need a re-link.
+- **Edit the source in this repo, never an installed copy.** The plugin is installed into Claude Code's plugin cache and the dotfiles are symlinks; an edit made under `~/.claude/` is either lost on the next update or silently changes this repo.
+- **Skills cross-reference each other by their namespaced name** (`/wf:pr`, `wf:reviewer`). Keep that form when adding a reference.
+- **Run `claude plugin validate .` after adding, removing, or renaming a skill or agent**, or touching either manifest.
 
 ## Docs are part of the change — never ship a behavior change without doc updates
 
@@ -27,15 +30,15 @@ When you change something in this list (left), update the docs on the right in t
 |--------|--------|
 | Skill behavior, args, or removal/rename | `skills/<name>/SKILL.md` (the source), `README.md` Skills table + tree, `CHANGELOG.md` |
 | Workflow convention (trunk rules, commit style, etc.) | `dotfiles/CLAUDE.md`, `docs/TRUNK_BASED_WORKFLOW.md`, `CHANGELOG.md` |
-| Adding/removing a skill | `install.sh`, `uninstall.sh`, `README.md` "Available skills" list, `dotfiles/CLAUDE.md` "Toolkit" section, `CHANGELOG.md` |
-| Installer or symlink layout | `install.sh`, `uninstall.sh`, `README.md` install section + tree, `CHANGELOG.md` |
+| Adding/removing a skill | `README.md` Skills tables, `dotfiles/CLAUDE.md` "Toolkit" section, `.claude-plugin/marketplace.json` description if the count changes, `CHANGELOG.md` |
+| Plugin manifests, installer or symlink layout | `install.sh`, `uninstall.sh`, `README.md` install section + tree, `CHANGELOG.md` |
 | New or repurposed top-level convention file | `README.md` repo-tree section |
 
 If you're not sure whether a change is doc-relevant, it is. Default to updating docs. The cost of a stale doc is much higher than the cost of a one-line CHANGELOG entry.
 
 ## Versioning + releases
 
-- Version lives in `CHANGELOG.md` only — no `package.json`, `VERSION` file, or other source of truth.
+- Version lives in `CHANGELOG.md` only — no `package.json`, `VERSION` file, or other source of truth. `plugin.json` deliberately has no `version`, so installed copies track the repository's commits.
 - Bump via SemVer:
   - **patch** (`0.x.y` → `0.x.y+1`) — doc-only, typo, or internal cleanup with no behavior change
   - **minor** (`0.x.y` → `0.x+1.0`) — new skill, new flag, repositioned skill, new convention, anything users can observe
@@ -50,8 +53,9 @@ If you're not sure whether a change is doc-relevant, it is. Default to updating 
 
 ## Testing changes locally
 
-- After editing a skill: in any project, invoke the slash command (e.g., `/autopilot --dry-run`) — Claude reads from `~/.claude/skills/<name>/SKILL.md`, which is the symlink to your edit.
-- After editing `install.sh` or `uninstall.sh`: run them in a throwaway shell and verify the symlinks land where expected.
+- After editing a skill or the agent: start a session with the working tree loaded as the plugin — `claude --plugin-dir .` — and invoke it (e.g., `/wf:autopilot --dry-run`).
+- After editing a manifest, or adding or renaming a skill: `claude plugin validate .`.
+- After editing `install.sh` or `uninstall.sh`: run them against a throwaway `CLAUDE_DIR` and verify the symlinks land where expected.
 
 ## When in doubt, ask
 

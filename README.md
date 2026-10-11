@@ -3,308 +3,190 @@
   <p align="center">
     Full SDLC (Software Development Life Cycle) for AI-assisted coding — from idea to production.<br/>
     Built on SDD (Spec-Driven Development): specs are the source of truth, AI agents execute them.<br/>
-    Skills, a reviewer agent, and conventions — installed globally, applied everywhere.<br/><br/>
+    Fifteen skills, a reviewer agent, and conventions — a Claude Code plugin.<br/><br/>
     For <a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a>.
   </p>
 </p>
 
 <p align="center">
-  <a href="https://github.com/0xrafasec/ai-workflow/blob/main/LICENSE"><img src="https://img.shields.io/github/license/0xrafasec/ai-workflow?style=flat-square" alt="License"></a>
-  <a href="https://github.com/0xrafasec/ai-workflow/issues"><img src="https://img.shields.io/github/issues/0xrafasec/ai-workflow?style=flat-square" alt="Issues"></a>
-  <a href="https://github.com/0xrafasec/ai-workflow/stargazers"><img src="https://img.shields.io/github/stars/0xrafasec/ai-workflow?style=flat-square" alt="Stars"></a>
+  <a href="https://github.com/rafagomes/ai-workflow/blob/main/LICENSE"><img src="https://img.shields.io/github/license/rafagomes/ai-workflow?style=flat-square" alt="License"></a>
+  <a href="https://github.com/rafagomes/ai-workflow/issues"><img src="https://img.shields.io/github/issues/rafagomes/ai-workflow?style=flat-square" alt="Issues"></a>
+  <a href="https://github.com/rafagomes/ai-workflow/stargazers"><img src="https://img.shields.io/github/stars/rafagomes/ai-workflow?style=flat-square" alt="Stars"></a>
 </p>
 
 ---
 
 ## What is this?
 
-AI Workflow covers the entire software development lifecycle for AI-assisted coding — from the initial idea through design, implementation, review, and delivery. It installs as a set of global skills, agents, and conventions that apply to every project you work on.
-
-Each phase of development has dedicated tooling:
-
-- **Discovery** — interview-driven requirements gathering (`/prd`)
-- **Design** — architecture with testing strategy, and threat modeling (`/architecture`, `/threat-model`)
-- **Specification** — detailed feature specs with verification criteria (`/spec`)
-- **Planning** — phased roadmaps with dependency tracking (`/roadmap`)
-- **Implementation** — one slice at a time from a spec (`/feature`), or a whole roadmap in parallel across isolated worktrees (`/autopilot`)
-- **Review** — every PR is reviewed by a fresh-context `reviewer` agent before it is marked ready (`/pr`); for ad-hoc reviews use Claude Code's built-in `/code-review` and `/security-review`
-- **Governance** — decision records at any point (`/adr`)
-
-## Features
-
-- **15 slash-command skills** covering every phase from idea to merged PR
-- **One reviewer agent** — a read-only, fresh-context reviewer with a fixed checklist and verdict format, dispatched by `/pr` and `/autopilot`
-- **Parallel execution** — worktree-based development with `/autopilot` for full roadmap execution
-- **Writer/reviewer separation** — a fresh-context reviewer is always spawned for every branch, never the session that wrote it; merging stays a separate, human-gated decision
-- **Notification hooks** — desktop notifications when Claude needs attention
-- **Custom status line** — git branch, model and context on one quiet row; rate limits and their reset times appear only once they need attention
-
-## Development Lifecycle
-
-The toolkit implements a layered document pipeline where each phase builds on the ones above it. Humans decide *what* to build through structured interviews and specs; AI agents decide *how* to build it by following those specs with full context.
+AI Workflow is a Claude Code plugin (`wf`) that covers the software development lifecycle for AI-assisted coding — from the initial idea through design, implementation, review, and delivery. It is built on Spec-Driven Development: humans decide *what* to build through structured interviews and specs; agents decide *how* by following those specs with full context.
 
 ```
-Idea → PRD (why) → Architecture + TDD + Security (how) → Roadmap (when) → Specs (what, per task) → Implementation → Review → Ship
+Idea → PRD (why) → Architecture + Threat model (how) → Roadmap (when) → Specs (what, per task) → Implementation → Review → Ship
 ```
 
-A feature spec references the architecture, technical design, and threat model — so implementation agents have complete context without repetition.
+- **15 skills** covering every phase from idea to merged PR
+- **One reviewer agent** — read-only, fresh-context, with a fixed checklist and verdict format; every PR passes through it before it is marked ready
+- **Trunk-based by construction** — short-lived branches, slices of ≤200 non-test lines, one PR per slice ([why and how](docs/TRUNK_BASED_WORKFLOW.md))
+- **Writer/reviewer separation** — the session that wrote the code never reviews it; merging stays a separate, human-gated decision unless you invoke `/wf:autopilot`
+- **Global conventions and a status line**, installed from this repo alongside the plugin
 
-### Model Strategy
+## Install
 
-The workflow uses a tiered model strategy — Opus for decisions, Sonnet for execution:
+Requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and `gh`.
 
-| Task | Model | Reasoning |
-|------|-------|-----------|
-| Spec writing, design, interviews | **Opus** | Creative reasoning, edge case discovery |
-| Implementation (main session) | **Opus** | Complex design decisions |
-| Orchestration (`/autopilot`) | **Opus** | Dependency logic, phase management |
-| Review (`reviewer` agent) | **Sonnet** | Small, checklist-driven input: diff + spec |
-| Worktree agents (`/autopilot`) | **Sonnet** | Following detailed specs, not designing |
+### The plugin (skills + reviewer agent)
 
-## Quick Start
+Inside Claude Code:
 
-### Prerequisites
+```
+/plugin install wf --marketplace rafagomes/ai-workflow
+```
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
-- `git`, `bash`
-- `jq` (status line — required), `notify-send` (Linux) or `osascript` (macOS, built in) for desktop notifications
-
-### Install (recommended — one-liner)
+Or from a shell:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/0xrafasec/ai-workflow/main/bootstrap.sh | bash
+claude plugin marketplace add rafagomes/ai-workflow
+claude plugin install wf@ai-workflow
 ```
 
-This clones the repo into `~/.local/share/ai-workflow`, symlinks the toolkit into `~/.claude`, and puts `aiwf` in `~/.local/bin`. Pin to a specific release with `AIWF_REF=v0.1.0 bash`.
+Update with `claude plugin update wf@ai-workflow`; remove with `claude plugin uninstall wf@ai-workflow`.
 
-Prefer to read the script before running it? [bootstrap.sh](bootstrap.sh) is short and auditable — the whole toolkit is bash + markdown by design.
+Skills are namespaced by the plugin: `/wf:spec`, `/wf:feature`, `/wf:pr`, and so on.
 
-### Install from a git clone (no curl)
+### The global conventions and status line (optional)
+
+A plugin cannot ship a global `CLAUDE.md`, a status line, or user settings. To get those, clone the repo and run the installer, which symlinks three files into `~/.claude/`:
 
 ```bash
-git clone https://github.com/0xrafasec/ai-workflow.git
+git clone https://github.com/rafagomes/ai-workflow.git
 cd ai-workflow
-./install.sh          # symlink into ~/.claude + install the aiwf launcher in ~/.local/bin
+./install.sh
 ```
 
-### Manage the install
+| Source | Installed as | What it is |
+|--------|--------------|------------|
+| `dotfiles/CLAUDE.md` | `~/.claude/CLAUDE.md` | Global conventions applied to every project: verification, conventional commits, trunk rules, writer/reviewer separation |
+| `statusline-command.sh` | `~/.claude/statusline-command.sh` | The status line described below (needs `jq`) |
+| `settings.json` | `~/.claude/settings.json` | Your settings, seeded from `settings.example.json` on first run and never tracked |
 
-Once `aiwf` is on your PATH:
+An existing file is backed up to `<name>.bak.<timestamp>` before it is replaced, and `./uninstall.sh` removes the symlinks and restores the backup. Flags: `--no-settings` leaves `settings.json` alone, `--with-settings` forces it, `--extra` also links the personal skills under `extras/`.
 
-```bash
-aiwf status            # install dir, version, and symlink health
-aiwf update            # git pull + re-link (refuses dirty trees; --force stashes)
-aiwf reinstall         # repair broken symlinks
-aiwf uninstall         # remove symlinks (--purge deletes the clone too)
-aiwf version           # git describe
-aiwf help              # all commands
-```
+**Multiple Claude Code profiles.** Claude Code isolates profiles through `CLAUDE_CONFIG_DIR`. Point `CLAUDE_DIR` at a profile to install into it: `CLAUDE_DIR="$HOME/.claude-work" ./install.sh`. A secondary profile keeps its own `settings.json` — account, theme, model and enabled plugins are the reason to have separate profiles — so only the primary `~/.claude` gets the repo's file unless you pass `--with-settings`. The plugin is installed per profile too: run the `claude plugin` commands with `CLAUDE_CONFIG_DIR` set.
 
-**Update conflict handling.** `aiwf update` fast-forwards `main` by default and refuses to proceed if the working tree is dirty or your local branch is ahead of `origin/main`. Both suggest you've edited the clone directly — which is supported. Resolve by committing/pushing, or use `--force` to auto-stash and hard-reset.
-
-### Selective Claude install
-
-```bash
-# Install only specific files into ~/.claude/
-./install.sh settings.json
-./install.sh skills/feature/SKILL.md CLAUDE.md
-# or: aiwf install settings.json
-```
-
-The filter matches on path, destination, or basename.
-
-### Multiple Claude Code profiles
-
-Claude Code can run isolated profiles — separate login, settings, MCP servers, history — by pointing its own `CLAUDE_CONFIG_DIR` at a different directory:
-
-```bash
-alias claude-work='CLAUDE_CONFIG_DIR="$HOME/.claude-work" claude'
-```
-
-Each profile carries its own `skills/`, `agents/`, `commands/` and `CLAUDE.md`, so a new profile starts with none of the toolkit. Set `CLAUDE_DIR` to install into it:
-
-```bash
-CLAUDE_DIR="$HOME/.claude-work" ./install.sh
-# or: CLAUDE_DIR="$HOME/.claude-work" aiwf install
-```
-
-**`settings.json` is not shared.** Account, theme, model, status line and enabled plugins are the reason to run separate profiles in the first place, so only the primary `~/.claude` gets the repo's `settings.json` — a secondary `CLAUDE_DIR` keeps its own file untouched. That follows from `CLAUDE_DIR`, not from a flag, so it still holds when `aiwf update` or `aiwf reinstall` re-runs the install for you. Override with `--with-settings` (share one settings file everywhere) or `--no-settings` (skip it even for the primary dir).
-
-What each profile sets for itself, in its own `settings.json` — model, permission mode, theme, status line:
-
-```json
-{
-  "model": "claude-opus-4-8[1m]",
-  "theme": "dark",
-  "permissions": { "defaultMode": "bypassPermissions" },
-  "statusLine": {
-    "type": "command",
-    "command": "bash \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/statusline-command.sh\"",
-    "refreshInterval": 30
-  }
-}
-```
-
-`model` takes a full model id, not just an alias, when you want a specific variant — `claude-opus-4-8[1m]` for the 1M-context window, `claude-opus-5`, `claude-sonnet-5`. The status line path resolves per profile, so each one runs the shared script against its own config dir.
-
-`--with-settings` and `--no-settings` are last-wins if you pass both.
-
-Uninstall the same way (`CLAUDE_DIR="$HOME/.claude-work" ./uninstall.sh`). It only removes symlinks, so a profile-local `settings.json` survives, and it leaves `~/.local/bin/aiwf` in place because the launcher is shared by every profile.
-
-`aiwf uninstall --purge` deletes the shared clone every profile links against, so it is refused unless `CLAUDE_DIR` is the primary dir.
-
-### Uninstall
-
-```bash
-aiwf uninstall            # remove the symlinks
-aiwf uninstall --purge    # remove the symlinks + delete the clone
-```
+**Upgrading from the symlink-based install (before 1.0).** Run `./uninstall.sh` once from your existing clone — it sweeps the old skill, agent, command and review-guide symlinks and the `aiwf` launcher — then `git pull`, `./install.sh`, and install the plugin.
 
 ## Skills
 
-Skills are multi-step workflows invoked as slash commands inside Claude Code.
-
 ### Planning
 
-| Skill | Description |
-|-------|-------------|
-| `/prd` | Interview-driven Product Requirements Document |
-| `/architecture` | One `docs/ARCHITECTURE.md`: the system (components, data flow, stack, deployment) and how it is engineered (testing strategy, dev env, CI/CD, coding standards) |
-| `/threat-model` | STRIDE-style threat model (`docs/THREAT_MODEL.md`) |
-| `/adr <title>` | Architecture Decision Record |
+| Skill | What it produces |
+|-------|------------------|
+| `/wf:prd` | Interview-driven Product Requirements Document (`docs/PRD.md`) |
+| `/wf:architecture` | One `docs/ARCHITECTURE.md`: the system (components, data flow, stack, deployment) and how it is engineered (testing strategy, dev environment, CI/CD, coding standards) |
+| `/wf:threat-model` | STRIDE-style threat model (`docs/THREAT_MODEL.md`) |
+| `/wf:adr <title>` | An Architecture Decision Record (`docs/adr/NNNN-<slug>.md`) |
+| `/wf:roadmap` | Phased roadmap, one file per phase (`docs/roadmap/NNN_<phase>.md`) |
+| `/wf:spec <feature>` | Feature spec with verification criteria, sliced when it exceeds 200 source lines (`docs/specs/NNN_<feature>.md`) |
+| `/wf:issues <roadmap or spec>` | GitHub milestones and issues, one milestone per phase and one issue per task or slice |
 
-### Design
+### UI design
 
-| Skill | Description |
-|-------|-------------|
-| `/design` | Produce distinctive, production-grade UI designs in Paper.design MCP |
-| `/verify-design` | Diff the running UI against Paper design refs with Playwright and fix mismatches |
+| Skill | What it does |
+|-------|--------------|
+| `/wf:design [flow]` | Design system, brand guide and screens in Paper (requires the Paper MCP) |
+| `/wf:verify-design [page]` | Diffs the running UI against the Paper artboards with Playwright and fixes mismatches in place |
 
 ### Implementation
 
-| Skill | Description |
-|-------|-------------|
-| `/spec <feature>` | Feature implementation spec with verification criteria |
-| `/roadmap` | Phased task breakdown from specs |
-| `/feature <spec>` | End-to-end feature implementation from a spec. `--commit` auto-commits after completion; `--pr` also opens the PR and runs its review loop |
-| `/fix <issue>` | Diagnose and fix a bug from a description, stack trace, or GitHub issue |
-| `/autopilot <roadmap>` · `--phase <NNN>` · `--milestone <N>` | Deliver a roadmap, one phase, or one GitHub milestone: develop each task in a worktree → fresh-context review → bounded fix loop → **merge to main**. `--supervised` stops with PRs open for you to merge; `--dry-run` prints the plan. User-invoked only |
-| `/new-project <name>` | Scaffold a new project with the full workflow |
-
-### Review
-
-There is no review skill. `/pr` dispatches the `reviewer` agent on every branch before marking the PR ready. To review someone else's branch or PR, use Claude Code's built-in `/code-review`; for a security pass, the built-in `/security-review`.
+| Skill | What it does |
+|-------|--------------|
+| `/wf:feature <spec>` | Implements one spec or slice with tests, runs the checks, stops at the working tree. `--commit` also commits; `--pr` also opens the PR and runs its review |
+| `/wf:fix <description or issue>` | Root-cause diagnosis, minimal fix, regression test |
+| `/wf:autopilot <roadmap>` · `--phase <NNN>` · `--milestone <N>` | Delivers a roadmap, a phase, or a GitHub milestone: each task developed in a worktree → fresh-context review → bounded fix loop → **merged to `main`**. `--supervised` stops with PRs open for you to merge; `--dry-run` prints the plan. Runs only when you type it |
+| `/wf:new-project <name> [stack]` | Scaffolds a repo: `CLAUDE.md`, Makefile, linter and pre-commit config, lint hook, docs skeleton |
 
 ### Delivery
 
-| Skill | Description |
-|-------|-------------|
-| `/commit` | Stage and commit the working tree as one or more logical conventional commits (local-only, never pushes) |
-| `/pr [--draft] [--no-review]` | Push the branch and open a pull request as a **draft**, have the fresh-context `reviewer` agent review it, fix HIGH/MED findings (max 2 cycles), then mark it ready. `--draft` keeps it a draft; `--no-review` skips the review loop |
-
-## Agents
-
-| Agent | What it does |
+| Skill | What it does |
 |-------|--------------|
-| `reviewer` | Read-only review of a branch diff against its spec: spec compliance, correctness, security at boundaries, test quality, convention drift. Runs the project's checks itself and returns `PASS` / `FIX_REQUIRED` with `HIGH` / `MED` / `LOW` findings |
+| `/wf:commit` | Splits the working tree into logical conventional commits. Local only |
+| `/wf:pr [--draft] [--no-review]` | Pushes and opens the PR as a **draft**, has the `reviewer` agent review it, fixes HIGH/MED findings (max 2 cycles), then marks it ready |
 
-## How It Works
+There is no review skill. To review someone else's branch or PR, use Claude Code's built-in `/code-review`; for a security pass, the built-in `/security-review`.
 
-### The Document Pipeline
+### The reviewer agent
 
-The typical flow from idea to shipped code:
+`wf:reviewer` reviews a branch diff against its spec: spec compliance, correctness, security at boundaries, test quality, convention drift. It is read-only, runs the project's checks itself rather than trusting the writer's output, and returns `PASS` or `FIX_REQUIRED` with `HIGH` / `MED` / `LOW` findings. `/wf:pr` and `/wf:autopilot` dispatch it.
+
+## How it fits together
 
 ```
-/prd                       Define what to build and why
+/wf:prd                    What to build and why
   │
-/architecture              System structure + testing strategy, dev env, CI/CD
-/threat-model              Threat model
+/wf:architecture           System structure + testing strategy, dev env, CI/CD
+/wf:threat-model           Threat model (when there are trust boundaries)
   │
-/roadmap                   Phase breakdown from design docs
+/wf:roadmap                Phases and tasks
+/wf:spec <feature>         One spec per task, sliced to ≤200 source lines
+/wf:issues                 Milestones + issues on GitHub
   │
-/spec <feature>            Detail each task in the roadmap
+  │   /wf:design           UI designs in Paper (for UI work)
+  │   /wf:verify-design    Diff the running UI against Paper, fix in place
   │
-  │   /design [flow]       UI designs in Paper (for UI features)
-  │   /verify-design       Diff running UI against Paper refs, fix in place
-  │
-  ├── /autopilot           Deliver a roadmap, phase or milestone (build, review, fix, merge to main)
-  └── /feature <spec>      Or implement one feature at a time
+  ├── /wf:autopilot        Deliver a roadmap, phase or milestone end to end
+  └── /wf:feature <spec>   Or implement one slice at a time
         │
-      /pr                  Draft PR → fresh-context reviewer → ready
+      /wf:commit           Logical conventional commits
+      /wf:pr               Draft PR → fresh-context reviewer → ready
+        │
+      you merge
 ```
 
-`/fix` can be used anytime for bug fixes (no spec needed). `/adr` can be used at any point to capture a decision.
+`/wf:fix` works at any time, without a spec. `/wf:adr` records a decision whenever one is made.
 
-### Parallel Development
+### When to use what
 
-Each task runs in its own [git worktree](https://git-scm.com/docs/git-worktree), isolated from other work:
+Not every change needs every step.
 
-```bash
-claude --worktree feature-auth
-claude --worktree feature-dashboard
-```
+| Situation | Path |
+|-----------|------|
+| A bug | `/wf:fix` → `/wf:commit` → `/wf:pr` |
+| A small, well-understood change | `/wf:spec` → `/wf:feature` → `/wf:commit` → `/wf:pr` |
+| A feature larger than one PR | `/wf:spec` (it slices) → `/wf:issues` → `/wf:feature` per slice |
+| A new project | `/wf:new-project` → `/wf:prd` → `/wf:architecture` → `/wf:threat-model` → `/wf:roadmap` → `/wf:spec` per task |
+| An inherited codebase with no docs | `/wf:architecture` first — it explores the code and asks you to confirm what it found — then `/wf:threat-model` if needed, then specs as you go |
+| A planned phase you want delivered unattended | `/wf:autopilot --phase <NNN>` (add `--supervised` to keep the merge) |
+| A decision worth remembering | `/wf:adr` |
 
-`/autopilot` takes this further — it reads a roadmap and runs the full pipeline for every task (develop in a worktree → review in a fresh context → fix → **merge to `main`**), dispatching independent tasks in parallel waves and sequencing dependent ones after their merge. It is autonomous by default (no human gate); `--supervised` never merges: it stops with the PRs open whenever the remaining work is waiting on your merge, and resumes on `continue`.
-
-### Quality Gates
-
-```
-Hooks          →  Lint and format on every edit
-Pre-commit     →  Tests, type checks on every commit
-Subagent review →  Security + architecture review before PR
-CI/CD          →  Full build, SAST, dependency scan
-Human review   →  Business logic, design decisions, edge cases
-```
-
-## Project Structure
+## Repository layout
 
 ```
 ai-workflow/
-├── CLAUDE.md                  # Project-only rules (loads when working IN this repo)
-├── dotfiles/CLAUDE.md          # Global conventions (symlinked to ~/.claude/)
-├── settings.json              # Hooks, permissions, model config (Claude Code)
-├── statusline-command.sh      # Custom status line script (Claude Code)
-├── aiwf                       # Toolkit manager CLI
-├── install.sh                 # Claude Code symlink installer
-├── uninstall.sh               # Claude Code uninstaller
-├── bootstrap.sh               # One-liner bootstrap
-├── agents/
-│   └── reviewer.md
-├── skills/
-│   ├── prd/
-│   ├── architecture/
-│   ├── threat-model/
-│   ├── adr/
-│   ├── spec/
-│   ├── roadmap/
-│   ├── feature/
-│   ├── fix/
-│   ├── autopilot/
-│   ├── new-project/
-│   ├── commit/
-│   ├── pr/
-│   ├── design/
-│   ├── issues/
-│   └── verify-design/
+├── .claude-plugin/
+│   ├── plugin.json            # The wf plugin manifest
+│   └── marketplace.json       # Lets this repo be added as a marketplace
+├── skills/<name>/SKILL.md     # The 15 skills
+├── agents/reviewer.md         # The reviewer agent
+├── dotfiles/CLAUDE.md         # Global conventions (symlinked to ~/.claude/CLAUDE.md)
+├── statusline-command.sh      # Status line script
+├── settings.example.json      # Seed for your untracked settings.json
+├── install.sh / uninstall.sh  # Symlink the three personal files above
+├── extras/                    # Opt-in personal skills (./install.sh --extra)
+├── CLAUDE.md                  # Rules for working IN this repo (not installed)
 └── docs/
-    ├── TRUNK_BASED_WORKFLOW.md  # Trunk-based rules, recipes, FAQ
-    └── SKILL_QUALITY.md         # How skills are benchmarked
+    ├── TRUNK_BASED_WORKFLOW.md
+    └── SKILL_QUALITY.md
 ```
 
 ## Configuration
 
-### Global Conventions (`dotfiles/CLAUDE.md`)
+### Global conventions (`dotfiles/CLAUDE.md`)
 
-Source: `dotfiles/CLAUDE.md`. Installed at `~/.claude/CLAUDE.md` (symlink). Applies to every Claude Code session in every project. The repo-root `CLAUDE.md` is **separate** — it's the project-only rules for working inside the ai-workflow repo itself, and is not installed.
-
-- Conventional commits (`feat:`, `fix:`, `refactor:`, etc.)
-- Spec-first development
-- Writer/reviewer separation
-- PRs under 200 lines of non-test diff, one concern each
+Installed at `~/.claude/CLAUDE.md` and applied to every Claude Code session in every project: verify before claiming done, conventional commits split by concern, spec first, a fresh reviewer for every branch, human-gated merges, and the trunk rules. The repo-root `CLAUDE.md` is separate — it holds the rules for working inside this repo and is not installed.
 
 ### Settings (`settings.json`)
 
-Desktop notification hooks, permission mode, and model preference. See `settings.json` for the current config.
+`settings.example.json` seeds a desktop-notification hook and the status line. Your `settings.json` is gitignored; edit it freely.
 
 ### Status Line
 
@@ -339,16 +221,15 @@ Details worth knowing:
 | [Skill Quality](docs/SKILL_QUALITY.md) | How skills are benchmarked before and after changes |
 | [Changelog](CHANGELOG.md) | Release notes — what changed in each version |
 
-## Modifying the Toolkit
+## Modifying the toolkit
 
-All config lives in this repo. **Never edit the installed files under `~/.claude/` directly** — changes will be lost on the next install or symlink conflict.
+Edit the sources in this repo, never the installed copies. To try a change before publishing it, load the working tree as the plugin for one session:
 
-To modify anything:
+```bash
+claude --plugin-dir /path/to/ai-workflow
+```
 
-1. Edit the source file in this repo (skills, agents, CLAUDE.md, reviews, etc.)
-2. Commit and push
-
-Skills are symlinked into `~/.claude/skills/`, so edits to SKILL.md files in this repo take effect immediately. Re-run `aiwf install` only when adding, removing, or renaming a skill, agent, or command.
+`claude plugin validate .` checks the manifests and every skill and agent definition. `dotfiles/CLAUDE.md` and `statusline-command.sh` are symlinked, so edits to them apply immediately.
 
 ## Contributing
 
