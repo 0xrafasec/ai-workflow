@@ -89,7 +89,7 @@ These live in root `CLAUDE.md` → **Trunk-Based Workflow**. Every skill in this
 
 3. **Typed branch names.** `feat/<slug>`, `fix/<slug>`, `refactor/<slug>`, `docs/<slug>`, `chore/<slug>`, `test/<slug>`, `perf/<slug>`, `security/<slug>`. The prefix tells reviewers what lens to apply.
 
-4. **One branch = one PR = one concern.** A PR is one vertical slice a reviewer can hold in one pass. Size is a signal, not a quota: past roughly **500 changed source lines**, ask whether it is really one concern, and split it if it is two. Tests, generated files, lockfiles, pure moves and deletions do not count. Do not cut one concern into several PRs to get under the number — PRs that only make sense together cost more review than one coherent PR.
+4. **One branch = one PR = one concern.** A PR is one vertical slice a reviewer can hold in one pass. Size is a signal, not a quota: past roughly **500 added source lines**, ask whether it is really one concern, and split it if it is two. Tests, generated files, lockfiles, pure moves and deletions do not count. Do not cut one concern into several PRs to get under the number — PRs that only make sense together cost more review than one coherent PR.
 
 5. **Vertical slicing.** A "feature" that's too big becomes N slices, each end-to-end (DB → API → UI for *one* capability), each independently mergeable. Never horizontal (all DB first, then all API). Horizontal slices pile up un-shippable state.
 
@@ -119,7 +119,7 @@ Nothing is configured in `git` itself. The rules live in docs + skill gates + (o
 
 ## Recipes
 
-### A small feature (≤500 lines)
+### A small feature (one concern)
 
 ```bash
 # 1. Spec
@@ -146,7 +146,7 @@ git worktree remove ../myrepo-avatar
 ### A larger feature (sliced)
 
 ```bash
-# 1. Spec — /wf:spec detects >500 lines and slices
+# 1. Spec — /wf:spec sees more than one concern and slices
 /wf:spec oauth-integration
 
 # Produces:
