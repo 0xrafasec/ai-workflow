@@ -69,6 +69,7 @@ flowchart LR
         TM -.-> ROAD["/wf:roadmap<br/>phases and tasks"]
         ROAD --> SPEC["/wf:spec<br/>one concern per PR"]
         SPEC --> ISS["/wf:issues<br/>milestones + issues"]
+        ROAD -.-> ISS
     end
     subgraph Build
         direction TB
@@ -106,7 +107,7 @@ flowchart LR
 | `/wf:architecture` | `docs/ARCHITECTURE.md` — the system (components, data flow, stack, deployment) and how it is engineered (testing strategy, dev environment, CI/CD, coding standards) |
 | `/wf:threat-model` | `docs/THREAT_MODEL.md` — a STRIDE-style threat model |
 | `/wf:adr [title]` | `docs/adr/NNNN-<slug>.md` — an architecture decision record |
-| `/wf:roadmap` | `docs/roadmap/NNN_<phase>.md` — a phased roadmap, one file per phase |
+| `/wf:roadmap` | `docs/roadmap/NNN_<phase>.md` — a phased roadmap, one file per phase. Asks whether to file GitHub milestones and issues and, once the roadmap is on the trunk branch, hands off to `/wf:issues` |
 | `/wf:spec <feature>` | `docs/specs/NNN_<feature>.md` — a spec with verification criteria, sliced when it is more than one concern (the check triggers at ~500 source lines) |
 | `/wf:issues <roadmap or spec>` | GitHub milestones and issues — one milestone per phase, one issue per task or slice |
 
