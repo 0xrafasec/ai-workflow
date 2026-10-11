@@ -1,6 +1,7 @@
 ---
 name: prd
-description: "Interview the user and produce a Product Requirements Document — personas, user stories, scope, success metrics. Use when the user asks to write a PRD, draft product requirements, capture user stories, define success metrics, or says 'what should we build', 'let's scope this product', 'write up the requirements'."
+description: "Interview the user and write a Product Requirements Document at docs/PRD.md (or docs/prd/<name>.md for a feature) — problem, scope, user types, key flows, success criteria, risks. Use when the user wants to write a PRD, scope a product or feature, capture requirements or success metrics, or says 'what should we build', 'let's scope this', 'write up the requirements'. Run before /wf:architecture and /wf:spec."
+argument-hint: "[product or feature name]"
 ---
 Create a Product Requirements Document for: $ARGUMENTS
 
@@ -9,13 +10,13 @@ Create a Product Requirements Document for: $ARGUMENTS
 Before starting, check what already exists:
 - Read `docs/` directory structure if it exists
 - Read any existing PRD, README, or whitepaper — do not duplicate what's already written
-- If a PRD already exists, ask the user if they want to revise it or start fresh
+- If `docs/PRD.md` exists, revise it in place and interview only about what is changing; start over only if the user asks. If `$ARGUMENTS` names a feature and a project PRD exists, write `docs/prd/<name>.md`.
 
 ## Process
 
 ### 1. Deep Interview
 
-Use AskUserQuestion to interview the user. This is the most important step — the PRD quality depends entirely on how well you extract the user's thinking.
+Use AskUserQuestion to interview the user. If they gave a brief, a README or a pasted idea, restate it in 3-5 lines and interview only the gaps. Ask at most 3-4 questions per round. If the user cannot be asked (headless run, or dispatched by `/wf:autopilot`), write the PRD from what exists and list each guess under Risks and Open Questions.
 
 **Start broad, then go deep:**
 
@@ -28,18 +29,18 @@ Use AskUserQuestion to interview the user. This is the most important step — t
 7. **Risks** — What could go wrong? What are the biggest unknowns? What keeps you up at night about this?
 
 **Interview rules:**
-- Don't ask obvious questions — if the user said "Rust CLI tool", don't ask "what language?"
 - Dig into contradictions and tensions — "you said X but also Y, how do those reconcile?"
 - Ask about the hard parts the user might not have thought through
 - It's OK to push back or challenge assumptions — the goal is a solid PRD, not agreement
-- Keep going until you have enough to write a comprehensive document. Don't rush.
 
 ### 2. Write the PRD
 
-Write to `docs/PRD.md` (or `docs/prd/<name>.md` if this is a sub-feature PRD).
+Write to `docs/PRD.md`, or `docs/prd/<name>.md` for a feature PRD (see Context Awareness).
 
 ```markdown
 # [Project/Feature Name]
+
+**Last updated:** [date]
 
 ## Problem
 
@@ -96,7 +97,7 @@ Write to `docs/PRD.md` (or `docs/prd/<name>.md` if this is a sub-feature PRD).
 [What comes after v1? What was deferred and why?]
 ```
 
-Adapt the structure to fit the project. Not every section is needed for every PRD. A small feature PRD might skip User Types and Constraints. A protocol PRD might need a Terminology section. Use judgment.
+Drop sections that don't apply; add one if the domain needs it.
 
 ### 3. Present for Review
 
@@ -107,4 +108,4 @@ Show the user the PRD and ask for feedback. Iterate until they're satisfied.
 Based on the PRD complexity, suggest which specs to create next:
 - "This needs an architecture doc (system structure + testing strategy) — run `/wf:architecture`"
 - "There are security-sensitive parts — run `/wf:threat-model`"
-- "Ready to break into features — run `/wf:spec <feature-name>` for each"
+- "Ready to break into features — run `/wf:spec <feature-name>` for each, then `/wf:roadmap`"

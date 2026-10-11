@@ -1,23 +1,20 @@
 ---
 name: adr
-description: "Create an Architecture Decision Record (ADR) — a single numbered file capturing context, options, and the choice made. Use whenever the user wants to document a design decision, says 'record why we picked X', 'write an ADR', 'lock in this choice', or is choosing between technical options worth preserving for future contributors. Invoked as /wf:adr <title>."
-argument-hint: "<title>"
+description: "Write an Architecture Decision Record — one numbered file in docs/adr/ with context, options considered and the choice. Use when the user says 'write an ADR', 'record why we picked X', 'document this decision', or has just made a technical choice future contributors will question. Not for whole-system design (use /wf:architecture)."
+argument-hint: "[title]"
 ---
 Create an Architecture Decision Record. Argument: $ARGUMENTS
 
-## Context
-
-ADRs capture a single decision — the context, options considered, and the choice made. They're lightweight and accumulate over time. Each ADR is a separate numbered file.
-
 ## Context Gathering
 
-1. Check `docs/adr/` for existing ADRs — determine the next number. If no ADRs exist, start at `0001`.
+1. Find the ADR directory (default `docs/adr/`; use the existing one if the repo has `docs/decisions/` or similar) and take the next number, zero-padded to the existing width, starting at `0001`.
 2. Read recent ADRs (last 2-3) to match the project's style and voice.
 3. If the decision relates to architecture, read `docs/ARCHITECTURE.md` for context.
+4. If this decision replaces an earlier ADR, set the old one's status to `Superseded by ADR-NNNN` and link it in Related.
 
 ## Interview
 
-Use AskUserQuestion to extract the decision. Keep it focused — an ADR is one decision, not a design doc.
+Use AskUserQuestion to extract the decision. Keep it focused — an ADR is one decision, not a design doc. If the decision was just made in this session, draft from the conversation and ask only for what is missing.
 
 1. **What's the decision?** — What are you deciding? What triggered this decision?
 2. **Context** — What constraints, requirements, or pressures led to this? What's the current state?
@@ -25,7 +22,7 @@ Use AskUserQuestion to extract the decision. Keep it focused — an ADR is one d
 4. **Decision** — What did you choose and why? What was the deciding factor?
 5. **Consequences** — What changes as a result? What are the known downsides you're accepting?
 
-If the decision is straightforward (user already knows what they want and why), keep the interview to 1-2 questions to fill in gaps.
+If the decision is straightforward (user already knows what they want and why), keep the interview to 1-2 questions to fill in gaps. If the user is asking you to decide, present the options and a recommendation before writing.
 
 ## Write
 
@@ -36,7 +33,7 @@ Write to `docs/adr/NNNN-<slug>.md`:
 
 **Status:** Proposed | Accepted | Deprecated | Superseded by [ADR-XXXX]
 **Date:** [date]
-**Deciders:** [who was involved]
+**Deciders:** [the user plus anyone they name; if unnamed, `git config user.name`]
 
 ## Context
 
@@ -52,13 +49,7 @@ Write to `docs/adr/NNNN-<slug>.md`:
 - **Pros:** [benefits]
 - **Cons:** [drawbacks]
 
-### Option B: [Name]
-- **Pros:** [benefits]
-- **Cons:** [drawbacks]
-
-### Option C: [Name] (if applicable)
-- **Pros:** [benefits]
-- **Cons:** [drawbacks]
+(Repeat per option, at least two.)
 
 ## Consequences
 
@@ -68,9 +59,6 @@ Write to `docs/adr/NNNN-<slug>.md`:
 ### Negative
 - [What gets harder or what risks are accepted]
 
-### Neutral
-- [What changes without clear positive/negative valence]
-
 ## Related
 
 - [Links to related ADRs, specs, issues, or documents]
@@ -78,5 +66,4 @@ Write to `docs/adr/NNNN-<slug>.md`:
 
 ## After Writing
 
-1. Present the ADR to the user for review.
-2. Ask if the status should be "Proposed" (needs team review) or "Accepted" (decided).
+Present the ADR for review. Status is `Proposed` unless the user said the decision is made.
