@@ -115,6 +115,10 @@ An existing file is backed up to `<name>.bak.<timestamp>` before it is replaced,
 
 There is no review skill. To review someone else's branch or PR, use Claude Code's built-in `/code-review`; for a security pass, the built-in `/security-review`.
 
+### The session-start hook
+
+The plugin ships one hook. When a session starts in a git repository whose branch tracks a remote, it runs `git fetch` on that remote and, only if the branch is behind or has diverged, tells Claude so before any work begins. It prints nothing otherwise, never prompts for credentials, and gives up quietly when the remote is unreachable.
+
 ### The reviewer agent
 
 `wf:reviewer` reviews a branch diff against its spec: spec compliance, correctness, security at boundaries, test quality, convention drift. It is read-only, runs the project's checks itself rather than trusting the writer's output, and returns `PASS` or `FIX_REQUIRED` with `HIGH` / `MED` / `LOW` findings. `/wf:pr` and `/wf:autopilot` dispatch it.
@@ -168,6 +172,7 @@ ai-workflow/
 │   └── marketplace.json       # Lets this repo be added as a marketplace
 ├── skills/<name>/SKILL.md     # The 15 skills
 ├── agents/reviewer.md         # The reviewer agent
+├── hooks/                     # SessionStart hook: fetch and report a stale branch
 ├── dotfiles/CLAUDE.md         # Global conventions (symlinked to ~/.claude/CLAUDE.md)
 ├── statusline-command.sh      # Status line script
 ├── settings.example.json      # Seed for your untracked settings.json
@@ -187,7 +192,7 @@ Installed at `~/.claude/CLAUDE.md` and applied to every Claude Code session in e
 
 ### Settings (`settings.json`)
 
-`settings.example.json` seeds a desktop-notification hook and the status line. Your `settings.json` is gitignored; edit it freely.
+`settings.example.json` seeds a desktop-notification hook, the status line, and a plugin list with `wf` enabled from this repo's marketplace. It sets no permission mode and no model — choose those yourself. Your `settings.json` is gitignored; edit it freely.
 
 ### Status Line
 

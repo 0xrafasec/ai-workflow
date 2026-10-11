@@ -42,11 +42,6 @@
 - Keep PRs focused: one concern per PR, under 200 lines of **non-test** diff when possible (see **Trunk-Based Workflow** above for slicing rules and feature-flag expectations)
 - PR description must include: summary, link to spec, security checklist, test plan
 
-## Context Management
-- /clear between unrelated tasks
-- /compact when context gets heavy mid-task
-- /rewind when an approach fails after 2 corrections
-
 ## Toolkit (available skills)
 - The workflow skills come from the `wf` plugin and are invoked as `/wf:<name>`: `prd`, `architecture`, `threat-model`, `adr`, `roadmap`, `spec`, `issues`, `feature`, `fix`, `commit`, `pr`, `autopilot`, `new-project`, `design`, `verify-design`. One agent: `wf:reviewer`.
 - To review someone else's branch or PR, use the built-in `/code-review`; for a security pass, the built-in `/security-review`.
