@@ -41,7 +41,6 @@ Create these directories:
 
 ```
 .claude/
-.claude/agents/
 docs/
 docs/specs/
 docs/roadmap/
@@ -49,7 +48,7 @@ docs/adr/
 docs/rfc/
 ```
 
-**Note:** Skills are installed globally at `~/.claude/skills/`. Do NOT create project-level skill copies — they'd duplicate and drift from the global versions. The global skills (`/architecture`, `/tdd`, `/security`, `/adr`, `/rfc`, `/spec`, `/roadmap`, `/feature`, `/fix`, `/review`, `/autopilot`) are already available. For stack-aware code review, install Anthropic's official `code-review` skill from `claude-code-plugins`. Only create project-level agents and settings.
+**Note:** The workflow skills are installed globally. Do NOT create project-level copies of them — they'd duplicate and drift from the global versions. Only create project-level settings.
 
 ### 4. Create CLAUDE.md
 
@@ -79,11 +78,7 @@ Create a `CLAUDE.md` at the project root tailored to the language/framework:
 
 Adapt the build commands and style section to the chosen language/framework.
 
-### 5. Create project-level agents
-
-Copy the security-reviewer and architecture-reviewer into `.claude/agents/`, tailored to the project's language if needed.
-
-### 6. Create project-level settings
+### 5. Create project-level settings
 
 Create `.claude/settings.json` with hooks appropriate to the language:
 
@@ -93,15 +88,19 @@ Create `.claude/settings.json` with hooks appropriate to the language:
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
-        "command": "make lint-changed 2>&1 | head -20",
-        "description": "Lint after every file edit"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "make lint-changed 2>&1 | head -20"
+          }
+        ]
       }
     ]
   }
 }
 ```
 
-### 7. Create Makefile
+### 6. Create Makefile
 
 Create a `Makefile` with standard targets for the chosen language/framework:
 - `test` — run tests
@@ -111,7 +110,7 @@ Create a `Makefile` with standard targets for the chosen language/framework:
 - `lint-changed` — lint only changed files
 - `security-scan` — run security scanner (gitleaks, bandit, gosec, etc.)
 
-### 8. Create .pre-commit-config.yaml
+### 7. Create .pre-commit-config.yaml
 
 Set up pre-commit hooks:
 - Language-appropriate linter
@@ -119,14 +118,14 @@ Set up pre-commit hooks:
 - Test runner
 - gitleaks for secret detection
 
-### 9. Create .gitignore
+### 8. Create .gitignore
 
 Appropriate for the language/framework. Always include:
-- `.claude/` local files
+- `.claude/settings.local.json` (personal overrides — `.claude/settings.json` itself is committed)
 - `.env`
 - Language-specific build artifacts
 
-### 10. Create initial docs
+### 9. Create initial docs
 
 Create `.gitkeep` files to preserve directory structure:
 - `docs/specs/.gitkeep`
@@ -134,7 +133,7 @@ Create `.gitkeep` files to preserve directory structure:
 - `docs/adr/.gitkeep`
 - `docs/rfc/.gitkeep`
 
-### 11. Summary
+### 10. Summary
 
 Tell the user what was created and suggest next steps:
 1. `cd <project-name>`
