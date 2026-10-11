@@ -148,7 +148,7 @@ A few things that matter, and why:
     - If the review is `NEEDS_HUMAN` → **leave it as a draft** and report the unresolved HIGH/MED findings; the user decides.
     - If `--no-review` was passed → the PR is already in its final state from step 8; nothing to flip.
 
-11. **Return the PR URL and review verdict** — show the PR URL, its final draft/ready state, and the review outcome (`PASS` / `PASS_WITH_NITS` with the LOW nits listed / `NEEDS_HUMAN` with the unresolved items). This is the final output.
+11. **Return the PR URL and review verdict** — show the PR URL, its final draft/ready state, and the review outcome (`PASS` / `PASS_WITH_NITS` with the LOW nits listed / `NEEDS_HUMAN` with the unresolved items). If the reviewer's `CHECKS` line says a check left the working tree dirty, say so too — otherwise the next `/pr` run stops on a dirty tree with no explanation. This is the final output.
 
 12. **Post-merge cleanup reminder.** After the URL, append a one-liner reminder (do not execute — the PR isn't merged yet):
 
