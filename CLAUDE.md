@@ -9,7 +9,6 @@ This repo is two things: the `wf` Claude Code plugin, and the personal config fi
 - `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` — the plugin manifest and the marketplace that serves it
 - `skills/<name>/SKILL.md` — the plugin's skills, invoked as `/wf:<name>`
 - `agents/reviewer.md` — the plugin's reviewer agent (`wf:reviewer`)
-- `hooks/hooks.json`, `hooks/session-fetch.sh` — the plugin's SessionStart hook
 - `dotfiles/CLAUDE.md` — global defaults, symlinked to `~/.claude/CLAUDE.md` by `install.sh`
 - `settings.json` — your untracked settings, symlinked into `~/.claude/` by `install.sh`
 - `CLAUDE.md` (this file) — project-specific rules, loaded only when `cwd` is this repo

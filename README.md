@@ -53,7 +53,6 @@ That is the whole loop. Everything else in this README is detail.
 | **A reviewer agent** | Read-only and fresh-context. It runs the project's checks itself and returns `PASS` or `FIX_REQUIRED`. By default every PR goes through it before it is marked ready. |
 | **Trunk-based by construction** | Short-lived branches, one PR per slice, slices of at most 200 non-test lines. [Why and how →](docs/TRUNK_BASED_WORKFLOW.md) |
 | **Writer / reviewer separation** | The session that wrote the code never reviews it, and merging stays your decision unless you run `/wf:autopilot`. |
-| **A session-start hook** | Fetches the remote and warns Claude when your branch is behind or has diverged, before any work starts. |
 | **Optional global conventions** | A `CLAUDE.md` applied to every project: verification, commit style, the trunk rules, review before merge. |
 
 ## How it works
@@ -232,15 +231,6 @@ Skills used to be symlinked into `~/.claude/skills/` and invoked by bare name (`
 </details>
 
 <details>
-<summary><strong>The session-start hook</strong></summary>
-
-<br/>
-
-When a session starts in a git repository whose branch tracks a remote, the hook runs `git fetch` on that remote and, only if the branch is behind or has diverged, tells Claude so before any work begins. It prints nothing otherwise, never prompts for credentials, and gives up quietly when the remote is unreachable.
-
-</details>
-
-<details>
 <summary><strong>Repository layout</strong></summary>
 
 <br/>
@@ -252,7 +242,6 @@ ai-workflow/
 │   └── marketplace.json       # Lets this repo be added as a marketplace
 ├── skills/<name>/SKILL.md     # The 15 skills
 ├── agents/reviewer.md         # The reviewer agent
-├── hooks/                     # SessionStart hook: fetch and report a stale branch
 ├── dotfiles/CLAUDE.md         # Global conventions (symlinked to ~/.claude/CLAUDE.md)
 ├── settings.example.json      # Seed for your untracked settings.json
 ├── install.sh / uninstall.sh  # Symlink the two personal files above

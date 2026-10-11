@@ -8,7 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Session-start fetch hook.** The plugin ships `hooks/hooks.json`: at session start it fetches the current branch's remote and tells Claude when the branch is behind or has diverged. The global conventions already asked for this; a hook makes it happen every time. Silent when up to date, never prompts for credentials, never blocks.
 - `argument-hint` on every skill that takes arguments, so the slash menu shows them.
 - **The toolkit is now a Claude Code plugin, `wf`.** `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` make this repo both the plugin and the marketplace that serves it: `claude plugin marketplace add rafagomes/ai-workflow` then `claude plugin install wf@ai-workflow` (or the same two as `/plugin` commands in a session). Skills are invoked as `/wf:<name>` and the agent is `wf:reviewer`; every cross-reference between skills uses the namespaced form.
 - **`reviewer` agent.** One read-only, fresh-context reviewer (`agents/reviewer.md`) with a fixed checklist, a `HIGH` / `MED` / `LOW` severity scale and a `VERDICT` / `CHECKS` / `FINDINGS` / `SUMMARY` output format. It runs the project's check commands itself rather than trusting the writer's output. `/pr` dispatches it; the prompt only supplies base branch, spec path and check commands.
