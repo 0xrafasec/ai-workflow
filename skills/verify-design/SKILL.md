@@ -1,6 +1,6 @@
 ---
 name: verify-design
-description: "Diff current UI against Paper design refs with Playwright runtime fidelity checks, then fix mismatches in place. Run before (and during) UI work."
+description: "Diff the running UI against Paper design refs with Playwright runtime fidelity checks, then fix mismatches in place. Use when the user says 'verify the design', 'does this match Paper', 'check design fidelity', 'the UI drifted from the mock', or before and during UI work on a page that has a Paper artboard."
 ---
 Verify current UI against Paper design references for: $ARGUMENTS
 
@@ -20,7 +20,7 @@ This skill does a **fix-in-place fidelity pass** against Paper design references
 
 - **No argument:** check all pages with design refs
 - **Page / route name:** `/verify-design owner` — check that page
-- **Component name / file path:** `/verify-design Hero` or `web/components/landing/Hero.tsx`
+- **Component name / file path:** `/verify-design Hero` or a path to the component file
 
 Arguments may include free-form notes from the user (specific bugs, reference screenshots, which page to use as a style anchor). Treat those as priority work items.
 
@@ -28,16 +28,16 @@ Arguments may include free-form notes from the user (specific bugs, reference sc
 
 Priority:
 1. `docs/design/` (page-level docs, artboard exports, `DESIGN_SYSTEM.md`)
-2. `specs/**/plan.md` / `tasks.md` / `spec.md` — extract Paper artboard IDs (e.g. `4P-0`, `96-0`, `15D-0`, `17M-0`)
+2. `specs/**/plan.md` / `tasks.md` / `spec.md` — extract the Paper artboard IDs they reference
 3. `docs/specs/` / `docs/roadmap/` cross-refs
 
-Build a scope table (Page → Paper artboard (desktop) → Paper artboard (mobile) → source file). If both a desktop and mobile artboard exist (e.g. `96-0` + `17M-0`), check **both**.
+Build a scope table (Page → Paper artboard (desktop) → Paper artboard (mobile) → source file). If both a desktop and mobile artboard exist, check **both**.
 
 If no design docs exist at all, stop and tell the user to run `/design` first.
 
 ## Step 2 — Load design tokens
 
-Read `docs/design/DESIGN_SYSTEM.md`, `web/app/globals.css`, and `web/tailwind.config.*`. Record palette, type scale, spacing, radii, shadows. Flag hardcoded values in source that duplicate a token.
+Read `docs/design/DESIGN_SYSTEM.md` and the project's token sources — the global stylesheet and the theme config (e.g. `globals.css`, `tailwind.config.*`; find them, don't assume a path). Record palette, type scale, spacing, radii, shadows. Flag hardcoded values in source that duplicate a token.
 
 ## Step 3 — Load Paper artboard context
 
@@ -52,7 +52,7 @@ Read every file the target page touches (page, components, global CSS, relevant 
 
 ## Step 5 — Playwright runtime fidelity (MANDATORY for any UI check)
 
-Ensure the dev server is running (`curl http://localhost:3000`). If it isn't, start it (`pnpm --filter web dev` in background) before using Playwright.
+Ensure the dev server is running. Take the start command and URL from the project's `CLAUDE.md`, `package.json` scripts, or `Makefile`; if it isn't up, start it in the background before using Playwright. If you can't determine how to start it, ask.
 
 For each in-scope page, drive a real browser:
 
@@ -80,7 +80,7 @@ Apply targeted edits. Rules:
 
 After edits:
 1. Re-run the Playwright pass (desktop + mobile + interaction flow). Confirm screenshots match Paper and consoles are clean.
-2. Run lint + typecheck + tests (`pnpm -w lint`, `pnpm -w typecheck`, `pnpm -w test` or the project's equivalents).
+2. Run the project's lint, typecheck, and test commands (from `CLAUDE.md` or the `Makefile`).
 3. Paste the tail of each run to the user.
 
 ## Severity guide
