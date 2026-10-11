@@ -25,11 +25,11 @@ When you change something in this list (left), update the docs on the right in t
 
 | Change | Update |
 |--------|--------|
-| Skill behavior, args, or removal/rename | `skills/<name>/SKILL.md` (the source), `docs/REFERENCE.md` skill section, `README.md` Skills table + tree, `CHANGELOG.md` |
-| Workflow convention (trunk rules, commit style, etc.) | `dotfiles/CLAUDE.md`, `docs/WORKFLOW.md`, `docs/TRUNK_BASED_WORKFLOW.md`, `CHANGELOG.md` |
+| Skill behavior, args, or removal/rename | `skills/<name>/SKILL.md` (the source), `README.md` Skills table + tree, `CHANGELOG.md` |
+| Workflow convention (trunk rules, commit style, etc.) | `dotfiles/CLAUDE.md`, `docs/TRUNK_BASED_WORKFLOW.md`, `CHANGELOG.md` |
 | Adding/removing a skill | `install.sh`, `uninstall.sh`, `README.md` "Available skills" list, `dotfiles/CLAUDE.md` "Toolkit" section, `CHANGELOG.md` |
-| Installer or symlink layout | `install.sh`, `uninstall.sh`, `README.md` install section, `docs/REFERENCE.md` layout section, `CHANGELOG.md` |
-| New or repurposed top-level convention file | `README.md` repo-tree section, `docs/REFERENCE.md` layout section |
+| Installer or symlink layout | `install.sh`, `uninstall.sh`, `README.md` install section + tree, `CHANGELOG.md` |
+| New or repurposed top-level convention file | `README.md` repo-tree section |
 
 If you're not sure whether a change is doc-relevant, it is. Default to updating docs. The cost of a stale doc is much higher than the cost of a one-line CHANGELOG entry.
 

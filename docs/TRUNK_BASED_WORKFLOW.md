@@ -225,4 +225,3 @@ Nothing in this toolkit *requires* it; the rules work on discipline alone. But f
 - [Trunk-Based Development](https://trunkbaseddevelopment.com/) — the canonical reference
 - [DORA Report](https://cloud.google.com/devops/state-of-devops) — data on trunk-based vs other models
 - Root `CLAUDE.md` → **Trunk-Based Workflow** — the terse rules
-- `docs/WORKFLOW.md` — how these rules slot into the full AI-assisted workflow
