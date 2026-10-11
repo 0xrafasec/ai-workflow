@@ -26,7 +26,7 @@ Name the branch from the spec's `## Trunk Metadata` — for a slice, from its ro
 - `<type>/<N>-<slug>` when `**Issue:**` holds `#<N>` (e.g. `feat/42-jira-sync`).
 - `<type>/<slug>` when it is `—` or empty: the issue is unfiled. Do not rename the branch when the issue is filed later; put `Closes #<N>` in the PR body.
 - `<slug>` is the spec's file name with everything up to and including the first `_` removed, and without `.md`: `docs/specs/003_jira-sync.md` → `jira-sync` (and `003.A_jira-sync.md` → `jira-sync`). For a slice, join the parent directory's slug and the slice's, so two features with a same-named slice cannot collide: `docs/specs/003_jira-sync/002_webhook.md` → `jira-sync-webhook`. `/wf:autopilot` derives the same name to find a task's PR, so do not improvise one.
-- `<type>` is the spec's `**Type:**` (`feat`, `fix`, `refactor`, `chore`, `test`, `docs`, `perf`, `security`). If `Type` is missing, warn and use `feat`.
+- `<type>` is the spec's `**Type:**` (`feat`, `fix`, `refactor`, `chore`, `test`, `docs`, `perf`, `build`, `ci`, `security`). If `Type` is missing, warn and use `feat`.
 
 Worktree conventions are in your global `CLAUDE.md` (Trunk-Based Workflow).
 

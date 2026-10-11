@@ -62,12 +62,12 @@ If `AskUserQuestion` is unavailable (a headless run), do not file anything: prin
 
 **Labels:**
 
-- `type:<type>` from the `Type` field (`feat`, `fix`, `refactor`, `chore`, `test`, `docs`, `perf`, `security`).
+- `type:<type>` from the `Type` field (`feat`, `fix`, `refactor`, `chore`, `test`, `docs`, `perf`, `build`, `ci`, `security`).
 - `complexity:low` / `complexity:med` / `complexity:high` from `Complexity`.
 - `mvp` or `post-mvp` from the roadmap index's MVP column; omit when not derivable.
 - `needs-spec` if the task's spec file does not exist yet.
 
-Create missing labels on first run (`gh label list --limit 200 --json name`, then `gh label create "<name>" --color <hex>`). Colors: `type:feat` `1d76db`, `type:fix` `d73a4a`, `type:refactor` `a2eeef`, `type:chore` `cccccc`, `type:test` `0e8a16`, `type:docs` `0075ca`, `type:perf` `fbca04`, `type:security` `b60205`; `complexity:low` `c2e0c6`, `complexity:med` `fef2c0`, `complexity:high` `f9d0c4`; `mvp` `0e8a16`, `post-mvp` `cfd3d7`, `needs-spec` `e99695`.
+Create missing labels on first run (`gh label list --limit 200 --json name`, then `gh label create "<name>" --color <hex>`). Colors: `type:feat` `1d76db`, `type:fix` `d73a4a`, `type:refactor` `a2eeef`, `type:chore` `cccccc`, `type:test` `0e8a16`, `type:docs` `0075ca`, `type:perf` `fbca04`, `type:build` `5319e7`, `type:ci` `bfd4f2`, `type:security` `b60205`; `complexity:low` `c2e0c6`, `complexity:med` `fef2c0`, `complexity:high` `f9d0c4`; `mvp` `0e8a16`, `post-mvp` `cfd3d7`, `needs-spec` `e99695`.
 
 **Body template:**
 
@@ -103,6 +103,8 @@ Filed by `/wf:issues` from `<source-file>`.
 ## Dependencies
 
 File issues in dependency order. Roadmap order already puts dependencies first, and `/wf:spec` forbids a slice depending on an unmerged slice. Each body then names the real `#N` of an already-filed blocker. A dependency already filed earlier is looked up in the source docs' `Issue` / `Issues` values. If a dependency points forward (to something not yet filed), stop and fix the source ordering.
+
+A dependency on a whole phase (`Depends on: Phase 002`) has no single issue: write `Needs all of <that phase's milestone title>.` instead of a `Blocked by` line. A dependency that is not a task at all (an owner decision, a design artboard to draw first) goes in the same section as `Also needs: <text>.`
 
 **Never write the source's `001`, `002`, ... as `#001` in a body.** GitHub auto-links `#N` to the issue with that number, so `#001` silently points at issue #1, not the slice you meant.
 

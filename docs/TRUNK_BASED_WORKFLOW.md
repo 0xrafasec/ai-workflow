@@ -87,7 +87,7 @@ These live in root `CLAUDE.md` → **Trunk-Based Workflow**. Every skill in this
 
 2. **Short-lived branches.** Hours to ~2 days. If a branch lives longer, it's a planning failure — re-slice the work.
 
-3. **Typed branch names.** `feat/<slug>`, `fix/<slug>`, `refactor/<slug>`, `docs/<slug>`, `chore/<slug>`, `test/<slug>`, `perf/<slug>`, `security/<slug>`. The prefix tells reviewers what lens to apply.
+3. **Typed branch names.** `feat/<slug>`, `fix/<slug>`, `refactor/<slug>`, `docs/<slug>`, `chore/<slug>`, `test/<slug>`, `perf/<slug>`, `build/<slug>`, `ci/<slug>`, `security/<slug>`. The prefix tells reviewers what lens to apply.
 
 4. **One branch = one PR = one concern.** A PR is one vertical slice a reviewer can hold in one pass. Size is a signal, not a quota: past roughly **500 added source lines**, ask whether it is really one concern, and split it if it is two. Tests, generated files, lockfiles, pure moves and deletions do not count. Do not cut one concern into several PRs to get under the number — PRs that only make sense together cost more review than one coherent PR.
 

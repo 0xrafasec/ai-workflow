@@ -50,7 +50,7 @@ Estimate size in **added source lines only**; tests never count toward the budge
 - Each slice is its own branch and PR. `/wf:feature` names the branch.
 
 **Trunk metadata fields** (in the Slices table and in single-file specs):
-- **Type:** conventional-commit prefix (`feat`, `fix`, `refactor`, `chore`, `test`, `docs`, `perf`, `security`). Drives the branch prefix and the `type:*` label.
+- **Type:** conventional-commit prefix (`feat`, `fix`, `refactor`, `chore`, `test`, `docs`, `perf`, `build`, `ci`, `security`). Drives the branch prefix and the `type:*` label.
 - **Flag:** exact flag name (default off), or `none` if it ships user-ready. This is the single source for the flag.
 - **Depends on:** other slice numbers or specs that must merge first; `—` if independent.
 - **Complexity:** `low` is under ~150 added source lines, `med` under ~500, `high` is more than that or more than one concern. A `high` slice is a smell to re-slice; if you keep it, add a `## Slicing` section saying why one PR is still defensible.
