@@ -43,7 +43,7 @@ claude plugin validate .
 claude --plugin-dir .
 ```
 
-Skills and agents are discovered from `skills/` and `agents/`; nothing needs registering. `install.sh` and `uninstall.sh` only handle the global `CLAUDE.md`, the status line and `settings.json`.
+Skills and agents are discovered from `skills/` and `agents/`; nothing needs registering. `install.sh` and `uninstall.sh` only handle the global `CLAUDE.md` and `settings.json`.
 
 ### Commit Conventions
 

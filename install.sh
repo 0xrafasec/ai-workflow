@@ -8,7 +8,6 @@ set -euo pipefail
 # carry the things below, so this script symlinks them from this clone:
 #
 #   dotfiles/CLAUDE.md      -> $CLAUDE_DIR/CLAUDE.md
-#   statusline-command.sh   -> $CLAUDE_DIR/statusline-command.sh
 #   settings.json           -> $CLAUDE_DIR/settings.json   (primary dir only)
 #
 # Usage:
@@ -72,8 +71,7 @@ link() {
 
 mkdir -p "$CLAUDE_DIR"
 
-link "dotfiles/CLAUDE.md"    "CLAUDE.md"
-link "statusline-command.sh" "statusline-command.sh"
+link "dotfiles/CLAUDE.md" "CLAUDE.md"
 
 # settings.json is per-user (gitignored). Seed it from the tracked example on a
 # fresh clone so the symlink target exists.

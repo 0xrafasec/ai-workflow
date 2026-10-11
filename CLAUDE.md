@@ -11,7 +11,7 @@ This repo is two things: the `wf` Claude Code plugin, and the personal config fi
 - `agents/reviewer.md` — the plugin's reviewer agent (`wf:reviewer`)
 - `hooks/hooks.json`, `hooks/session-fetch.sh` — the plugin's SessionStart hook
 - `dotfiles/CLAUDE.md` — global defaults, symlinked to `~/.claude/CLAUDE.md` by `install.sh`
-- `statusline-command.sh`, `settings.json` — symlinked into `~/.claude/` by `install.sh`
+- `settings.json` — your untracked settings, symlinked into `~/.claude/` by `install.sh`
 - `CLAUDE.md` (this file) — project-specific rules, loaded only when `cwd` is this repo
 - `extras/` — opt-in personal skills, only installed via `./install.sh --extra`
 

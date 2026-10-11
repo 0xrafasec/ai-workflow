@@ -17,7 +17,7 @@
   <a href="#how-it-works">How it works</a> ·
   <a href="#skills">Skills</a> ·
   <a href="#pick-your-path">Pick your path</a> ·
-  <a href="#optional-global-conventions-and-status-line">Conventions &amp; status line</a> ·
+  <a href="#optional-global-conventions">Global conventions</a> ·
   <a href="#documentation">Docs</a>
 </p>
 
@@ -54,7 +54,7 @@ That is the whole loop. Everything else in this README is detail.
 | **Trunk-based by construction** | Short-lived branches, one PR per slice, slices of at most 200 non-test lines. [Why and how →](docs/TRUNK_BASED_WORKFLOW.md) |
 | **Writer / reviewer separation** | The session that wrote the code never reviews it, and merging stays your decision unless you run `/wf:autopilot`. |
 | **A session-start hook** | Fetches the remote and warns Claude when your branch is behind or has diverged, before any work starts. |
-| **Optional extras** | Global conventions for every project, and a status line that stays quiet until something needs a decision. |
+| **Optional global conventions** | A `CLAUDE.md` applied to every project: verification, commit style, the trunk rules, review before merge. |
 
 ## How it works
 
@@ -151,9 +151,9 @@ Not every change needs every step.
 | A planned phase to deliver unattended | `/wf:autopilot --phase <NNN>` (add `--supervised` to keep the merge) |
 | A decision worth remembering | `/wf:adr` |
 
-## Optional: global conventions and status line
+## Optional: global conventions
 
-A plugin cannot ship a global `CLAUDE.md`, a status line, or user settings. To get those, clone the repo and run the installer:
+A plugin cannot ship a global `CLAUDE.md` or user settings. To get those, clone the repo and run the installer:
 
 ```bash
 git clone https://github.com/rafagomes/ai-workflow.git
@@ -161,13 +161,12 @@ cd ai-workflow
 ./install.sh
 ```
 
-It symlinks three files into `~/.claude/`. A file already there is moved to `<name>.bak.<timestamp>` first:
+It symlinks two files into `~/.claude/`. A file already there is moved to `<name>.bak.<timestamp>` first:
 
 | Installed as | What it is |
 |---|---|
 | `~/.claude/CLAUDE.md` | Conventions applied to every project: verify before claiming done, conventional commits split by concern, spec first, a fresh reviewer for every branch, human-gated merges, the trunk rules |
-| `~/.claude/statusline-command.sh` | The status line below (needs `jq`) |
-| `~/.claude/settings.json` | Your settings, seeded from `settings.example.json` on first run and never tracked. The seed holds a desktop-notification hook, the status line with a 30s refresh, and a plugin list (`wf` plus a handful of official plugins) with this repo registered as a marketplace. It sets no permission mode and no model — read it before the first run |
+| `~/.claude/settings.json` | Your settings, seeded from `settings.example.json` on first run and never tracked. The seed holds a desktop-notification hook and a plugin list (`wf` plus a handful of official plugins) with this repo registered as a marketplace. It sets no permission mode and no model — read it before the first run |
 
 `./uninstall.sh` removes the symlinks that point into this clone and restores the backups.
 
@@ -221,36 +220,6 @@ Skills used to be symlinked into `~/.claude/skills/` and invoked by bare name (`
 
 </details>
 
-### Status line
-
-One row in Claude Code's status bar, and a second only when a rate limit needs attention:
-
-```
-ai-workflow · main ✚2 · Opus 5 (1M) · high · ctx 69k/1M
-5h ███████░  88% ↻ today 22:00 (39m)
-```
-
-| Row | Shows |
-|---|---|
-| **1 — identity** | Directory, git branch and uncommitted count, model, reasoning effort (plus `⚡` in fast mode and any non-default output style), and the context in absolute tokens |
-| **2 — rate-limit alert** | A 5-hour or 7-day window, drawn only once it reaches 70% used, with a usage bar, the **local clock time the allowance resets**, and a countdown |
-
-<details>
-<summary><strong>Colours, thresholds and tuning</strong></summary>
-
-<br/>
-
-- **Colours.** Limit bars are green below 70%, amber from 70–89%, red at 90%+. The context count is graded on absolute tokens: amber past 150k (`CLAUDE_STATUSLINE_CTX_IDEAL`), red once auto-compact is close.
-- **Threshold.** Set `CLAUDE_STATUSLINE_LIMIT_SHOW` to another percentage to move the 70% threshold, or to `0` to always show both windows.
-- **Unambiguous reset stamps.** `today 22:00` and `tomorrow 05:00` when the reset is that close, the full `Mon 10 Aug 05:00` otherwise — a bare weekday would be ambiguous for the 7-day window.
-- **No context bar or percentage.** On a 1M window the percentage stays in single digits for a whole session, so the token count carries the meaning and its colour says whether to act.
-- **Cost appears only on API-key billing**, from `cost.total_cost_usd`. On a Claude.ai subscription the figure is notional and is not shown.
-- **Set `refreshInterval`** in `settings.json` (30s is a good default) so the countdown keeps ticking while the session is idle.
-- **Width-adaptive** via `$COLUMNS` (needs Claude Code ≥ 2.1.153): countdowns drop below 90 columns, limit bars below 70, the context window size below 80.
-- Honours `NO_COLOR`, runs a single `jq` pass, caches `git status` for 3s, and always exits 0 — a broken status line is worse than a plain one.
-
-</details>
-
 ## Under the hood
 
 <details>
@@ -285,9 +254,8 @@ ai-workflow/
 ├── agents/reviewer.md         # The reviewer agent
 ├── hooks/                     # SessionStart hook: fetch and report a stale branch
 ├── dotfiles/CLAUDE.md         # Global conventions (symlinked to ~/.claude/CLAUDE.md)
-├── statusline-command.sh      # Status line script
 ├── settings.example.json      # Seed for your untracked settings.json
-├── install.sh / uninstall.sh  # Symlink the three personal files above
+├── install.sh / uninstall.sh  # Symlink the two personal files above
 ├── extras/                    # Opt-in personal skills (./install.sh --extra)
 ├── CLAUDE.md                  # Rules for working IN this repo (not installed)
 └── docs/
@@ -310,7 +278,7 @@ Edit the sources in this repo, never the installed copies. To try a change befor
 claude --plugin-dir /path/to/ai-workflow
 ```
 
-`claude plugin validate .` checks the manifests and every skill and agent definition. `dotfiles/CLAUDE.md` and `statusline-command.sh` are symlinked, so edits to them apply immediately.
+`claude plugin validate .` checks the manifests and every skill and agent definition. `dotfiles/CLAUDE.md` is symlinked, so edits to it apply immediately.
 
 </details>
 
@@ -323,8 +291,8 @@ claude --plugin-dir /path/to/ai-workflow
 | [Changelog](CHANGELOG.md) | What changed in each version |
 | [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Code of Conduct](CODE_OF_CONDUCT.md) | Project policies |
 
-**Related:** [claude-code-mods](https://github.com/rafagomes/claude-code-mods) — optional mods for the Claude Code interface (`english-coach`, `toolbar`), installed separately.
+**Related:** [claude-code-mods](https://github.com/rafagomes/claude-code-mods) — optional mods for the Claude Code interface (`english-coach`, `toolbar`) and the status line that used to ship here, installed separately.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) — Rafa Gomes
