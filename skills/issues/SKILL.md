@@ -26,30 +26,21 @@ The argument is one of:
 
 No argument? Default to `docs/roadmap/README.md` if it exists; otherwise prompt.
 
-## Transport: GitHub MCP first, `gh` fallback
+## Transport: `gh` CLI
 
-Prefer the **GitHub MCP** (tool names starting with `mcp__github__*` or similar) for every read and write. It gives structured JSON in/out and avoids shelling out.
+Every read and write goes through the `gh` CLI. Run `gh auth status` once at skill start; if it fails, tell the user to run `gh auth login` (their call — don't do it for them) and stop.
 
-Detection order at skill start:
-1. If `mcp__github__*` tools are available in this session, use them. Call `mcp__github__authenticate` (or the equivalent) first if the server reports unauthenticated. If the MCP tool list includes create/update/list tools for issues, milestones, and labels, run the entire skill through MCP.
-2. If GitHub MCP is **not** available, or a specific action isn't exposed by the MCP, fall back to the `gh` CLI. Run `gh auth status` once; if it fails, tell the user to run `gh auth login` (their call — don't do it for them) and stop.
-3. **Never mix** mid-run for the same action type. Pick one transport per session; if you start on MCP and hit a missing tool, switch everything remaining to `gh` rather than interleaving.
-
-The MCP-equivalent operations map to these `gh` calls (shown as the fallback reference — use the MCP tool first when present):
-
-| Operation | MCP (preferred) | `gh` fallback |
-|-----------|-----------------|---------------|
-| List milestones | `mcp__github__list_milestones` | `gh api "repos/{owner}/{repo}/milestones?state=all" --jq '.[]'` |
-| Create milestone | `mcp__github__create_milestone` | `gh api "repos/{owner}/{repo}/milestones" -f title=... -f description=...` |
-| List labels | `mcp__github__list_labels` | `gh label list --json name,color` |
-| Create label | `mcp__github__create_label` | `gh label create "<name>" --color <hex>` |
-| Create issue | `mcp__github__create_issue` | `gh issue create --title ... --body-file <tmp> --milestone "..." --label "..."` |
-| View issue | `mcp__github__get_issue` | `gh issue view <N> --json title,state,milestone,labels,body` |
-| Edit issue | `mcp__github__update_issue` | `gh issue edit <N> --title ... --add-label ... --remove-label ... --milestone ...` |
-| Close issue | `mcp__github__close_issue` | `gh issue close <N> --comment "..."` |
-| List issues | `mcp__github__list_issues` | `gh issue list --state all --json number,title,labels,milestone` |
-
-If the exact MCP tool name differs from the table, use whichever MCP tool matches the operation — inspect the available MCP tools, don't hard-code the name.
+| Operation | Command |
+|-----------|---------|
+| List milestones | `gh api "repos/{owner}/{repo}/milestones?state=all" --jq '.[]'` |
+| Create milestone | `gh api "repos/{owner}/{repo}/milestones" -f title=... -f description=...` |
+| List labels | `gh label list --json name,color` |
+| Create label | `gh label create "<name>" --color <hex>` |
+| Create issue | `gh issue create --title ... --body-file <tmp> --milestone "..." --label "..."` |
+| View issue | `gh issue view <N> --json title,state,milestone,labels,body` |
+| Edit issue | `gh issue edit <N> --title ... --add-label ... --remove-label ... --milestone ...` |
+| Close issue | `gh issue close <N> --comment "..."` |
+| List issues | `gh issue list --state all --json number,title,labels,milestone` |
 
 ## User prompts — use `AskUserQuestion`
 
@@ -70,11 +61,11 @@ If two decisions are needed back-to-back (e.g., horizon choice + dry-run confirm
 
 ## Preflight
 
-1. **Pick transport** (above). Stop if neither works.
+1. **Check `gh auth status`** (above). Stop if it fails.
 2. **Confirm we're in a git repo with a GitHub remote** — `git remote get-url origin` and check it's a github.com URL. If not, stop.
 3. **Read the source file(s) top-to-bottom** — parse the Tasks and Slices tables, collect `Type`, `Complexity`, `Feature flag`, `Dependencies`, `Spec`, and the existing `Issue:` / `Issues:` columns.
 4. **Detect already-filed issues.**
-   - For each row that already has a `#<N>` in the `Issue` column, fetch the issue (MCP `get_issue` or `gh issue view`).
+   - For each row that already has a `#<N>` in the `Issue` column, fetch the issue (`gh issue view`).
    - Classify each as `match` (still aligned with the source), `drift` (title/labels/milestone or body need an update), or `gone` (issue was closed or deleted).
    - Print the summary in text: `X rows already filed: Y match / Z drift / W gone`.
    - Then call `AskUserQuestion` (see "User prompts" above) with a single `Reconcile` question to choose the bulk action (Update in place / Close + refile / Skip). If the user picks "Other" and names specific rows, re-plan per-row before proceeding.
@@ -88,7 +79,7 @@ If two decisions are needed back-to-back (e.g., horizon choice + dry-run confirm
 - **Description:** copy the phase's `## Context` paragraph (truncate to ~500 chars).
 - **Due date:** skip unless the phase file names one.
 
-Create via MCP `create_milestone` (preferred) or `gh api "repos/{owner}/{repo}/milestones" -f title="..." -f description="..."` (fallback).
+Create via `gh api "repos/{owner}/{repo}/milestones" -f title="..." -f description="..."`.
 
 ## Issue shape
 
@@ -110,7 +101,7 @@ Create via MCP `create_milestone` (preferred) or `gh api "repos/{owner}/{repo}/m
 - `spec-ready` — if the spec exists and has a filled-in Verification section.
 - `blocked` — if `Dependencies` names another task whose issue is still open.
 
-**Bootstrap the labels on first run.** Via MCP `list_labels` + `create_label` (preferred) or `gh label list --json name --jq '.[].name'` + `gh label create "<name>" --color <color>` (fallback). Enumerate existing labels and create only what's missing, using this default palette:
+**Bootstrap the labels on first run.** Use `gh label list --json name --jq '.[].name'` + `gh label create "<name>" --color <color>`. Enumerate existing labels and create only what's missing, using this default palette:
 
 - `type:feat` — `1d76db` (blue)
 - `type:fix` — `d73a4a` (red)
@@ -163,7 +154,7 @@ Create via MCP `create_milestone` (preferred) or `gh api "repos/{owner}/{repo}/m
 Filed by `/issues` from `<source-file>`.
 ```
 
-Create via MCP `create_issue` (preferred; pass title/body/milestone/labels as fields) or `gh issue create --title "..." --body-file <tmp> --milestone "Phase NNN — <name>" --label "type:feat" --label "complexity:med" ...` (fallback).
+Create via `gh issue create --title "..." --body-file <tmp> --milestone "Phase NNN — <name>" --label "type:feat" --label "complexity:med" ...`.
 
 ## Dependencies: two-pass resolution
 
@@ -180,7 +171,7 @@ Blocked by {{issue:atlassian.001}}, {{issue:atlassian.004}}.
 
 Any `#` token you write at this stage is a bug. If a dependency is external (already filed), write its real `#N` directly — those are stable.
 
-**Pass 2 — rewrite once the mapping is known.** After all issues in this batch are filed and you have a `slice-id → #N` map (e.g., `atlassian.001 → #48`), walk every filed issue in the batch, substitute each `{{issue:<slice-id>}}` token with the corresponding `#<N>`, and update the body via MCP `update_issue` / `gh issue edit --body-file <tmp>`. Pass 2 is also where you update the **source spec files' Dependencies fields** if they used slice-id references — the canonical form in the repo should match the canonical form on GitHub.
+**Pass 2 — rewrite once the mapping is known.** After all issues in this batch are filed and you have a `slice-id → #N` map (e.g., `atlassian.001 → #48`), walk every filed issue in the batch, substitute each `{{issue:<slice-id>}}` token with the corresponding `#<N>`, and update the body via `gh issue edit --body-file <tmp>`. Pass 2 is also where you update the **source spec files' Dependencies fields** if they used slice-id references — the canonical form in the repo should match the canonical form on GitHub.
 
 **Idempotency.** On re-runs, any `{{issue:…}}` token still present in a filed issue body means pass 2 was interrupted; resolve it. Any `#N` already in place that matches the current mapping is left alone.
 
