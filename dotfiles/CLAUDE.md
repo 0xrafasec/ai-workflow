@@ -1,48 +1,45 @@
 # Global Defaults
 
 ## Verification
-- Always verify work before claiming completion: run lint/build/tests and check outputs against the stated design or spec references.
-- Before saying you're done, run lint, typecheck, and tests, and paste the tail of each output. If anything fails, fix and re-run.
+- Run the project's lint, typecheck and tests before saying a change is done, and fix what fails. Report each check in one line (command, result); paste output only for a failure.
+- If the project has no such checks, say so and say what you verified instead. Never report a check you did not run.
+- Check the result against the spec or design it implements, not only against the checks.
 
 ## Workflow
-- Spec first, code second - read the spec before implementing
-- Commit messages use conventional commits: feat:, fix:, refactor:, chore:, test:, docs:, security:
-- Split commits by logical concern; each commit leaves the codebase working
-- Security-sensitive changes require the built-in `/security-review` before PR
-- **Writer/reviewer pattern — ALWAYS trigger a fresh reviewer.** This is an obligation, not just a prohibition. "Don't review your own code" is true but insufficient: once an implementation is on a branch, actively spawn a reviewer with clean context — the `wf:reviewer` agent (which `/wf:pr` dispatches by default), or a fresh session. Do this every time, unprompted. Never skip it because the diff is small, test-only, or "obviously fine".
-- **Merging is gated on me, not on the review passing.** Default: after the review, report the findings and stop — I merge. Merge autonomously only when I have said so for that specific piece of work ("autonomous", "you can merge", "merge if it passes", or by invoking `/wf:autopilot` without `--supervised`). That authorization is per-task and never carries to the next one.
+- Spec first, code second: read the spec before implementing. A change with no spec (a fix, a small chore) does not need one written for it.
+- Commits are conventional (`feat:`, `fix:`, `refactor:`, `chore:`, `test:`, `docs:`, `perf:`, `security:`), split by logical concern, and each leaves the codebase working.
+- Security-sensitive changes — auth, crypto, input parsing, secrets, permissions, anything that runs automatically — get the built-in `/security-review` before the PR is marked ready.
 
-## UI Work
-- Before implementing UI work, always load and reference the Paper design source; do not proceed without it.
+## Review
+- **Every PR that changes behaviour is reviewed by a fresh context before it is ready** — the `wf:reviewer` agent, which `/wf:pr` dispatches, or a fresh session. The context that wrote the code never reviews it. Do this unprompted; a small or test-only diff is not a reason to skip it.
+- **One reviewer per PR, not per commit.** Fix `HIGH` and `MED` findings and re-review once per round, at most two rounds. `LOW` findings are fixed or listed, and never trigger another round. A PR that has not converged after two rounds stays a draft and comes to me with the findings.
+- **What may skip the reviewer:** a change that cannot alter behaviour — a typo or wording fix in docs, a changelog or version bump, a pure file move, a revert. Say in the PR that it was not reviewed and why.
+- **Merging is my call, not the review's.** After the review, report the findings and stop. Merge on your own only when I said so for that piece of work ("merge it", "merge if it passes", "autonomous", or `/wf:autopilot` without `--supervised`). That authorization covers the work I gave it for and does not carry to the next task.
 
-## File Conventions
-- Prefer refactoring existing files over creating new ones; ask before introducing parallel docs/configs.
-
-## Git Workflow
-- Check you are in the correct project directory and that it is a git repo before running commit/PR/bootstrap commands.
-- Sync with the remote before starting work: `git fetch origin` at the start of every session and before each new task/phase, and check for divergence from the tracking branch — the user works from parallel sessions/machines, so the remote may have moved. If histories have diverged, reconcile before building (published history wins by default); never force-push over unseen remote commits.
+## Git
+- Before a commit or PR, confirm you are in the intended repository and on the intended branch.
+- Sync before starting: `git fetch` at the start of a session and before each new task, and check the branch against its upstream — I work from parallel sessions and machines. If histories have diverged, reconcile before building; published history wins, and never force-push over commits you have not seen.
 
 ## Trunk-Based Workflow
-- `main` is trunk; always deployable. No long-lived `develop` or `release/*` branches.
-- Branches are short-lived (hours to ~2 days). Name them by type: `feat/<slug>`, `fix/<slug>`, `refactor/<slug>`, `docs/<slug>`, `chore/<slug>`, `test/<slug>`, `perf/<slug>`, `security/<slug>`.
-- **One branch = one PR = one vertical slice.** Target ≤200 lines of diff **excluding tests** — count source lines only. Test lines never count toward the budget, so never trim or skip tests to fit. If larger, split before opening the PR.
-- Large features ship as N independently mergeable slices off `main`, not stacked on each other. If a slice isn't user-ready, merge it behind a feature flag so `main` stays deployable.
-- Worktrees live **outside the repo** (e.g., `../<repo>-<slug>`) to keep `git status` clean. If kept inside, add the directory to `.gitignore`.
-- After merge: delete the branch (local + remote) and remove the worktree. Never reuse a merged branch.
-- Canonical feature flow: `/wf:spec` → (slice if >200 lines) → `/wf:issues` (file milestones + issues on GitHub) → `/wf:feature <spec>` → look over the diff → `/wf:commit` → `/wf:pr` (opens a draft, dispatches the fresh-context `wf:reviewer` agent, fixes findings, marks ready — **the review is never optional**) → report findings → merge (mine to call unless I declared the task autonomous) → delete branch + worktree.
-- Full guide (why, how, recipes, FAQ): `docs/TRUNK_BASED_WORKFLOW.md` in the ai-workflow repo.
+- `main` is trunk and always deployable. No long-lived `develop` or `release/*` branches.
+- Branches are short-lived (hours to about two days) and named by type: `feat/<slug>`, `fix/<slug>`, `refactor/<slug>`, `docs/<slug>`, `chore/<slug>`, `test/<slug>`, `perf/<slug>`, `security/<slug>`.
+- **One branch = one PR = one concern.** A PR should be something a reviewer can hold in one pass: one vertical slice, independently mergeable, with its docs.
+- **Size is a signal, not a quota.** Past roughly **500 changed source lines**, stop and ask whether it is really one concern; split it if it is two. Tests, generated files, lockfiles, pure moves or renames, and deletions do not count, so never trim tests to fit. Do not split one concern into several PRs just to stay under the number — small PRs that only make sense together cost more review than one coherent PR.
+- Large features ship as independently mergeable slices off `main`, not stacked on each other. A slice that is not user-ready merges behind a feature flag.
+- Worktrees live outside the repo (`../<repo>-<slug>`), so `git status` stays clean.
+- After a merge, delete the branch (local and remote) and remove the worktree. Never reuse a merged branch.
+- A PR description has a summary, a test plan, and — when they apply — a link to the spec and a security note.
+- The reasoning, recipes and FAQ are in `docs/TRUNK_BASED_WORKFLOW.md` in the ai-workflow repo.
 
 ## Code Quality
-- No unnecessary abstractions - keep code as simple as it can be
-- No speculative features or premature generalization
-- Validate at system boundaries (user input, external APIs), trust internal code
-- Tests must cover verification criteria from the spec
+- Keep code as simple as it can be: no unnecessary abstractions, no speculative features, no premature generalization.
+- Validate at system boundaries (user input, external APIs); trust internal code.
+- Tests cover the verification criteria in the spec.
+- Prefer changing an existing file to adding a new one, and ask before introducing a parallel doc or config.
 
-## PR Structure
-- Keep PRs focused: one concern per PR, under 200 lines of **non-test** diff when possible (see **Trunk-Based Workflow** above for slicing rules and feature-flag expectations)
-- PR description must include: summary, link to spec, security checklist, test plan
+## UI Work
+- When the project has a design source (a Paper file, `docs/design/`), load it before implementing UI and build from it. If there is none, say so rather than inventing one.
 
-## Toolkit (available skills)
-- The workflow skills come from the `wf` plugin and are invoked as `/wf:<name>`: `prd`, `architecture`, `threat-model`, `adr`, `roadmap`, `spec`, `issues`, `feature`, `fix`, `commit`, `pr`, `autopilot`, `new-project`, `design`, `verify-design`. One agent: `wf:reviewer`.
+## Toolkit
+- The workflow skills come from the `wf` plugin (`/wf:spec`, `/wf:feature`, `/wf:fix`, `/wf:commit`, `/wf:pr`, …); the usual path is spec → feature → commit → PR.
 - To review someone else's branch or PR, use the built-in `/code-review`; for a security pass, the built-in `/security-review`.
-- Plugin sources and maintenance rules live in the `ai-workflow` repo. Maintenance instructions only apply when working inside that repo — see its project-level `CLAUDE.md`.
