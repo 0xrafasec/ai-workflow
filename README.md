@@ -50,8 +50,6 @@ Idea → PRD (why) → Architecture + TDD + Security (how) → Roadmap (when) �
 
 A feature spec references the architecture, technical design, and threat model — so implementation agents have complete context without repetition.
 
-For a detailed explanation with diagrams, see [docs/spec-driven-development.md](docs/spec-driven-development.md).
-
 ### Model Strategy
 
 The workflow uses a tiered model strategy — Opus for decisions, Sonnet for execution:
@@ -327,8 +325,8 @@ ai-workflow/
 │   ├── verify-design/
 │   └── factory/
 └── docs/
-    ├── WORKFLOW.md            # Full workflow documentation
-    └── REFERENCE.md           # Quick reference for all components
+    ├── TRUNK_BASED_WORKFLOW.md  # Trunk-based rules, recipes, FAQ
+    └── SKILL_QUALITY.md         # How skills are benchmarked
 ```
 
 ## Configuration
@@ -375,9 +373,8 @@ Details worth knowing:
 
 | Document | Description |
 |----------|-------------|
-| [Spec-Driven Development](docs/spec-driven-development.md) | Detailed explanation of the SDD methodology with Mermaid diagrams |
-| [Workflow Guide](docs/WORKFLOW.md) | Full workflow guide — phases, conventions, CI/CD integration, team practices |
-| [Reference](docs/REFERENCE.md) | Quick reference for all agents, skills, settings, and daily patterns |
+| [Trunk-Based Workflow](docs/TRUNK_BASED_WORKFLOW.md) | Why and how the toolkit enforces trunk-based development — rules, recipes, FAQ |
+| [Skill Quality](docs/SKILL_QUALITY.md) | How skills are benchmarked before and after changes |
 | [Changelog](CHANGELOG.md) | Release notes — what changed in each version |
 
 ## Modifying the Toolkit
