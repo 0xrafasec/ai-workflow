@@ -46,10 +46,10 @@ Build on existing architecture, TDD, and security docs if they exist — referen
 
 ## Slice (trunk-based)
 
-Estimate implementation size in **source lines only** — tests are written in full regardless and never count toward the budget. Per the global **Trunk-Based Workflow** (root `CLAUDE.md`), each PR targets ≤200 non-test lines.
+Estimate implementation size in **source lines only** — tests are written in full regardless and never count toward the budget. Per the global **Trunk-Based Workflow** (root `CLAUDE.md`), each PR targets ≤500 non-test lines.
 
-- **≤200 lines:** one spec, one PR. Single file at `docs/specs/NNN_<slug>.md`.
-- **>200 lines:** slice into N independently mergeable vertical slices, each ≤200 lines, under `docs/specs/NNN_<slug>/`.
+- **≤500 lines:** one spec, one PR. Single file at `docs/specs/NNN_<slug>.md`.
+- **>500 lines:** slice into N independently mergeable vertical slices, each ≤500 lines, under `docs/specs/NNN_<slug>/`.
 
 **Slicing rules:**
 - Every slice must leave `main` deployable. If a slice adds user-visible behavior that isn't ready to ship, name a **feature flag** (default off) in its spec.
@@ -98,7 +98,7 @@ Write each sub-spec using the single-file template below.
 
 ## Write
 
-Single (≤200 line) spec or sub-spec:
+Single (≤500 line) spec or sub-spec:
 
 ```markdown
 # Feature: [Name]
