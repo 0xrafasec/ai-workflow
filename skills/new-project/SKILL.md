@@ -72,7 +72,7 @@ Create a `CLAUDE.md` at the project root tailored to the language/framework:
 ## Workflow
 - All PRs require passing CI + human review
 - Commit messages use conventional commits (feat:, fix:, refactor:, chore:)
-- Security-sensitive changes require /sec-review before PR
+- Security-sensitive changes require /security-review before PR
 - Features start with a spec in docs/specs/
 ```
 

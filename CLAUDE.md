@@ -9,7 +9,7 @@ This repo is the source of truth for everything installed under `~/.claude/`:
 - `dotfiles/CLAUDE.md` — global defaults, symlinked to `~/.claude/CLAUDE.md`
 - `CLAUDE.md` (this file) — project-specific rules, loaded only when `cwd` is this repo
 - `skills/<name>/SKILL.md` — slash-command skills, symlinked into `~/.claude/skills/`
-- `agents/`, `commands/`, `reviews/`, `settings.json` — symlinked similarly via `install.sh`
+- `agents/`, `settings.json` — symlinked similarly via `install.sh`
 - `extras/` — opt-in personal skills, only installed via `./install.sh --extra`
 
 ## Editing rules

@@ -18,7 +18,7 @@ set -euo pipefail
 #
 #   CLAUDE_DIR="$HOME/.claude-work" ./install.sh
 #
-# Skills, agents, commands, review guides and the global CLAUDE.md are shared
+# Skills, agents and the global CLAUDE.md are shared
 # toolkit — every profile gets them. settings.json is not: it carries the
 # profile's account, theme, model, status line and enabled plugins, which is
 # the whole reason to run separate profiles. So it is linked only into the
@@ -186,7 +186,7 @@ echo ""
 MATCHED=0
 
 # Ensure ~/.claude exists
-mkdir -p "$CLAUDE_DIR"/{agents,commands,skills}
+mkdir -p "$CLAUDE_DIR"/{agents,skills}
 
 # Install the aiwf launcher so follow-up commands work from a clone.
 link_bin "aiwf" "aiwf"
@@ -211,14 +211,10 @@ fi
 link "statusline-command.sh"    "statusline-command.sh"
 
 # Agents
-link "agents/security-reviewer.md"      "agents/security-reviewer.md"
-link "agents/architecture-reviewer.md"   "agents/architecture-reviewer.md"
-
-# Commands
-link "commands/sec-review.md"   "commands/sec-review.md"
+link "agents/reviewer.md"   "agents/reviewer.md"
 
 # Skills
-for skill in feature fix spec review new-project prd autopilot roadmap architecture tdd security adr rfc commit pr design verify-design factory issues; do
+for skill in feature fix spec new-project prd autopilot roadmap architecture tdd security adr rfc commit pr design verify-design factory issues; do
     mkdir -p "$CLAUDE_DIR/skills/$skill"
     link "skills/$skill/SKILL.md" "skills/$skill/SKILL.md"
 done
@@ -231,12 +227,6 @@ if [ "$INSTALL_EXTRAS" -eq 1 ]; then
         link "extras/skills/$skill" "skills/$skill"
     done
 fi
-
-# Language-specific review guides
-mkdir -p "$CLAUDE_DIR/reviews"
-for guide in go rust typescript python; do
-    link "reviews/$guide.md" "reviews/$guide.md"
-done
 
 echo ""
 if [ ${#FILTERS[@]} -gt 0 ] && [ "$MATCHED" -eq 0 ]; then
