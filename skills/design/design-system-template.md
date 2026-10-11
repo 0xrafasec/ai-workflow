@@ -14,17 +14,17 @@ This document is the **rules and tokens** layer. The **pixel-perfect source of t
 **Non-negotiable checklist before you implement any component:**
 
 1. **Find the component in the Paper Canvas Map below.** It lists every artboard and which component lives where. Never implement from the markdown alone.
-2. **Pull exact values from Paper via MCP**, not from screenshots:
-   - `mcp__paper__get_basic_info` once per session (confirms you're on the right file)
-   - `mcp__paper__get_tree_summary` on the target artboard to locate nodes
-   - `mcp__paper__get_jsx` on the specific component node — returns exact JSX + styles
-   - `mcp__paper__get_computed_styles` — returns the resolved values (colors, sizes, shadows, etc.)
-   - `mcp__paper__get_fill_image` when the fill is an image/gradient
-3. **Screenshots are the lowest-trust input.** Use `mcp__paper__get_screenshot` to sanity-check your implementation visually, but never read sizes or colors off a PNG.
+2. **Pull exact values from the Paper MCP**, not from screenshots (the tool prefix depends on how Paper is installed):
+   - `get_basic_info` once per session (confirms you're on the right file)
+   - `get_tree_summary` on the target artboard to locate nodes
+   - `get_jsx` on the specific component node — returns exact JSX + styles
+   - `get_computed_styles` — returns the resolved values (colors, sizes, shadows, etc.)
+   - `get_fill_image` when the fill is an image/gradient
+3. **Screenshots are the lowest-trust input.** Use `get_screenshot` to sanity-check your implementation visually, but never read sizes or colors off a PNG.
 4. **If Paper and this doc disagree, Paper wins.** Update the doc immediately with the correct value; don't silently diverge.
 5. **After implementing, run `/wf:verify-design`** to diff the built UI against Paper and close any gaps before declaring done.
 
-Agents calling this from `/wf:feature`, `/wf:fix`, `/wf:autopilot`, or any UI work **must** follow this protocol. Steps 1–3 are not optional — implementing from markdown + memory produces drift.
+Agents doing UI work, including via `/wf:feature`, `/wf:fix` and `/wf:autopilot`, follow this protocol. Steps 1–3 matter most: implementing from markdown alone produces drift.
 
 ## Paper Canvas Map
 
@@ -33,7 +33,7 @@ Every component and screen has a named location on the Paper canvas. Cite the pa
 | Artboard | Node ID | What lives here | Consult for |
 |---|---|---|---|
 | `Design System` | [id] | Tokens, palette, type, spacing, status badges, icon rules, tooltip spec | Any token-level question (color, space, radius, type) |
-| `Component Library` | [id] | All reusable components in every state (buttons, inputs, controls, badges, avatars, nav, tables, overlays, tooltips, pane chrome, stat tile, memory row, etc.) | Any component implementation — pull JSX/styles from here |
+| `Component Library` | [id] | All reusable components in every state (buttons, inputs, controls, badges, avatars, nav, tables, overlays, tooltips, etc.) | Any component implementation — pull JSX/styles from here |
 | `<Flow> / <Screen> / <Viewport>` | [id] | One screen or state in its flow group | Page-level layout, page-specific composition |
 
 Rule: **every component spec below ends with a `📐 Paper reference` line** pointing to its canvas location. No exceptions.
@@ -93,13 +93,13 @@ Rule: **every component spec below ends with a `📐 Paper reference` line** poi
 ### Dark Mode
 | Token | Light | Dark | Usage |
 |-------|-------|------|-------|
-| `color-bg-primary` | #ffffff | #0f0f10 | Page background |
-| `color-bg-secondary` | #fafafa | #18181b | Card / surface background |
-| `color-bg-tertiary` | #f4f4f5 | #27272a | Subtle backgrounds, hover |
-| `color-border` | #e4e4e7 | #3f3f46 | Borders, dividers |
-| `color-text-primary` | #18181b | #fafafa | Headings, primary text |
-| `color-text-secondary` | #52525b | #a1a1aa | Secondary text, labels |
-| `color-text-muted` | #a1a1aa | #71717a | Placeholder, disabled |
+| `color-bg-primary` | [from palette] | [from palette] | Page background |
+| `color-bg-secondary` | [from palette] | [from palette] | Card / surface background |
+| `color-bg-tertiary` | [from palette] | [from palette] | Subtle backgrounds, hover |
+| `color-border` | [from palette] | [from palette] | Borders, dividers |
+| `color-text-primary` | [from palette] | [from palette] | Headings, primary text |
+| `color-text-secondary` | [from palette] | [from palette] | Secondary text, labels |
+| `color-text-muted` | [from palette] | [from palette] | Placeholder, disabled |
 
 **Dark mode rules:**
 - Invert the neutral scale — dark backgrounds, light text
@@ -112,10 +112,6 @@ Rule: **every component spec below ends with a `📐 Paper reference` line** poi
 ### Application Rule
 60% neutral backgrounds / 30% surface & secondary / 10% accent & CTA
 
-**Multi-hue distribution within the 10% accent slice:**
-- Primary color: ~60% of accent usage (buttons, active states, key CTAs)
-- Secondary color: ~30% of accent usage (secondary actions, charts, category indicators, badges)
-- Accent color: ~10% of accent usage (highlights, premium badges, warm touches — used sparingly for maximum impact)
 
 ## Typography
 
@@ -124,7 +120,7 @@ Rule: **every component spec below ends with a `📐 Paper reference` line** poi
 - **Body:** [chosen body font], sans-serif
 - **Mono:** [chosen mono font], monospace (code, data)
 
-### Scale (Major Third — 1.25 ratio)
+### Type scale (override to suit the aesthetic)
 | Token | Size | Weight | Line Height | Letter Spacing | Usage |
 |-------|------|--------|-------------|----------------|-------|
 | `text-xs` | 12px | 400 | 1.5 | 0.01em | Captions, fine print |
@@ -179,25 +175,11 @@ Rule: **every component spec below ends with a `📐 Paper reference` line** poi
 
 [Updated as screens are created — each new screen adds its reusable components here]
 
-**Every component block below ends with a `📐 Paper reference` line pointing to the exact node on the canvas. Implementers MUST pull JSX/computed-styles from that node via MCP — do not translate from the markdown alone.**
+**Every component block below ends with a `📐 Paper reference` line pointing to the exact node on the canvas. Implementers pull JSX and computed styles from that node via the Paper MCP rather than translating from the markdown alone.**
 
-### Buttons
-- **Primary:** [primary-500] bg, white text, radius-md, text-sm 500 weight, px-4 py-2
-- **Secondary:** transparent bg, [neutral-200] border, [neutral-800] text
-- **Ghost:** transparent bg, no border, [primary-500] text
-- **Destructive:** [error] bg, white text
-- 📐 **Paper reference:** `Component Library ▸ Buttons` — all variants × states live here. Pull with `get_jsx` per state.
-
-### Inputs
-- [neutral-100] bg, [neutral-200] border, radius-md, text-base, px-3 py-2
-- Focus: [primary-500] border, [primary-50] bg
-- Error: [error] border, [error] text below
-- 📐 **Paper reference:** `Component Library ▸ Inputs` — default, focus, filled, error, disabled.
-
-### Cards
-- [white or neutral-50] bg, shadow-md, radius-lg, p-6
-- Hover: shadow-lg, transition 200ms ease
-- 📐 **Paper reference:** `Component Library ▸ Cards`
+### [Component name, e.g. Buttons]
+- [Variants and their token usage, e.g. Primary: primary-500 bg, radius-md, text-sm 500]
+- 📐 **Paper reference:** `Component Library ▸ [Section]` — variants × states live here. Pull with `get_jsx` per state.
 
 ### Navigation
 - [defined when first nav screen is created]
@@ -227,5 +209,5 @@ Rule: **every component spec below ends with a `📐 Paper reference` line** poi
 
 ### Color Independence
 - All status indicators use icon + color (never color alone)
-- P&L values use +/- prefix alongside green/red
+- Positive/negative values use a +/- sign or arrow alongside color
 - Form errors use icon + colored border + text message
