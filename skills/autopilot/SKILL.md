@@ -143,7 +143,7 @@ Base: origin/main (run `git fetch origin` first)   Branch: <the branch name from
 2. Implement exactly what the spec says. Record any judgement call in the PR body.
 3. Write tests at the layers above, covering every verification criterion in the spec.
 4. Run lint, typecheck and tests; fix until all pass. No PR while any of them fails, and never `--no-verify`.
-5. Commit with conventional messages, split by logical concern. Push. Open a PR against main with: summary, spec link, `Closes #<N>` if there is an issue, a security note, and a test plan listing each verification criterion.
+5. Commit with conventional messages, split by logical concern. Push. Open a PR against main with: summary, spec link, `Closes #<N>` if there is an issue, a security checklist when the change touches a trust boundary, and a test plan listing each verification criterion.
 6. Report: branch, PR URL, the tail of each check, and any blocker.
 
 You may be resumed with review findings to fix — keep your context.
