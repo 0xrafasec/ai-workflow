@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a new skill, agent, review guide, or improvement
+about: Suggest a new skill, agent, or improvement
 title: ""
 labels: enhancement
 assignees: ""
