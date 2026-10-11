@@ -35,7 +35,7 @@ Never switch modes silently. If the trunk branch turns out to be protected again
 
 ### 1. Parse the scope
 
-For each phase extract: name, goal, feature flag (if any), and its tasks — each with name, spec path, files touched, dependencies, verification command and test layers. A task with `Complexity: high` points at a sliced spec directory; every slice is its own task and its own PR.
+For each phase extract: name, goal, feature flag (if any), and its tasks — each with name, spec path, files touched, dependencies, verification command and test layers. A task with `Complexity: high` normally points at a sliced spec directory (a single-file `high` spec is one concern its author chose to keep together, and is one task); every slice is its own task and its own PR.
 
 If a task's spec is missing, or the roadmap lacks the detail to plan (no file list, unclear dependencies), **stop and say what is missing**. Do not invent specs — that is `/wf:spec`'s job, and it needs the user.
 
@@ -78,7 +78,7 @@ Goal: <goal>   Flag: <feature flag or none>
 Wave 1: <task>, <task>     Wave 2: <task>
 ```
 
-Skip phases whose Status in the roadmap index is `Completed`. Within a phase, look each task up by its branch before planning it: `gh pr list --state all --head <branch> --json number,state`. The branch name is derived from the task, never invented per run — the one `/wf:feature` would create from the spec's metadata: `<type>/<issue-number>-<slug>`, or `<type>/<slug>` when there is no issue, the slug being the spec file's name — so a later run finds the same PR.
+Skip phases whose Status in the roadmap index is `Completed`. Within a phase, look each task up by its branch before planning it: `gh pr list --state all --head <branch> --json number,state`. The branch name is derived from the task, never invented per run — the one `/wf:feature` defines under "Branch": `<type>/<issue-number>-<slug>`, or `<type>/<slug>` when there is no issue, where the slug is the spec (or slice) file's name without its numeric prefix and `.md` — so a later run, or a PR someone opened with `/wf:feature`, is found under the same name.
 
 - `MERGED` → done; leave it out of the plan.
 - `OPEN` → an earlier run got this far. Do not dispatch a second writer; pick the PR up at step 5b. If its last comment is already a `PASS` verdict, go straight to 5e (autonomous) or report it as waiting on the human (`--supervised`). If it needs fixes there is no writer to resume, so dispatch a fresh one on the existing branch with the findings; the same goes for a rebase in step 5e.
@@ -98,7 +98,7 @@ Tasks in one wave run concurrently — dispatch all their writers in a single me
 
 **e. Merge** (autonomous mode only). On `PASS` with the security gate clear:
 
-- Wait for remote CI: `gh pr checks <n> --watch --fail-fast`. A failing check goes to the fix loop like a reviewer finding; a PR with no checks configured is fine. Commits pushed after a `PASS` that change behaviour need a fresh review first.
+- Wait for remote CI: `gh pr checks <n> --watch --fail-fast`. A failing check goes to the fix loop like a reviewer finding; a PR with no checks is fine only if the repo has none (no `.github/workflows/`, no required checks) — right after a push they may simply not have registered yet, so retry once after a short wait before concluding that. Commits pushed after a `PASS` that change behaviour need a fresh review first.
 - `gh pr merge <n> --rebase --delete-branch`. Do not `--squash`, which destroys the writer's logical commit split, unless the project's `CLAUDE.md` mandates it. If preflight showed rebase merges disabled, use `--merge` and say so.
 - If the branch no longer applies because `<base>` moved under a parallel wave, have the writer rebase and re-verify, then merge. A conflict that is not mechanical is a stop condition.
 - Remove the writer's worktree. Never reuse a merged branch.

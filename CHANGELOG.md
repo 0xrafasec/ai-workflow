@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The size gate in `/feature` and `/fix` compared `origin/<base>...HEAD`, which ignores uncommitted work — and both skills stop at the working tree, so it measured nothing. It now diffs the working tree against the merge base and counts untracked source files.
+- `/pr`, re-run on a branch that already has an open PR, was told to continue at the step after the reviewer dispatch, which skipped the review.
+- The `reviewer` agent diffed against the local base branch when `/pr` dispatched it, so a stale local trunk pulled merged commits into the review. It now fetches and diffs against `origin/<base>` in every case.
+- The branch slug was undefined in `/feature` and defined differently in `/autopilot`, so autopilot could miss a PR opened with `/feature` and dispatch a second writer. `/feature` now defines it (spec or slice file name without its numeric prefix) and `/autopilot` points there.
+- `/issues` let a caller's claim that "the plan is approved" stand in for the user's confirmation in a headless run. A headless run now always prints the plan and stops.
+- `/issues` matches an existing milestone by its `Phase NNN` prefix and reads roadmaps written before 1.1 (`# Phase:`, `Feature flag`, `Dependencies`); the title for a standalone single-file spec is restored.
+- `/commit` handles a repository with no commits when clearing the index, and no longer assumes the trunk is `main`. `/autopilot` retries once before treating a PR as having no remote checks.
+
+### Changed
+Behaviour that changed in 1.1.0 and was missing from its notes:
+- `/issues` no longer applies the `spec-ready` and `blocked` labels, no longer writes a `## Branch` section into issue bodies, files issues in dependency order instead of patching `{{issue:…}}` placeholders in a second pass, and asks about the next phase only for a full roadmap.
+- `/new-project` no longer generates a `security-scan` Makefile target or runs the test suite from pre-commit.
+- `/commit` proposes a branch when run on the trunk branch or a detached HEAD.
+- `/pr` reuses an open PR for the branch instead of trying to create another.
+- `/roadmap` writes `Design reference: MISSING` for a UI task with no design source instead of stopping to ask.
+- The `reviewer` agent reports a check that fails for environmental reasons (a tool missing in its sandbox) as `LOW` rather than as a failing check.
+
 ## [1.1.0] - 2026-10-11
 
 A quality pass over every skill: sharper descriptions, about 40% less text, one vocabulary across the planning skills, and a reworked `/new-project`.

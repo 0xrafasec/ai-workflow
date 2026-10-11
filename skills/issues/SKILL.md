@@ -10,7 +10,7 @@ File GitHub milestones and issues for: $ARGUMENTS
 `/wf:issues` is the hand-off between planning artifacts (`docs/roadmap/*.md`, `docs/specs/*.md`) and GitHub. It files:
 
 - **One milestone per phase:** `Phase NNN — <phase-name>`
-- **One issue per task/slice:** title `[NNN.N] <task-name>` for a roadmap task, `[NNN.N.N] <slice-name>` for a slice of a roadmap task, `[<feature>.NNN] <slice-name>` for a standalone spec's slice. `N` in `[NNN.N]` is the task's position in its phase (Task 2 gives `[003.2]`), not the letter suffix of the spec file.
+- **One issue per task/slice:** title `[NNN.N] <task-name>` for a roadmap task, `[NNN.N.N] <slice-name>` for a slice of a roadmap task, `[<feature>.NNN] <slice-name>` for a standalone spec's slice, `<feature-name>` for a standalone single-file spec. `N` in `[NNN.N]` is the task's position in its phase (Task 2 gives `[003.2]`), not the letter suffix of the spec file.
 - **Labels:** `type:<type>`, `complexity:<low|med|high>`, `mvp` or `post-mvp` (if derivable), `needs-spec` if the spec file does not exist yet.
 - **Body:** spec link, file list, dependencies, verification command, flag, acceptance criteria from the spec.
 
@@ -38,7 +38,7 @@ Use `AskUserQuestion` at each decision point: structured options are unambiguous
 - **Proceed?** (dry-run confirmation): Yes / Cancel.
 - **Next phase** (after each milestone batch, only when the user chose Full roadmap): Yes, continue / Stop here.
 
-If `AskUserQuestion` is unavailable (headless run, or dispatched by `/wf:autopilot` with the plan already approved), do not file anything on your own: print the dry-run plan and stop, unless the caller said the plan is approved.
+If `AskUserQuestion` is unavailable (a headless run), do not file anything: print the dry-run plan and stop. Creating milestones and issues is outward-facing, so only the user's own answer approves it.
 
 ## Preflight
 
@@ -54,7 +54,7 @@ If `AskUserQuestion` is unavailable (headless run, or dispatched by `/wf:autopil
 
 ## Milestone shape
 
-- **Title:** `Phase NNN — <phase-name>`, from the phase file's `# Phase NNN: <name>` heading or the task's `Milestone:` field.
+- **Title:** `Phase NNN — <phase-name>`, copied from the task's `Milestone:` field when the roadmap has one, otherwise built from the phase file's `# Phase NNN: <name>` heading. Match an existing milestone by its `Phase NNN` prefix, not the full title, so a differently-cased name does not create a second one. A roadmap written before 1.1 may use `# Phase: <name>`, `Feature flag` and `Dependencies`: read those as `# Phase NNN: <name>` (number from the file name), `Flag` and `Depends on`.
 - **Description:** the phase's `## Context` paragraph, truncated to ~500 chars.
 - **Due date:** skip unless the phase file names one.
 
