@@ -1,68 +1,41 @@
 ---
 name: fix
-description: "Diagnose and fix a bug from a description, a stack trace, or a GitHub issue link — reproduce and patch. Stops with a working tree the user can review. Use when the user says 'fix this', 'debug X', 'something is broken', 'why isn't Y working', pastes an error/traceback, or links an issue expecting a patch. Covers root-cause diagnosis, not just symptom patching."
-argument-hint: "<description | issue link>"
+description: "Diagnose the root cause of a bug and fix it with a regression test, from a description, a stack trace or error output, or a GitHub issue link. Stops with a working tree to review. Use for 'fix this', 'this is broken', a pasted traceback, or an issue link where a patch is expected. For a feature use /wf:feature."
+argument-hint: "<description | issue link | error text>"
 ---
 Fix the bug described in $ARGUMENTS.
 
-## Parse Arguments
+## Parse arguments
 
-The argument can be:
-- **Bug description:** `/wf:fix users can't login when password contains special chars`
-- **Issue link:** `/wf:fix https://github.com/org/repo/issues/42`
+- **Description:** `/wf:fix users can't login when password contains special chars`
+- **Issue link or number:** `/wf:fix https://github.com/org/repo/issues/42`. Run `gh issue view <url|N> --comments` and read the description, comments and labels. If `gh` is unavailable, ask for the issue text.
+- **Error output or stack trace:** use it as the reproduction.
 
 ## Branch
 
-Before writing code, ensure you are on a short-lived branch named `fix/<slug>`. If currently on `main`/`master`, create the branch now. See the global **Trunk-Based Workflow** in root `CLAUDE.md` for branch/worktree conventions.
+Run `git fetch origin`, and if the tree is dirty with unrelated changes, say so before starting. Resolve the trunk branch as `<base>`: `gh repo view --json defaultBranchRef -q .defaultBranchRef.name`, falling back to `git symbolic-ref --short refs/remotes/origin/HEAD` with `origin/` stripped. Work on a short-lived branch cut from `origin/<base>`, not from another feature branch: `fix/<N>-<slug>` when there is an issue, `fix/<slug>` otherwise. Worktree conventions are in your global `CLAUDE.md` (Trunk-Based Workflow).
 
 ## Steps
 
-1. **Understand the bug**
+1. **Reproduce and locate.** Check the project's `CLAUDE.md`, `README.md` and `docs/` for context (for a UI bug, `docs/design/DESIGN_SYSTEM.md` too, if it exists). Find the code path, then reproduce the failure by running the failing test or the reported steps, telling the user what you are doing. Check `git log` on the affected files for the change that may have introduced it. If you cannot reproduce it, say so, list what you tried and ask for the missing input; do not patch on a guess.
 
-   - If given an issue link: fetch it with `gh issue view` and read the full description, comments, and labels.
-   - If given a description: use it directly.
-   - Check for existing docs (`CLAUDE.md`, `README.md`, `docs/`) to understand the project context.
+2. **Diagnose the root cause.** Trace the data flow from input to the failure point. Explain the cause, not the symptom, in 1-2 sentences before changing code.
 
-2. **Reproduce and locate**
+3. **Pick the test layer** as in `/wf:feature` step 2 (`docs/ARCHITECTURE.md` Testing Strategy, else inferred from the project): unit for pure logic, integration at a boundary (API, database, service interaction), e2e only if a critical user flow broke and had no e2e coverage.
 
-   - Search the codebase for the relevant code paths (use Grep, Glob, read key files).
-   - Identify the component, module, or layer where the bug lives.
-   - If there are existing tests, run them to see the current failure state.
-   - If reproduction requires specific steps, tell the user what you're doing.
+4. **Fix.** Write the regression test first and watch it fail for the right reason. Then make the minimal change that fixes the root cause, without refactoring surrounding code, and confirm the test passes. If the bug is in auth, crypto, input parsing or secrets, note that it needs `/security-review` before the PR.
 
-3. **Diagnose root cause**
+5. **Quality checks.** Run the project's lint, typecheck and the full test suite (so a regression elsewhere shows up); report each in one line (command, result) and paste output only for a failure.
 
-   - Read the relevant code carefully. Trace the data flow from input to failure point.
-   - Check `git log` on the affected files for recent changes that may have introduced the bug.
-   - Identify the root cause — not just the symptom. Explain it to the user in 1-2 sentences before proceeding.
+   **Size gate.** Measure the hand-written source this change adds:
+   `git diff --numstat origin/<base>...HEAD -- . ':(exclude,glob)**/tests/**' ':(exclude,glob)**/__tests__/**' ':(exclude,glob)**/*_test.*' ':(exclude,glob)**/*.test.*' ':(exclude,glob)**/*.spec.*' ':(exclude,glob)**/*_spec.*' ':(exclude,glob)**/test_*' ':(exclude,glob)**/*.lock' ':(exclude,glob)**/*-lock.*'`
+   Sum the first column. Leave out generated files and files that only moved. Over ~500: decide whether it is one concern. One concern: carry on, and say in the report how large it is and why it stays together. More than one (a fix that grows into a refactor is two slices): stop and propose a split via AskUserQuestion, and do not leave it in the working tree without the user's override.
 
-4. **Discover test strategy** — Before writing the fix, understand the project's test approach:
+6. **Report and stop.** Do not review your own fix: `/wf:pr` dispatches `wf:reviewer` once the commits exist. Summarize:
+   - **Root cause** - 1-2 sentences on what was broken.
+   - **Files changed** - `git diff --stat`, or a short list.
+   - **Regression tests** - layers added, where they live, how to re-run them.
+   - **Verification** - each check in one line.
+   - **Issue link** - if one was provided.
 
-   a. **Check for a documented strategy:** Read `docs/ARCHITECTURE.md` (in older projects, `docs/TECHNICAL_DESIGN_DOCUMENT.md`) — if it has a Testing Strategy section, follow it.
-   b. **If there is none:** Infer from the codebase — look for existing test directories, frameworks, patterns, and naming conventions (same discovery as `/wf:feature` step 2).
-   c. **Determine which test layers the bug touches** — a bug in a pure function needs a unit test; a bug in an API endpoint needs an integration test; a bug in a user flow may need an e2e test.
-
-5. **Fix**
-
-   - Make the minimal change that fixes the root cause. Don't refactor surrounding code.
-   - Add regression tests at the appropriate layer(s):
-     - **Unit test:** Always — proves the root cause logic is fixed
-     - **Integration test:** If the bug is at a component boundary (API, database, service interaction)
-     - **E2E test:** Only if the bug broke a critical user flow and no e2e coverage existed for it
-   - Each regression test must fail without the fix and pass with it.
-   - Run the project's test suite and fix any failures.
-
-6. **Run quality checks** — Run the project's lint, typecheck, and test commands (check CLAUDE.md or Makefile for the right commands). Run ALL test layers, not just unit tests.
-
-   **Slice-size gate (trunk-based).** Before reporting completion, measure the hand-written source this change adds: run `git diff --numstat main...HEAD -- . ':(exclude,glob)**/tests/**' ':(exclude,glob)**/*_test.*' ':(exclude,glob)**/*.test.*' ':(exclude,glob)**/test_*' ':(exclude,glob)**/*.lock' ':(exclude,glob)**/*-lock.*'` (or the same pathspec against `git diff` for unstaged work) and sum the first column — added lines. Leave out generated files and files that only moved; deletions are not in that column. If the total is over **~500 lines**, decide whether the change is one concern. **One concern:** carry on, and say in your report how large it is and why it stays together. **More than one:** stop and propose a split via **AskUserQuestion** — a "fix" that balloons into a refactor is two slices, not one — and do not leave it in the working tree without the user's explicit override.
-
-7. **Report and stop.** Do not review your own fix here — `/wf:pr` dispatches the fresh-context `wf:reviewer` agent once the commits exist. Summarize for the user:
-   - **Root cause** — 1–2 sentences on what was actually broken.
-   - **Files changed** — `git diff --stat` output, or a short list.
-   - **Regression tests** — which layers (unit/integration/e2e) you added, where they live, how to re-run them.
-   - **Verification** — lint / typecheck / test commands run and their tail output.
-   - **Issue link** — if one was provided, so the user can reference it later.
-
-   Suggested conventional-commit subject for when the user commits: `fix: <what was broken>` (describe the bug, not the change). Example: `fix: login fails when password contains special characters`.
-
-   Then stop. The user reviews the working tree and decides next steps (typically `/wf:commit`, then `/wf:pr`, which runs the review).
+   Then stop. The user reviews the working tree and decides next steps, typically `/wf:commit` then `/wf:pr`.
