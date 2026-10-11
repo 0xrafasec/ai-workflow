@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `/roadmap` asks, in its interview, whether to file GitHub milestones and issues when the roadmap is settled. On Yes it hands off to `/issues` at the end, and only once the roadmap is on the trunk branch; for a roadmap still on a branch or in an open PR it prints the command to run after the merge. `/issues` keeps its own dry-run and confirmation, and stays the way to file issues for an existing roadmap, phase or spec. The question is skipped when there is no GitHub remote, and a run that cannot ask the user files nothing.
+
 ## [1.1.1] - 2026-10-11
 
 Fixes for defects the review of 1.1.0 found after it shipped, and the 1.1.0 notes it was missing.

@@ -1,6 +1,6 @@
 ---
 name: roadmap
-description: "Turn the PRD and architecture into a phased delivery plan: docs/roadmap/README.md plus one numbered phase file per phase (docs/roadmap/NNN_<phase>.md), each with sized, ordered tasks that name their spec, flag, files and verification command. Use when the user wants to plan phases, sequence a build, decide what ships first or where the MVP ends, or says 'lay out the roadmap', 'what order should we ship in', 'split this into phases', 'add a phase for X'. Not for GitHub issues (/wf:issues) or a single feature's spec (/wf:spec)."
+description: "Turn the PRD and architecture into a phased delivery plan: docs/roadmap/README.md plus one numbered phase file per phase (docs/roadmap/NNN_<phase>.md), each with sized, ordered tasks that name their spec, flag, files and verification command. Use when the user wants to plan phases, sequence a build, decide what ships first or where the MVP ends, or says 'lay out the roadmap', 'what order should we ship in', 'split this into phases', 'add a phase for X'. Can hand the finished roadmap to /wf:issues at the end. Not for filing issues for a roadmap that already exists (/wf:issues) or a single feature's spec (/wf:spec)."
 argument-hint: "[phase name | spec path]"
 ---
 Create a phased roadmap for: $ARGUMENTS
@@ -28,6 +28,8 @@ If neither a PRD nor an architecture doc exists, say so and offer two choices: c
 Draft the phase split, the MVP boundary and the parallelism from the docs first. Ask only what the docs leave open, at most 4 questions in one AskUserQuestion call; if the user cannot be asked, proceed from the docs and list each assumption as an open question. Typical gaps: priorities and deadlines, how many parallel worktrees/agents are practical (solo or team), where a human review is needed before continuing, build/test/lint commands if the project's `CLAUDE.md` lacks them. Push back where two tasks touch the same files: they must be sequential.
 
 A full roadmap needs an MVP boundary: the last phase required to ship the MVP. Take it from the PRD's "in scope (v1)" section; if that does not settle it, ask.
+
+**GitHub hand-off.** In the same AskUserQuestion call, always ask: "File GitHub milestones and issues when the roadmap is settled?" with options *Yes, once it is on the trunk branch* / *No, only the roadmap*. It counts toward the 4. Skip it when the repository has no GitHub remote (`gh repo view` fails). The answer is intent only: nothing is filed during the interview or while the roadmap is being written, because the draft still changes and issue titles are numbered by task position. Act on it in After Writing. If the user cannot be asked, the answer is No.
 
 ## Generate the Roadmap
 
@@ -131,7 +133,11 @@ Status is one of `Not started`, `In progress`, `Completed`. `/wf:autopilot` sets
 
 1. Present the roadmap: critical path, parallelization, which tasks have specs. Iterate until the user is satisfied.
 2. Commit the roadmap and any specs; `/wf:autopilot` needs them on the trunk branch.
-3. Suggest the next step:
-   - Specs missing: `/wf:spec <task>` for each (a `high` task gets a sliced spec).
-   - Specs exist: `/wf:issues docs/roadmap/README.md` (or one phase file), then `/wf:autopilot` on the same file.
+3. **Hand off to `/wf:issues`, if the user answered Yes** in the interview. File from what is on the trunk branch, never from a draft:
+   - The roadmap is on the trunk branch (`git fetch`, then the files exist unchanged in `origin/<trunk>`): invoke `/wf:issues` on the file you wrote (`docs/roadmap/README.md` for a full roadmap, the phase file for a single phase). It runs its own preflight, dry-run and confirmation; do not file anything yourself and do not answer its questions for the user.
+   - The roadmap is still on a branch or in an open PR: do not file. Say so and give the command to run after the merge: `/wf:issues docs/roadmap/README.md` (or the phase file).
+   - The user answered No or could not be asked: do not file, and do not ask again.
+4. Suggest the next step:
+   - Specs missing: `/wf:spec <task>` for each (a `high` task gets a sliced spec). Issues filed before a spec exists carry `needs-spec`; re-run `/wf:issues` after writing it.
+   - Specs exist and issues are not filed: `/wf:issues docs/roadmap/README.md` (or one phase file), then `/wf:autopilot` on the same file.
    - One task: `/wf:feature docs/specs/NNN_<name>.md` (or a slice file `docs/specs/NNN_<name>/MMM_<slice>.md`).
