@@ -1,8 +1,9 @@
 ---
 name: threat-model
-description: "Create or update docs/THREAT_MODEL.md — STRIDE-style threat model, trust boundaries, attack surface, mitigations. Use when the user asks for a threat model, attack-surface analysis, STRIDE pass, or says 'what could go wrong security-wise', 'identify the threats', 'lock this down before launch', 'review the security posture'."
+description: "Create or update docs/THREAT_MODEL.md — a STRIDE-style design-level threat model with trust boundaries, attack surface, threats and mitigations. Use when the user asks for a threat model, an attack-surface analysis or a STRIDE pass, or says 'what could go wrong security-wise', 'identify the threats', 'lock this down before launch'. For reviewing a specific diff or branch, use the built-in /security-review instead."
+argument-hint: "[focus area]"
 ---
-Create the threat model. Argument: $ARGUMENTS
+Create or update the threat model. Argument: $ARGUMENTS (an optional focus area; update only that part and leave the rest)
 
 ## Context Gathering
 
@@ -11,20 +12,14 @@ Before interviewing, understand the system's security surface:
 1. **Check for existing docs:**
    - Read `docs/THREAT_MODEL.md` — if revising, don't start from scratch
    - Read `docs/ARCHITECTURE.md` for system structure and trust boundaries
-   - Read `CLAUDE.md`, `README.md`
+   - Read the project's `CLAUDE.md` and `README.md`
 
-2. **Explore the codebase for security-relevant patterns:**
-   - Look for auth middleware, JWT handling, session management
-   - Check for input validation patterns (or lack thereof)
-   - Look for database queries (raw SQL vs ORM/parameterized)
-   - Check for secrets management (env vars, config files, hardcoded values)
-   - Check for exposed endpoints (route definitions, API handlers)
-   - Read `docker-compose.yml` or deployment config for service exposure
-   - Summarize what you found to the user — "Here's what I see from a security perspective: ..."
+2. **Survey the codebase** for auth, input handling, data access (raw SQL vs parameterized), secrets, exposed endpoints and service exposure (`docker-compose.yml`, deployment config).
+3. Summarize what you found — "Here's what I see from a security perspective: ..."
 
 ## Interview
 
-Use AskUserQuestion to understand the security landscape. Adapt based on what the codebase reveals.
+Use AskUserQuestion, asking only what the code and docs do not answer, in rounds of at most 3-4 questions. If the user cannot be asked (headless run, or dispatched by `/wf:autopilot`), write from what exists and list each assumption as an open question.
 
 1. **Trust boundaries** — What is trusted? What is untrusted? Where are the boundaries?
 2. **Authentication** — How do users/agents/services prove identity? What mechanisms exist today?
@@ -32,7 +27,7 @@ Use AskUserQuestion to understand the security landscape. Adapt based on what th
 4. **Sensitive data** — What data is sensitive? Credentials, PII, financial? Where does it live? How is it protected at rest and in transit?
 5. **Attack surface** — What is exposed to the internet? To local users? To other services? What inputs does the system accept?
 6. **Threat actors** — Who would attack this? Script kiddies, insiders, nation states? What are their capabilities?
-7. **Compliance** — Any regulatory requirements? SOC2, GDPR, HIPAA, PCI?
+7. **Compliance** — Any regulatory requirements? SOC2, GDPR, HIPAA, PCI? (skip if none apply)
 8. **Existing security measures** — What's already in place? What's missing?
 
 For inherited projects: "I see you're using X for auth — is that intentional or legacy? I notice Y has no input validation — is that a known gap?"
@@ -44,8 +39,7 @@ Write to `docs/THREAT_MODEL.md`:
 ```markdown
 # Threat Model
 
-**Version:** [version]
-**Date:** [date]
+**Last updated:** [date]
 
 ## Trust Assumptions
 
@@ -66,14 +60,13 @@ Write to `docs/THREAT_MODEL.md`:
 
 ## Threats
 
-### [Threat Category 1: e.g., Agent Impersonation]
+[Walk each trust boundary and data flow through S/T/R/I/D/E (spoofing, tampering, repudiation, information disclosure, denial of service, elevation of privilege); omit categories that do not apply. If a control cannot be confirmed from the code, mark it `unverified`, never `implemented`.]
 
-| # | Attack | Impact | Likelihood | Defense |
-|---|--------|--------|------------|---------|
-| 1 | [attack description] | [what happens] | [Low/Med/High] | [how it's prevented] |
+### [Component or flow]
 
-### [Threat Category 2]
-...
+| # | STRIDE | Attack | Impact | Likelihood | Defense | Status |
+|---|--------|--------|--------|------------|---------|--------|
+| 1 | [S/T/R/I/D/E] | [attack description] | [what happens] | [Low/Med/High] | [how it's prevented] | [implemented / unverified / missing] |
 
 ## Sensitive Data Inventory
 
@@ -81,17 +74,13 @@ Write to `docs/THREAT_MODEL.md`:
 |------|---------------|---------|------------|----------------|
 | [data type] | [level] | [protection] | [protection] | [who can access] |
 
-## Security Controls
+## Gaps (not yet implemented)
 
-### Implemented
-- [Control 1 — what it protects against]
-
-### Required (not yet implemented)
-- [Control 1 — what it would protect against, priority]
+- [Control — what it protects against — priority]
 
 ## Compliance Requirements
 
-[If applicable. Regulatory frameworks, what they require, current status.]
+[Only if applicable. Regulatory frameworks, what they require, current status.]
 ```
 
 ## After Writing
@@ -100,3 +89,4 @@ Write to `docs/THREAT_MODEL.md`:
 2. Suggest next steps based on what exists:
    - No architecture doc? → "Define system structure with `/wf:architecture`"
    - Ready to build? → "Create feature specs with `/wf:spec <name>`, then `/wf:roadmap`"
+3. Remind the user that security-sensitive PRs still need `/security-review`; this document is its input, not a substitute.
