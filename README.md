@@ -39,7 +39,8 @@ Requires [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and `gh`.
 Inside Claude Code:
 
 ```
-/plugin install wf --marketplace rafagomes/ai-workflow
+/plugin marketplace add rafagomes/ai-workflow
+/plugin install wf@ai-workflow
 ```
 
 Or from a shell:
@@ -69,11 +70,11 @@ cd ai-workflow
 | `statusline-command.sh` | `~/.claude/statusline-command.sh` | The status line described below (needs `jq`) |
 | `settings.json` | `~/.claude/settings.json` | Your settings, seeded from `settings.example.json` on first run and never tracked |
 
-An existing file is backed up to `<name>.bak.<timestamp>` before it is replaced, and `./uninstall.sh` removes the symlinks and restores the backup. Flags: `--no-settings` leaves `settings.json` alone, `--with-settings` forces it, `--extra` also links the personal skills under `extras/`.
+An existing file is backed up to `<name>.bak.<timestamp>` before it is replaced, and `./uninstall.sh` removes the symlinks that point into this clone and restores the backup. Flags: `--no-settings` leaves `settings.json` alone, `--with-settings` forces it, `--extra` also links the personal skills under `extras/`.
 
 **Multiple Claude Code profiles.** Claude Code isolates profiles through `CLAUDE_CONFIG_DIR`. Point `CLAUDE_DIR` at a profile to install into it: `CLAUDE_DIR="$HOME/.claude-work" ./install.sh`. A secondary profile keeps its own `settings.json` — account, theme, model and enabled plugins are the reason to have separate profiles — so only the primary `~/.claude` gets the repo's file unless you pass `--with-settings`. The plugin is installed per profile too: run the `claude plugin` commands with `CLAUDE_CONFIG_DIR` set.
 
-**Upgrading from the symlink-based install (before 1.0).** Run `./uninstall.sh` once from your existing clone — it sweeps the old skill, agent, command and review-guide symlinks and the `aiwf` launcher — then `git pull`, `./install.sh`, and install the plugin.
+**Upgrading from the symlink-based install (before 1.0).** Run `./uninstall.sh` once from your existing clone, at the path the old links point to — it only removes links into its own clone. It sweeps the old skill, agent, command and review-guide symlinks and the `aiwf` launcher — then `git pull`, `./install.sh`, and install the plugin.
 
 ## Skills
 
@@ -110,7 +111,7 @@ An existing file is backed up to `<name>.bak.<timestamp>` before it is replaced,
 | Skill | What it does |
 |-------|--------------|
 | `/wf:commit` | Splits the working tree into logical conventional commits. Local only |
-| `/wf:pr [--draft] [--no-review]` | Pushes and opens the PR as a **draft**, has the `reviewer` agent review it, fixes HIGH/MED findings (max 2 cycles), then marks it ready |
+| `/wf:pr [--draft] [--no-review]` | Pushes and opens the PR as a **draft**, has the `wf:reviewer` agent review it, fixes HIGH/MED findings (max 2 cycles), then marks it ready |
 
 There is no review skill. To review someone else's branch or PR, use Claude Code's built-in `/code-review`; for a security pass, the built-in `/security-review`.
 
