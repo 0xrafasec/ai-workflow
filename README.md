@@ -115,7 +115,7 @@ flowchart LR
 | Skill | Does |
 |---|---|
 | `/wf:design [flow]` | Design system, brand guide and screens in Paper (needs the Paper MCP) |
-| `/wf:verify-design [page]` | Diffs the running UI against the Paper artboards with Playwright and fixes mismatches in place |
+| `/wf:verify-design [page]` | Diffs the running UI against the Paper artboards in a real browser and fixes mismatches in place (needs the Paper and Playwright MCPs) |
 
 ### Build
 
@@ -124,7 +124,7 @@ flowchart LR
 | `/wf:feature <spec>` | Implements one spec or slice with tests, runs the checks, and stops at the working tree. `--commit` also commits; `--pr` also opens the PR and runs its review |
 | `/wf:fix <description or issue>` | Root-cause diagnosis, minimal fix, regression test |
 | `/wf:autopilot [roadmap or phase file]` | Delivers a roadmap, a phase (`--phase <NNN>`) or a GitHub milestone (`--milestone <N>`): each task is developed in a worktree, reviewed in a fresh context, fixed, and **merged to `main`**. `--supervised` leaves the PRs open for you; `--dry-run` prints the plan. Runs only when you type it |
-| `/wf:new-project <name> [stack]` | Scaffolds a repo: `CLAUDE.md`, Makefile, linter and pre-commit config, lint hook, docs skeleton |
+| `/wf:new-project <name> [stack]` | Scaffolds a new repo: `CLAUDE.md` with the real commands, Makefile with lint and test targets, lint-on-edit hook, secret-scanning pre-commit, docs skeleton. Refuses a non-empty directory unless you confirm. Runs only when you type it |
 
 ### Ship
 
@@ -241,6 +241,7 @@ ai-workflow/
 │   ├── plugin.json            # The wf plugin manifest
 │   └── marketplace.json       # Lets this repo be added as a marketplace
 ├── skills/<name>/SKILL.md     # The 15 skills
+├── skills/<name>/references/  # Templates and per-stack detail a skill reads only when needed
 ├── agents/reviewer.md         # The reviewer agent
 ├── dotfiles/CLAUDE.md         # Global conventions (symlinked to ~/.claude/CLAUDE.md)
 ├── settings.example.json      # Seed for your untracked settings.json

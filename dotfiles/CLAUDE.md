@@ -7,7 +7,7 @@
 
 ## Workflow
 - Spec first, code second: read the spec before implementing. A bug fix, or a chore that adds no behaviour, does not need a spec written for it.
-- Commits are conventional (`feat:`, `fix:`, `refactor:`, `chore:`, `test:`, `docs:`, `perf:`, `security:`), split by logical concern, and each leaves the codebase working.
+- Commits are conventional (`feat:`, `fix:`, `refactor:`, `chore:`, `test:`, `docs:`, `perf:`, `build:`, `ci:`, `security:`), split by logical concern, and each leaves the codebase working.
 - Security-sensitive changes — auth, crypto, input parsing, secrets, permissions, anything that runs automatically — get the built-in `/security-review` before the PR is marked ready.
 
 ## Review

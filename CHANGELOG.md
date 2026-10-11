@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Every skill reviewed against the `skill-creator` writing guide.** Descriptions now say what the skill writes and when to use it, and name the sibling or built-in to use instead where they used to collide (`/threat-model` vs the built-in `/security-review`, `/roadmap` vs `/issues` vs `/spec`). Bodies lost text that did not change behaviour — the fifteen `SKILL.md` files go from about 2,400 lines to about 1,500 — and long templates moved into `references/` files read only at the step that needs them (`/architecture`, `/design`, `/new-project`).
+- **One planning vocabulary.** `/roadmap`, `/spec` and `/issues` used different names for the same fields. They now share `Flag`, `Depends on`, `Complexity: low / med / high` (defined in `/spec`) and `Issue`; phase files are headed `# Phase NNN: <Name>`, which is what `/issues` derives the milestone title from; the roadmap index Status is `Not started`, `In progress` or `Completed`. `/issues` writes the issue number into the spec's `## Trunk Metadata` (or the Slices row), which is where `/feature` and `/autopilot` read it. Branch naming is defined only in `/feature` and `/fix`.
+- **Skills work from the trunk branch, not from `main`.** `/feature`, `/fix`, `/pr` and `/autopilot` resolve the default branch with `gh repo view` and measure against `origin/<base>` after a fetch. The size gate also excludes `__tests__/`, `*.spec.*` and `*_spec.*`.
+- **Skills ask less.** Interviews read the code and docs first and ask only the gaps, at most 3–4 questions per round. `/prd` revises an existing PRD instead of asking whether to start over. When nobody can be asked (headless run, or dispatched by `/autopilot`), a skill proceeds and lists its assumptions.
+- **`/new-project` reworked.** It refuses to scaffold into a non-empty directory unless confirmed, no longer copies the global workflow rules into the generated `CLAUDE.md`, takes per-stack commands from `references/stacks.md` instead of inventing them, and is user-invoked only.
+- **`/pr`** records the review verdict as a PR comment, runs the built-in `/security-review` before marking a security-sensitive PR ready, and prints a cleanup command that works after a rebase or squash merge. **`/autopilot`** checks merge permission and the allowed merge method up front and waits for the PR's remote checks before merging.
+- **`/threat-model`** tables carry a STRIDE column and a status per control; **`/adr`** finds the repo's ADR directory, defaults to `Proposed`, and marks a superseded ADR. Generated documents carry `Last updated` instead of a `Version` nobody could fill.
+- `/design` and `/verify-design` name MCP tools by their short name (the `mcp__…` prefix depends on how the server is installed), load Paper's own guide first, and say what to do when a server is not connected. Model advice is gone from both.
+- Conventional-commit types in the global conventions gain `build:` and `ci:`.
+
+### Fixed
+- `/roadmap` wrote `# Phase: <Name>` while `/issues` derived the milestone title from a `# Phase NNN:` heading, so the title could not be derived.
+- `/commit` told the agent not to `reset` and, two steps later, to `git reset` staged changes.
+- `/pr` measured the commit range against a possibly stale local base branch.
+- `/fix` required the regression test to fail without the fix but never said to write it first.
+
 ## [1.0.0] - 2026-10-11
 
 The toolkit becomes the `wf` Claude Code plugin. Skills are invoked as `/wf:<name>`; the symlink installer, the `aiwf` CLI, the Cursor/Codex adapters, the status line and six skills are gone or merged. See "Removed" for the old → new command map and the README for the upgrade steps.
