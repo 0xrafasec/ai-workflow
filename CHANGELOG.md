@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-11
+
+A quality pass over every skill: sharper descriptions, about 40% less text, one vocabulary across the planning skills, and a reworked `/new-project`.
+
 ### Changed
 - **Every skill reviewed against the `skill-creator` writing guide.** Descriptions now say what the skill writes and when to use it, and name the sibling or built-in to use instead where they used to collide (`/threat-model` vs the built-in `/security-review`, `/roadmap` vs `/issues` vs `/spec`). Bodies lost text that did not change behaviour — the fifteen `SKILL.md` files go from about 2,400 lines to about 1,500 — and long templates moved into `references/` files read only at the step that needs them (`/architecture`, `/design`, `/new-project`).
 - **One planning vocabulary.** `/roadmap`, `/spec` and `/issues` used different names for the same fields. They now share `Flag`, `Depends on`, `Complexity: low / med / high` (defined in `/spec`) and `Issue`; phase files are headed `# Phase NNN: <Name>`, which is what `/issues` derives the milestone title from; the roadmap index Status is `Not started`, `In progress` or `Completed`. `/issues` writes the issue number into the spec's `## Trunk Metadata` (or the Slices row), which is where `/feature` and `/autopilot` read it. Branch naming is defined only in `/feature` and `/fix`.
@@ -217,7 +221,8 @@ The toolkit becomes the `wf` Claude Code plugin. Skills are invoked as `/wf:<nam
 
 Initial tagged release: full SDLC toolkit for AI-assisted coding — skills, agents, review guides, hooks, and the `aiwf` launcher for Claude Code.
 
-[Unreleased]: https://github.com/rafagomes/ai-workflow/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/rafagomes/ai-workflow/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/rafagomes/ai-workflow/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/rafagomes/ai-workflow/compare/v0.6.3...v1.0.0
 [0.3.0]: https://github.com/rafagomes/ai-workflow/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/rafagomes/ai-workflow/compare/v0.1.0...v0.2.0
