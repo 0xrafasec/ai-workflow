@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/speckit-integration.md` — the Spec Kit integration guide had drifted from the skills. `/factory` and `/roadmap` still mention Spec Kit commands; those references are cleaned up separately.
 
 ### Fixed
+- `/new-project` generated an invalid `PostToolUse` hook (old flat shape, no `hooks` array or `type`), told the scaffold to gitignore all of `.claude/` while also creating a committed `.claude/settings.json`, and copied two reviewer agents that had no frontmatter and so never registered. The hook now uses the current schema, only `.claude/settings.local.json` is ignored, and the agent-copy step is gone.
+- `/verify-design` carried paths and commands from one specific project (`web/app/globals.css`, `pnpm --filter web dev`, `localhost:3000`, literal artboard IDs). It now discovers the token sources, dev-server command and check commands from the project, and its description lists trigger phrases.
+- `/issues` preferred a GitHub MCP server using guessed tool names; it now goes through the `gh` CLI only.
 - `aiwf help` documented `CLAUDE_DIR` as "Override Claude config dir (default: ~/.claude)" and `aiwf status` honoured it, but `install.sh` and `uninstall.sh` both hardcoded `$HOME/.claude` — so `CLAUDE_DIR=... aiwf install` reported one directory and symlinked into another. Both scripts read the override now, and `aiwf` exports it so the value reaches them.
 - `aiwf reinstall` silently dropped its arguments (`cmd_reinstall` ignored `"$@"`), so any filter or flag passed to it was accepted and discarded. It forwards them to the install step now.
 - `aiwf uninstall` and `aiwf reinstall` no longer abort with `passthru: unbound variable` on bash 3.2 (stock macOS `/bin/bash`), where an empty array expansion trips `set -u`.
