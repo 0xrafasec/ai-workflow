@@ -10,9 +10,9 @@ Scaffold a new project with the AI-assisted development workflow.
 - `[language/framework]` (optional) — the tech stack, used to tailor Makefile targets, linter config, .gitignore, and pre-commit hooks. Examples: `python`, `python/fastapi`, `go`, `typescript/nextjs`, `rust`. If omitted, you will be asked.
 
 **Examples:**
-- `/new-project my-api python/fastapi` — creates `./my-api/` with Python/FastAPI tooling
-- `/new-project my-cli go` — creates `./my-cli/` with Go tooling
-- `/new-project my-app` — creates `./my-app/`, asks what stack to use
+- `/wf:new-project my-api python/fastapi` — creates `./my-api/` with Python/FastAPI tooling
+- `/wf:new-project my-cli go` — creates `./my-cli/` with Go tooling
+- `/wf:new-project my-app` — creates `./my-app/`, asks what stack to use
 
 ## Process
 
@@ -136,8 +136,8 @@ Create `.gitkeep` files to preserve directory structure:
 Tell the user what was created and suggest next steps:
 1. `cd <project-name>`
 2. `pre-commit install`
-3. `/prd <project-name>` — define what we're building
-4. `/architecture` — define system structure, testing strategy, dev environment, CI/CD
-5. `/threat-model` — define the threat model (if applicable)
-6. `/spec <first-feature>` — write your first feature spec
-7. `/feature docs/specs/<first-feature>.md` — implement it
+3. `/wf:prd <project-name>` — define what we're building
+4. `/wf:architecture` — define system structure, testing strategy, dev environment, CI/CD
+5. `/wf:threat-model` — define the threat model (if applicable)
+6. `/wf:spec <first-feature>` — write your first feature spec
+7. `/wf:feature docs/specs/<first-feature>.md` — implement it

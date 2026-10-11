@@ -2,7 +2,7 @@
 name: pr
 description: "Push the current branch and open a pull request via gh — assumes commits already exist. Use when the user says 'open a PR', 'push this up for review', 'ship this branch', 'create a draft PR', 'put this up on GitHub', or is ready to hand a branch off to reviewers. By default opens the PR as a draft, runs a fresh-context review + bounded fixes, then marks it ready on PASS. Supports --draft (stay draft) and --no-review (skip the review loop)."
 ---
-Open a pull request for the current branch. Assumes commits already exist (from `/commit`, `/feature`, `/fix`, or manual commits).
+Open a pull request for the current branch. Assumes commits already exist (from `/wf:commit`, `/wf:feature`, `/wf:fix`, or manual commits).
 
 **Default flow (draft → review → fix → ready):** the PR is opened as a *draft*, a fresh-context reviewer subagent reviews the committed branch, HIGH/MED findings are fixed in a bounded loop, and the PR is then flipped to *ready* on a passing review. This honours the writer/reviewer rule in root `CLAUDE.md` — a reviewer with cold context always sees the branch before it becomes review-ready. The escape hatches below opt out.
 
@@ -21,7 +21,7 @@ A few things that matter, and why:
 - **Don't force-push any branch without explicit user confirmation.** Even on feature branches, someone may have pulled or based work off it — ask first.
 - **Don't merge, request reviewers, add labels, or close issues as part of this skill.** Those are human judgment calls that depend on team conventions and context this skill doesn't have. Open the PR; let the user drive the rest.
 - **Don't add Claude / Anthropic co-author tags in the PR body.** Co-authorship belongs on individual commits (where configured), not repeated in PR descriptions where it just adds noise.
-- **If the working tree is dirty, stop and point the user at `/commit`.** This skill doesn't commit pre-existing working-tree changes — mixing the two obscures what the PR actually contains. The only commits it makes are review fixes in step 9, staging just the files it fixed.
+- **If the working tree is dirty, stop and point the user at `/wf:commit`.** This skill doesn't commit pre-existing working-tree changes — mixing the two obscures what the PR actually contains. The only commits it makes are review fixes in step 9, staging just the files it fixed.
 
 ## Steps
 
@@ -32,10 +32,10 @@ A few things that matter, and why:
    git remote show origin | grep 'HEAD branch'   # detect base branch (main/master)
    ```
 
-   - **Dirty tree?** Stop and tell the user: *"Working tree has uncommitted changes. Run `/commit` first, then re-run `/pr`."*
+   - **Dirty tree?** Stop and tell the user: *"Working tree has uncommitted changes. Run `/wf:commit` first, then re-run `/wf:pr`."*
    - **On `main` / `master`?** Stop and tell the user: *"You're on `<base>`. Create a feature branch first."*
    - **Branch name doesn't match the trunk-based convention?** (`feat/*`, `fix/*`, `refactor/*`, `docs/*`, `chore/*`, `test/*`, `perf/*`, `security/*`) Warn the user and offer to rename before pushing. The convention lives in root `CLAUDE.md` → **Trunk-Based Workflow**.
-   - **Diff >200 lines?** Run `git diff --stat <base>...HEAD -- . ':(exclude)**/tests/**' ':(exclude)**/*_test.*' ':(exclude)**/*.test.*' ':(exclude)**/test_*'`; if the **non-test** diff exceeds ~200 lines, warn the user and suggest splitting. Proceed only if the user explicitly confirms ("ship it anyway") — this is a warning, not a hard block, since `/pr` runs after commits already exist.
+   - **Diff >200 lines?** Run `git diff --stat <base>...HEAD -- . ':(exclude)**/tests/**' ':(exclude)**/*_test.*' ':(exclude)**/*.test.*' ':(exclude)**/test_*'`; if the **non-test** diff exceeds ~200 lines, warn the user and suggest splitting. Proceed only if the user explicitly confirms ("ship it anyway") — this is a warning, not a hard block, since `/wf:pr` runs after commits already exist.
    - Record the base branch name (usually `main`, sometimes `master` or `develop`).
 
 2. **Gather the commit range** — with the base branch resolved:
@@ -123,11 +123,11 @@ A few things that matter, and why:
 
    **When the review loop runs** (default — anything except `--no-review`), always pass `--draft` here so the branch is never review-ready before its fresh review. When `--no-review` is set, add `--draft` only if the user passed `--draft` (or asked for a draft during approval).
 
-9. **Fresh-context review + bounded fix loop** — **run this by default; skip only when `--no-review` was passed.** You are the writer; you do **not** review your own work (writer/reviewer rule, root `CLAUDE.md`), and an in-session review skill does not count — it runs in your context. Dispatch the `reviewer` agent, which starts cold:
+9. **Fresh-context review + bounded fix loop** — **run this by default; skip only when `--no-review` was passed.** You are the writer; you do **not** review your own work (writer/reviewer rule, root `CLAUDE.md`), and an in-session review skill does not count — it runs in your context. Dispatch the `wf:reviewer` agent, which starts cold:
 
    ```
    Agent(
-     subagent_type: "reviewer",
+     subagent_type: "wf:reviewer",
      description: "Review PR branch",
      prompt: "Base: <base>\nSpec: <spec-path, or 'none'>\nVerify: <the project's lint / typecheck / test commands>"
    )
@@ -148,7 +148,7 @@ A few things that matter, and why:
     - If the review is `NEEDS_HUMAN` → **leave it as a draft** and report the unresolved HIGH/MED findings; the user decides.
     - If `--no-review` was passed → the PR is already in its final state from step 8; nothing to flip.
 
-11. **Return the PR URL and review verdict** — show the PR URL, its final draft/ready state, and the review outcome (`PASS` / `PASS_WITH_NITS` with the LOW nits listed / `NEEDS_HUMAN` with the unresolved items). If the reviewer's `CHECKS` line says a check left the working tree dirty, say so too — otherwise the next `/pr` run stops on a dirty tree with no explanation. This is the final output.
+11. **Return the PR URL and review verdict** — show the PR URL, its final draft/ready state, and the review outcome (`PASS` / `PASS_WITH_NITS` with the LOW nits listed / `NEEDS_HUMAN` with the unresolved items). If the reviewer's `CHECKS` line says a check left the working tree dirty, say so too — otherwise the next `/wf:pr` run stops on a dirty tree with no explanation. This is the final output.
 
 12. **Post-merge cleanup reminder.** After the URL, append a one-liner reminder (do not execute — the PR isn't merged yet):
 

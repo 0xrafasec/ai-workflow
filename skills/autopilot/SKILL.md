@@ -10,15 +10,15 @@ Run the delivery pipeline for: $ARGUMENTS
 
 Autopilot takes planned work and runs the whole delivery pipeline for every task in it — **develop → review → fix → merge to `main`** — looping until the scope is delivered or a real blocker stops it.
 
-You are the **orchestrator**. You parse the scope, dispatch writer agents in worktrees, dispatch the `reviewer` agent on each PR, triage verdicts, perform the mechanical merge, update status, and loop. You do not implement, review, or read diffs yourself; everything intellectual is delegated, and you keep only compact results (`branch`, `PR`, `verdict`) in your own context.
+You are the **orchestrator**. You parse the scope, dispatch writer agents in worktrees, dispatch the `wf:reviewer` agent on each PR, triage verdicts, perform the mechanical merge, update status, and loop. You do not implement, review, or read diffs yourself; everything intellectual is delegated, and you keep only compact results (`branch`, `PR`, `verdict`) in your own context.
 
-This skill can only be invoked by the user typing `/autopilot`. That invocation is what grants merge authority for this run, and only for this run.
+This skill can only be invoked by the user typing `/wf:autopilot`. That invocation is what grants merge authority for this run, and only for this run.
 
 ## Scope
 
-- **`/autopilot docs/roadmap/README.md`** (or no path, if that file exists) — every phase in the roadmap, in order.
-- **`/autopilot docs/roadmap/NNN_<phase>.md`** or **`--phase NNN`** — one phase.
-- **`--milestone <N>`** — one GitHub milestone. Read its title with `gh api "repos/{owner}/{repo}/milestones/<N>"`, match it to the phase file (`/issues` titles milestones `Phase NNN — <phase-name>`), and take the milestone's **open** issues as the task list: `gh issue list --milestone "<title>" --state open --limit 200 --json number,title,body,url`. Closed issues are done. The phase file stays the source of truth for spec paths, files and dependencies: match each issue to its task or slice by the `#N` that `/issues` wrote into the phase file's `Issues:` field or the spec's Slices table, falling back to the spec link in the issue body.
+- **`/wf:autopilot docs/roadmap/README.md`** (or no path, if that file exists) — every phase in the roadmap, in order.
+- **`/wf:autopilot docs/roadmap/NNN_<phase>.md`** or **`--phase NNN`** — one phase.
+- **`--milestone <N>`** — one GitHub milestone. Read its title with `gh api "repos/{owner}/{repo}/milestones/<N>"`, match it to the phase file (`/wf:issues` titles milestones `Phase NNN — <phase-name>`), and take the milestone's **open** issues as the task list: `gh issue list --milestone "<title>" --state open --limit 200 --json number,title,body,url`. Closed issues are done. The phase file stays the source of truth for spec paths, files and dependencies: match each issue to its task or slice by the `#N` that `/wf:issues` wrote into the phase file's `Issues:` field or the spec's Slices table, falling back to the spec link in the issue body.
 
 ## Modes
 
@@ -38,7 +38,7 @@ Never switch modes silently. If `main` turns out to be protected against your me
 
 For each phase extract: name, goal, feature flag (if any), and its tasks — each with name, spec path, files touched, dependencies, verification command and test layers. A `complexity:high` task points at a sliced spec directory; every slice is its own task and its own PR.
 
-If a task's spec is missing, or the roadmap lacks the detail to plan (no file list, unclear dependencies), **stop and say what is missing**. Do not invent specs — that is `/spec`'s job, and it needs the user.
+If a task's spec is missing, or the roadmap lacks the detail to plan (no file list, unclear dependencies), **stop and say what is missing**. Do not invent specs — that is `/wf:spec`'s job, and it needs the user.
 
 ### 2. Read project context (once)
 
@@ -60,7 +60,7 @@ Verify, and fix or surface, before the first dispatch:
 - **`gh auth status` passes** and the remote is reachable.
 - **Merge authority** (autonomous mode) — you can merge to `main`. If not, fall back to `--supervised` and say so.
 - **Working tree is clean** of unrelated work.
-- **UI tasks have a design reference** — for a task that builds a page or component, check `docs/design/`. If there is none, warn and note "run `/verify-design` before merge" on that task; don't block.
+- **UI tasks have a design reference** — for a task that builds a page or component, check `docs/design/`. If there is none, warn and note "run `/wf:verify-design` before merge" on that task; don't block.
 
 ### 4. Plan waves
 
@@ -81,8 +81,8 @@ Wave 1: <task>, <task>     Wave 2: <task>
 Skip phases whose Status in the roadmap index is `Completed`. Within a phase, look each task up by its branch before planning it: `gh pr list --state all --head <branch> --json number,state`. The branch name is derived from the task, never invented per run — `<type>/<issue-number>-<slug>` (or `<type>/<slug>` when there is no issue), the slug being the spec file's name — so a later run finds the same PR.
 
 - `MERGED` → done; leave it out of the plan.
-- `OPEN` → an earlier run got this far. Do not dispatch a second writer; pick the PR up at step 5b. If its last comment is already a `PASS` verdict, go straight to 5e (autonomous) or report it as waiting on the human (`--supervised`). If it needs fixes there is no writer to resume, so dispatch a fresh one on the existing branch with the findings.
-- no PR (or only `CLOSED` ones) → dispatch.
+- `OPEN` → an earlier run got this far. Do not dispatch a second writer; pick the PR up at step 5b. If its last comment is already a `PASS` verdict, go straight to 5e (autonomous) or report it as waiting on the human (`--supervised`). If it needs fixes there is no writer to resume, so dispatch a fresh one on the existing branch with the findings; the same goes for a rebase in step 5e.
+- no PR → dispatch. Only `CLOSED` ones → dispatch in autonomous mode; in `--supervised` mode the human closed it, so ask for `retry <task>` or `skip <task>`.
 
 ### 5. Run the pipeline per task
 
@@ -90,7 +90,7 @@ Tasks in one wave run concurrently — dispatch all their writers in a single me
 
 **a. Develop.** Dispatch a writer: `Agent(subagent_type: "general-purpose", model: "sonnet", isolation: "worktree", prompt: <writer template below>)` — writers follow a detailed spec, they don't design. Record its branch and PR URL. If a writer fails outright, do not retry on your own — record it and report it.
 
-**b. Review.** When the PR is open, dispatch the `reviewer` agent on it with `isolation: "worktree"` (so it can run the checks) and the prompt `Base: main` / `Branch: <branch>` / `Spec: <path>` / `Verify: <commands>`. A verdict whose findings say the diff was empty is a dispatch error, not a pass — fix the prompt and re-dispatch once; if the second verdict is the same, mark the task `NEEDS_HUMAN`. Remove the reviewer's worktree once you have its verdict. Never review in your own context and never let the writer review itself. The verdict comes back as `VERDICT` / `CHECKS` / `FINDINGS` / `SUMMARY`. Post it on the PR as a comment.
+**b. Review.** When the PR is open, dispatch the `wf:reviewer` agent on it with `isolation: "worktree"` (so it can run the checks) and the prompt `Base: main` / `Branch: <branch>` / `Spec: <path>` / `Verify: <commands>`. A verdict whose findings say the diff was empty is a dispatch error, not a pass — fix the prompt and re-dispatch once; if the second verdict is the same, mark the task `NEEDS_HUMAN`. Remove the reviewer's worktree once you have its verdict. Never review in your own context and never let the writer review itself. The verdict comes back as `VERDICT` / `CHECKS` / `FINDINGS` / `SUMMARY`. Post it on the PR as a comment.
 
 **c. Security gate, when warranted.** If the task touches a trust boundary, auth, crypto, input parsing, secrets, or dependencies, dispatch one more fresh agent with `isolation: "worktree"` to run `/security-review`, and take back only its HIGH findings. The branch is checked out in the writer's worktree, so tell it to `git fetch origin <branch> && git checkout --detach origin/<branch>` rather than check the branch out. A HIGH finding blocks the merge. Skip it for plainly non-security work.
 
@@ -136,7 +136,7 @@ Phase: <phase>   Task: <task>   Issue: <#N or none>
 Spec: <path> — read it first, in full, plus: <architecture / threat-model / referenced specs>
 Files to create or modify: <list> — do not touch anything else unless strictly necessary
 Test layers: <from the roadmap task>
-Base: origin/main (run `git fetch origin` first)   Branch to create: <the branch name from step 4>
+Base: origin/main (run `git fetch origin` first)   Branch: <the branch name from step 4> — create it, or check it out if it already exists on origin
 
 ## Instructions
 1. Confirm you are in your worktree and on the branch above before changing anything.

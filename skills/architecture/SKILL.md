@@ -5,7 +5,7 @@ argument-hint: "[focus area]"
 ---
 Create or update the architecture document. Argument: $ARGUMENTS
 
-`docs/ARCHITECTURE.md` has two parts. **System** says what is being built and how the pieces fit. **Engineering** says how it is built, tested and shipped. They live in one file because they share the stack and deployment decisions, and because `/spec`, `/feature`, `/fix` and `/autopilot` read both before touching code.
+`docs/ARCHITECTURE.md` has two parts. **System** says what is being built and how the pieces fit. **Engineering** says how it is built, tested and shipped. They live in one file because they share the stack and deployment decisions, and because `/wf:spec`, `/wf:feature`, `/wf:fix` and `/wf:autopilot` read both before touching code.
 
 ## Context Gathering
 
@@ -100,7 +100,7 @@ Write to `docs/ARCHITECTURE.md`:
 
 ## Testing Strategy
 
-[The source of truth `/feature`, `/fix`, `/spec` and `/autopilot` read when deciding which tests to write. Keep this heading exactly as is.]
+[The source of truth `/wf:feature`, `/wf:fix`, `/wf:spec` and `/wf:autopilot` read when deciding which tests to write. Keep this heading exactly as is.]
 
 ### Test Layers
 
@@ -165,6 +165,6 @@ Adapt the structure to the project. A small project may not need Deployment, Sca
 
 1. Present the document for review. Iterate until the user is satisfied.
 2. Suggest next steps based on what exists:
-   - No threat model and the system has trust boundaries? → "Consider `/threat-model`"
-   - A decision here deserves its own record? → "Capture it with `/adr <title>`"
-   - Ready to build? → "Create feature specs with `/spec <name>`, then `/roadmap`"
+   - No threat model and the system has trust boundaries? → "Consider `/wf:threat-model`"
+   - A decision here deserves its own record? → "Capture it with `/wf:adr <title>`"
+   - Ready to build? → "Create feature specs with `/wf:spec <name>`, then `/wf:roadmap`"

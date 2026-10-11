@@ -13,11 +13,11 @@ You are a **senior UI designer**. You read the project's design documents, creat
 ## Parse Arguments
 
 The argument can be:
-- **No argument:** `/design` — full design workflow: design system + brand guide, then all screens from PRD
-- **Page/flow name:** `/design auth` — design only the auth flow screens, reusing existing design system
-- **With phase override:** `/design --system-only` — only create/refine the design system and brand guide
-- **With phase override:** `/design --layouts-only` — skip design system, go straight to layouts (assumes system exists)
-- **Specific screen:** `/design auth/login` — single screen with all its states
+- **No argument:** `/wf:design` — full design workflow: design system + brand guide, then all screens from PRD
+- **Page/flow name:** `/wf:design auth` — design only the auth flow screens, reusing existing design system
+- **With phase override:** `/wf:design --system-only` — only create/refine the design system and brand guide
+- **With phase override:** `/wf:design --layouts-only` — skip design system, go straight to layouts (assumes system exists)
+- **Specific screen:** `/wf:design auth/login` — single screen with all its states
 
 ## Context Gathering
 
@@ -42,7 +42,7 @@ Before anything, read what exists:
    - Check `docs/roadmap/` — understand phasing and priorities to order screen creation
 
 **Minimum required context:** A PRD or at least one feature spec. If neither exists, stop:
-"No PRD or feature specs found. Create one first with `/prd`, then come back to design."
+"No PRD or feature specs found. Create one first with `/wf:prd`, then come back to design."
 
 ## Phase 1: Discovery Interview
 
@@ -114,7 +114,7 @@ Create the design system document and the corresponding design system artboard i
 
 ### 2a. Generate the Design System Document
 
-Write to `docs/design/DESIGN_SYSTEM.md`. **The doc must always open with an Implementation Fidelity Protocol and a Paper Canvas Map before anything else.** Downstream skills (`/feature`, `/autopilot`, etc.) read this doc when implementing — the protocol is what makes them stop and consult Paper instead of eyeballing from screenshots.
+Write to `docs/design/DESIGN_SYSTEM.md`. **The doc must always open with an Implementation Fidelity Protocol and a Paper Canvas Map before anything else.** Downstream skills (`/wf:feature`, `/wf:autopilot`, etc.) read this doc when implementing — the protocol is what makes them stop and consult Paper instead of eyeballing from screenshots.
 
 ```markdown
 # Design System
@@ -141,9 +141,9 @@ This document is the **rules and tokens** layer. The **pixel-perfect source of t
    - `mcp__paper__get_fill_image` when the fill is an image/gradient
 3. **Screenshots are the lowest-trust input.** Use `mcp__paper__get_screenshot` to sanity-check your implementation visually, but never read sizes or colors off a PNG.
 4. **If Paper and this doc disagree, Paper wins.** Update the doc immediately with the correct value; don't silently diverge.
-5. **After implementing, run `/verify-design`** to diff the built UI against Paper and close any gaps before declaring done.
+5. **After implementing, run `/wf:verify-design`** to diff the built UI against Paper and close any gaps before declaring done.
 
-Agents calling this from `/feature`, `/fix`, `/autopilot`, or any UI work **must** follow this protocol. Steps 1–3 are not optional — implementing from markdown + memory produces drift.
+Agents calling this from `/wf:feature`, `/wf:fix`, `/wf:autopilot`, or any UI work **must** follow this protocol. Steps 1–3 are not optional — implementing from markdown + memory produces drift.
 
 ## Paper Canvas Map
 
@@ -611,7 +611,7 @@ Mark updates with the screen that introduced them:
 ## Execution Flow Summary
 
 ```
-/design (full)
+/wf:design (full)
   1. Read all docs → extract flows and screens
   2. Interview → brand direction, palette, typography, density, references
   3. Create design system doc + Paper artboard (light + dark tokens)
@@ -627,27 +627,27 @@ Mark updates with the screen that introduced them:
        e. Update design system with new patterns
   8. Final review → present complete canvas
 
-/design <flow-name>
+/wf:design <flow-name>
   1. Read all docs + existing design system
   2. If no design system exists → run Phase 2 first
   3. Build only the specified flow group (light + dark, desktop + mobile)
   4. Review checkpoint
   5. Update design system with new patterns
 
-/design <flow/screen>
+/wf:design <flow/screen>
   1. Read all docs + existing design system
   2. Build only the specified screen + all states (light + dark)
   3. Review checkpoint
   4. Update design system with new patterns
 
-/design --system-only
+/wf:design --system-only
   1. Read all docs
   2. Interview → brand direction, palette, typography, density, references
   3. Create/refine design system doc + Paper artboard
   4. Create/refine component library (light + dark)
   5. Checkpoint → user approves
 
-/design --layouts-only
+/wf:design --layouts-only
   1. Read existing design system (required)
   2. Read all docs → extract screens
   3. Skip to Phase 4 layout creation (includes dark mode)
@@ -668,7 +668,7 @@ Dark mode is generated per flow group, not as a separate pass. This keeps relate
 
 ## Rules
 
-1. **Paper is the pixel-perfect source of truth; the doc is the rules layer.** The generated `DESIGN_SYSTEM.md` must open with the Implementation Fidelity Protocol + Paper Canvas Map sections (template above). Every component block must end with a `📐 Paper reference` line pointing to its canvas location. Downstream skills (`/feature`, `/autopilot`, `/fix`) read this doc — the protocol is what stops them from implementing from markdown alone.
+1. **Paper is the pixel-perfect source of truth; the doc is the rules layer.** The generated `DESIGN_SYSTEM.md` must open with the Implementation Fidelity Protocol + Paper Canvas Map sections (template above). Every component block must end with a `📐 Paper reference` line pointing to its canvas location. Downstream skills (`/wf:feature`, `/wf:autopilot`, `/wf:fix`) read this doc — the protocol is what stops them from implementing from markdown alone.
 2. **Docs are the source of truth for *what* to build.** Every screen must trace back to a PRD flow, spec, or user story. Don't invent screens.
 3. **Design system first.** Never create layouts without an approved design system. If none exists, create it.
 4. **Incremental HTML.** One visual group per `write_html` call. Never dump an entire page in one call.
