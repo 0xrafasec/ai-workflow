@@ -627,7 +627,7 @@ Orchestrator (stays thin: parse, dispatch, triage, MERGE, track, loop)
 
 ### /code-review (deprecated)
 
-This skill was removed after a benchmark (see `code-review-workspace/iteration-1/benchmark.md`) showed no detection lift over a no-skill baseline on planted-bug fixtures at ~1.5× the cost, and its parallel-subagent architecture didn't execute as designed when nested.
+This skill was removed after a benchmark showed no detection lift over a no-skill baseline on planted-bug fixtures at ~1.5× the cost, and its parallel-subagent architecture didn't execute as designed when nested.
 
 **Replacement:** install Anthropic's official `code-review` skill from `claude-code-plugins`. Language-specific criteria remain in this repo under `reviews/` (`go.md`, `rust.md`, `typescript.md`, `python.md`) and can be passed as stack criteria, or loaded directly by `/review`, `/feature`, and `/fix`.
 
