@@ -37,7 +37,7 @@ Create `docs/roadmap/` if it does not exist.
 
 Write `docs/roadmap/NNN_<phase-name>.md`. If `docs/roadmap/README.md` exists, append the phase's row to its table (MVP column `—` unless the user says otherwise).
 
-A task is one vertical slice, one PR, one concern (see the size guide in your global `CLAUDE.md`). Complexity is defined in `/wf:spec`; a `high` task must point at a sliced spec (a directory with a `## Slices` table). The roadmap task then tracks the spec and the PRs come from its slices.
+A task is one vertical slice, one PR, one concern (see the size guide in your global `CLAUDE.md`). Complexity is defined in `/wf:spec`; a `high` task normally points at a sliced spec (a directory with a `## Slices` table). The roadmap task then tracks the spec and the PRs come from its slices.
 
 ```markdown
 # Phase NNN: [Name]

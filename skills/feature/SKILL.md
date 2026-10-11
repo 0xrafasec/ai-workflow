@@ -14,7 +14,7 @@ Implement the feature described in $ARGUMENTS.
 - `--commit` → once the feature is complete and verified, commit by following `/wf:commit`, skipping only the step that asks you to approve the commit plan. Output only the `git log --oneline -<N>` lines for the new commits.
 - `--pr` → implies `--commit`, then open the PR by following `/wf:pr`, skipping only the step that asks you to approve the title and body. `/wf:pr`'s fresh-context review still runs. Output only the `git log` lines, the PR URL and the review verdict. If the review has not converged after two rounds, leave the PR as a draft and report the findings.
 
-Ask decisions with AskUserQuestion (recommended option first, labelled "(Recommended)"). If the user cannot be asked (headless run, or dispatched by `/wf:autopilot`), take the recommended option and list it as an assumption in the report.
+Ask decisions with AskUserQuestion (recommended option first, labelled "(Recommended)"). If the user cannot be asked (a headless run), take the recommended option and list it as an assumption in the report.
 
 ## Branch
 
@@ -25,6 +25,7 @@ Resolve the trunk branch as `<base>`: `gh repo view --json defaultBranchRef -q .
 Name the branch from the spec's `## Trunk Metadata` — for a slice, from its row in the parent `README.md` Slices table, which holds the same fields:
 - `<type>/<N>-<slug>` when `**Issue:**` holds `#<N>` (e.g. `feat/42-jira-sync`).
 - `<type>/<slug>` when it is `—` or empty: the issue is unfiled. Do not rename the branch when the issue is filed later; put `Closes #<N>` in the PR body.
+- `<slug>` is the spec's file name without its numeric prefix and `.md`: `docs/specs/003_jira-sync.md` → `jira-sync`. For a slice, it is the slice file's name the same way: `docs/specs/003_jira-sync/002_webhook.md` → `webhook`. `/wf:autopilot` derives the same name to find a task's PR, so do not improvise one.
 - `<type>` is the spec's `**Type:**` (`feat`, `fix`, `refactor`, `chore`, `test`, `docs`, `perf`, `security`). If `Type` is missing, warn and use `feat`.
 
 Worktree conventions are in your global `CLAUDE.md` (Trunk-Based Workflow).
@@ -48,8 +49,8 @@ Worktree conventions are in your global `CLAUDE.md` (Trunk-Based Workflow).
    **Feature flag.** If the spec's `**Flag:**` names a flag other than `none` (or its `## Feature Flag` section does), verify the new behavior is gated by it. If the flag does not exist yet, create it, default off, as part of this slice.
 
    **Size gate.** Measure the hand-written source this change adds:
-   `git diff --numstat origin/<base>...HEAD -- . ':(exclude,glob)**/tests/**' ':(exclude,glob)**/__tests__/**' ':(exclude,glob)**/*_test.*' ':(exclude,glob)**/*.test.*' ':(exclude,glob)**/*.spec.*' ':(exclude,glob)**/*_spec.*' ':(exclude,glob)**/test_*' ':(exclude,glob)**/*.lock' ':(exclude,glob)**/*-lock.*'`
-   Sum the first column. Leave out generated files and files that only moved. Over ~500: decide whether it is one concern. One concern: carry on, and say in the report how large it is and why it stays together. More than one: stop and ask. For a single-file spec, offer "ship as-is" plus one or two concrete splits (e.g. sub-slices under `docs/specs/NNN_<name>/`), recommending "ship as-is" only when the bulk is mechanical. For a slice of a sliced feature, offer "ship as-is" and "defer these hunks to a follow-up slice". The number prompts the question and is not a cap: never split one concern to get under it.
+   `git diff --numstat $(git merge-base origin/<base> HEAD) -- . ':(exclude,glob)**/tests/**' ':(exclude,glob)**/__tests__/**' ':(exclude,glob)**/*_test.*' ':(exclude,glob)**/*.test.*' ':(exclude,glob)**/*.spec.*' ':(exclude,glob)**/*_spec.*' ':(exclude,glob)**/test_*' ':(exclude,glob)**/*.lock' ':(exclude,glob)**/*-lock.*'`
+   This compares the working tree with the point the branch left the trunk, so it counts committed and uncommitted work alike. Sum the first column and add the line counts of new untracked source files (`git status --porcelain` lists them; `git diff` does not). Leave out generated files and files that only moved. Over ~500: decide whether it is one concern. One concern: carry on, and say in the report how large it is and why it stays together. More than one: stop and ask. For a single-file spec, offer "ship as-is" plus one or two concrete splits (e.g. sub-slices under `docs/specs/NNN_<name>/`), recommending "ship as-is" only when the bulk is mechanical. For a slice of a sliced feature, offer "ship as-is" and "defer these hunks to a follow-up slice". The number prompts the question and is not a cap: never split one concern to get under it.
 
 6. **Report and stop.** A reviewer needs cold context, so do not review your own work here: `/wf:pr` dispatches `wf:reviewer` once the commits exist. With `--commit` or `--pr`, run the flow under Parse arguments; on a pre-commit hook failure, stop and surface the error, never bypass with `--no-verify`.
 

@@ -11,7 +11,7 @@ Default flow: open as a draft, have a fresh-context reviewer review the branch, 
 
 $ARGUMENTS may contain:
 - **`--draft`** — leave the PR a draft even after the review passes. The review still runs; only the final `gh pr ready` is skipped.
-- **`--no-review`** — skip the review loop and open the PR directly (ready, unless `--draft`). The allow-list is the one in your global `CLAUDE.md` → **Review**, repeated here so the skill is self-contained (update both together): a fresh-context review of these exact commits already ran (say which), or the whole diff is a typo, spelling or formatting fix in prose, or a changelog entry or project-version bump. Text that instructs an agent — a skill, an agent definition, a `CLAUDE.md`, a prompt — is behaviour and never qualifies; neither does a revert, a file move, or a dependency bump. When unsure, review. Small or urgent is not a reason to skip. State it in the PR body as `Review: skipped — <reason>`.
+- **`--no-review`** — skip the review loop and open the PR directly (ready, unless `--draft`). Two cases allow it. First, a fresh-context review of these exact commits already ran (say which). Second, the allow-list in your global `CLAUDE.md` → **Review**, repeated here so the skill is self-contained (update both together): the whole diff is a typo, spelling or formatting fix in prose, or a changelog entry or project-version bump. Text that instructs an agent — a skill, an agent definition, a `CLAUDE.md`, a prompt — is behaviour and never qualifies; neither does a revert, a file move, or a dependency bump. When unsure, review. Small or urgent is not a reason to skip. State it in the PR body as `Review: skipped — <reason>`.
 - **No flags** — the default flow.
 
 ## Guardrails
@@ -25,7 +25,7 @@ $ARGUMENTS may contain:
 
 1. **Check preconditions** (in parallel where possible).
    - `gh auth status` — if it fails, stop and print the manual `git push` plus the proposed title and body.
-   - `gh pr view --json url,state,isDraft 2>/dev/null` — if an open PR already exists for this branch, don't create another: push any new commits and continue at step 9 (review), then step 10.
+   - `gh pr view --json url,state,isDraft 2>/dev/null` — if an open PR already exists for this branch, don't create another: push any new commits and continue at step 8 (review).
    - Resolve the trunk branch once as `<base>`: `gh repo view --json defaultBranchRef -q .defaultBranchRef.name`, falling back to `git symbolic-ref --short refs/remotes/origin/HEAD` (strip `origin/`). Run `git fetch origin <base>` and use `origin/<base>` in every range below.
    - `git status` and `git rev-parse --abbrev-ref HEAD`.
    - **Dirty tree:** stop — *"Working tree has uncommitted changes. Run `/wf:commit` first, then re-run `/wf:pr`."*

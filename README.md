@@ -105,7 +105,7 @@ flowchart LR
 | `/wf:prd` | `docs/PRD.md` — an interview-driven product requirements document |
 | `/wf:architecture` | `docs/ARCHITECTURE.md` — the system (components, data flow, stack, deployment) and how it is engineered (testing strategy, dev environment, CI/CD, coding standards) |
 | `/wf:threat-model` | `docs/THREAT_MODEL.md` — a STRIDE-style threat model |
-| `/wf:adr <title>` | `docs/adr/NNNN-<slug>.md` — an architecture decision record |
+| `/wf:adr [title]` | `docs/adr/NNNN-<slug>.md` — an architecture decision record |
 | `/wf:roadmap` | `docs/roadmap/NNN_<phase>.md` — a phased roadmap, one file per phase |
 | `/wf:spec <feature>` | `docs/specs/NNN_<feature>.md` — a spec with verification criteria, sliced when it is more than one concern (the check triggers at ~500 source lines) |
 | `/wf:issues <roadmap or spec>` | GitHub milestones and issues — one milestone per phase, one issue per task or slice |
@@ -123,7 +123,7 @@ flowchart LR
 |---|---|
 | `/wf:feature <spec>` | Implements one spec or slice with tests, runs the checks, and stops at the working tree. `--commit` also commits; `--pr` also opens the PR and runs its review |
 | `/wf:fix <description or issue>` | Root-cause diagnosis, minimal fix, regression test |
-| `/wf:autopilot [roadmap or phase file]` | Delivers a roadmap, a phase (`--phase <NNN>`) or a GitHub milestone (`--milestone <N>`): each task is developed in a worktree, reviewed in a fresh context, fixed, and **merged to `main`**. `--supervised` leaves the PRs open for you; `--dry-run` prints the plan. Runs only when you type it |
+| `/wf:autopilot [roadmap or phase file]` | Delivers a roadmap, a phase (`--phase <NNN>`) or a GitHub milestone (`--milestone <N>`): each task is developed in a worktree, reviewed in a fresh context, fixed, and **merged to the trunk branch**. `--supervised` leaves the PRs open for you; `--dry-run` prints the plan. Runs only when you type it |
 | `/wf:new-project <name> [stack]` | Scaffolds a new repo: `CLAUDE.md` with the real commands, Makefile with lint and test targets, lint-on-edit hook, secret-scanning pre-commit, docs skeleton. Refuses a non-empty directory unless you confirm. Runs only when you type it |
 
 ### Ship

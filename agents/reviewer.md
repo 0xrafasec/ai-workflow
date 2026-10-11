@@ -18,7 +18,7 @@ The dispatch prompt gives you some or all of:
 
 Read, in this order:
 
-1. The diff: `git diff origin/<base>...HEAD` when Branch was given, otherwise `git diff <base>...HEAD` (or `git diff` if the work is uncommitted). **An empty diff means you are looking at the wrong thing** — report it as a HIGH finding (`FIX_REQUIRED`), never a `PASS`.
+1. The diff: `git fetch origin <base>` first, then `git diff origin/<base>...HEAD` — against the remote trunk in every case, because a local `<base>` may be stale and would drag already-merged commits into the review. If the work is uncommitted, `git diff` as well. **An empty diff means you are looking at the wrong thing** — report it as a HIGH finding (`FIX_REQUIRED`), never a `PASS`.
 2. The spec, if given.
 3. Only the extra files the diff makes you doubt — a caller of a changed function, the type a changed call relies on. Stay close to the change; do not tour the codebase. If you could not look at something you needed, say so in a LOW finding rather than guessing.
 
