@@ -244,7 +244,7 @@ claude --worktree feature-auth
 claude --worktree feature-dashboard
 ```
 
-`/autopilot` takes this further — it reads a roadmap and runs the full pipeline for every task (develop in a worktree → review in a fresh context → fix → **merge to `main`**), dispatching independent tasks in parallel waves and sequencing dependent ones after their merge. It is autonomous by default (no human gate); `--supervised` stops at each phase boundary for human merge.
+`/autopilot` takes this further — it reads a roadmap and runs the full pipeline for every task (develop in a worktree → review in a fresh context → fix → **merge to `main`**), dispatching independent tasks in parallel waves and sequencing dependent ones after their merge. It is autonomous by default (no human gate); `--supervised` never merges: it stops with the PRs open whenever the remaining work is waiting on your merge, and resumes on `continue`.
 
 ### Quality Gates
 
