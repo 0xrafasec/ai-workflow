@@ -59,9 +59,9 @@ link() {
     local src="$SCRIPT_DIR/$1"
     local dst="$CLAUDE_DIR/$2"
     mkdir -p "$(dirname "$dst")"
-    if [ -L "$dst" ]; then
+    if [ -L "$dst" ] && [[ "$(readlink "$dst")" == "$SCRIPT_DIR"/* ]]; then
         rm "$dst"
-    elif [ -e "$dst" ]; then
+    elif [ -e "$dst" ] || [ -L "$dst" ]; then
         local backup="${dst}.bak.$(date +%s)"
         warn "Backing up existing $dst -> $backup"
         mv "$dst" "$backup"
