@@ -47,10 +47,10 @@ That is the whole loop. Everything else in this README is detail.
 
 ## What you get
 
-| | |
+| Piece | What it means |
 |---|---|
 | **15 skills** | One per step, from the first product interview to the merged pull request. All namespaced `/wf:<name>`. |
-| **A reviewer agent** | Read-only and fresh-context. It runs the project's checks itself and returns `PASS` or `FIX_REQUIRED`. Every PR goes through it before it is marked ready. |
+| **A reviewer agent** | Read-only and fresh-context. It runs the project's checks itself and returns `PASS` or `FIX_REQUIRED`. By default every PR goes through it before it is marked ready. |
 | **Trunk-based by construction** | Short-lived branches, one PR per slice, slices of at most 200 non-test lines. [Why and how →](docs/TRUNK_BASED_WORKFLOW.md) |
 | **Writer / reviewer separation** | The session that wrote the code never reviews it, and merging stays your decision unless you run `/wf:autopilot`. |
 | **A session-start hook** | Fetches the remote and warns Claude when your branch is behind or has diverged, before any work starts. |
@@ -65,8 +65,9 @@ flowchart LR
     subgraph Plan
         direction TB
         PRD["/wf:prd<br/>what and why"] --> ARCH["/wf:architecture<br/>system + engineering"]
-        ARCH --> TM["/wf:threat-model<br/>when there are trust boundaries"]
-        TM --> ROAD["/wf:roadmap<br/>phases and tasks"]
+        ARCH --> ROAD
+        ARCH -.-> TM["/wf:threat-model<br/>when there are trust boundaries"]
+        TM -.-> ROAD["/wf:roadmap<br/>phases and tasks"]
         ROAD --> SPEC["/wf:spec<br/>one per task, ≤200 lines"]
         SPEC --> ISS["/wf:issues<br/>milestones + issues"]
     end
@@ -91,10 +92,10 @@ flowchart LR
 
 `/wf:pr` does not hand you an unreviewed pull request:
 
-1. Pushes the branch and opens the PR as a **draft**.
+1. Shows you the title and body, then pushes the branch and opens the PR as a **draft**.
 2. Dispatches the `wf:reviewer` agent, which has never seen the code. It checks spec compliance, correctness, security at boundaries, test quality and convention drift, and runs the project's checks itself.
 3. Fixes `HIGH` and `MED` findings and asks for a re-review — at most two cycles.
-4. Marks the PR **ready** on `PASS`. If the loop does not converge, the PR stays a draft and you get the findings.
+4. Marks the PR **ready** on `PASS`; `LOW` nits are listed but never block. If the loop does not converge, the PR stays a draft and you get the findings.
 
 ## Skills
 
@@ -123,7 +124,7 @@ flowchart LR
 |---|---|
 | `/wf:feature <spec>` | Implements one spec or slice with tests, runs the checks, and stops at the working tree. `--commit` also commits; `--pr` also opens the PR and runs its review |
 | `/wf:fix <description or issue>` | Root-cause diagnosis, minimal fix, regression test |
-| `/wf:autopilot` | Delivers a roadmap, a phase (`--phase <NNN>`) or a GitHub milestone (`--milestone <N>`): each task is developed in a worktree, reviewed in a fresh context, fixed, and **merged to `main`**. `--supervised` leaves the PRs open for you; `--dry-run` prints the plan. Runs only when you type it |
+| `/wf:autopilot [roadmap or phase file]` | Delivers a roadmap, a phase (`--phase <NNN>`) or a GitHub milestone (`--milestone <N>`): each task is developed in a worktree, reviewed in a fresh context, fixed, and **merged to `main`**. `--supervised` leaves the PRs open for you; `--dry-run` prints the plan. Runs only when you type it |
 | `/wf:new-project <name> [stack]` | Scaffolds a repo: `CLAUDE.md`, Makefile, linter and pre-commit config, lint hook, docs skeleton |
 
 ### Ship
@@ -160,13 +161,13 @@ cd ai-workflow
 ./install.sh
 ```
 
-It symlinks three files into `~/.claude/`, backing up anything already there:
+It symlinks three files into `~/.claude/`. A file already there is moved to `<name>.bak.<timestamp>` first:
 
 | Installed as | What it is |
 |---|---|
 | `~/.claude/CLAUDE.md` | Conventions applied to every project: verify before claiming done, conventional commits split by concern, spec first, a fresh reviewer for every branch, human-gated merges, the trunk rules |
 | `~/.claude/statusline-command.sh` | The status line below (needs `jq`) |
-| `~/.claude/settings.json` | Your settings, seeded from `settings.example.json` on first run and never tracked. The seed sets no permission mode and no model |
+| `~/.claude/settings.json` | Your settings, seeded from `settings.example.json` on first run and never tracked. The seed holds a desktop-notification hook, the status line with a 30s refresh, and a plugin list (`wf` plus a handful of official plugins) with this repo registered as a marketplace. It sets no permission mode and no model — read it before the first run |
 
 `./uninstall.sh` removes the symlinks that point into this clone and restores the backups.
 
@@ -315,7 +316,7 @@ claude --plugin-dir /path/to/ai-workflow
 
 ## Documentation
 
-| | |
+| Document | About |
 |---|---|
 | [Trunk-Based Workflow](docs/TRUNK_BASED_WORKFLOW.md) | Why and how the toolkit enforces trunk-based development — rules, recipes, FAQ |
 | [Skill Quality](docs/SKILL_QUALITY.md) | How skills are benchmarked before and after changes |
