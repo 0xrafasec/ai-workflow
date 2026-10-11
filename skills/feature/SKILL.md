@@ -9,8 +9,8 @@ Implement the feature described in $ARGUMENTS.
 - `/feature <name>` → resolve to `docs/specs/NNN_<name>.md` (or `docs/specs/NNN_<name>/` for a sliced spec) by matching the suffix after the prefix. Specs carry a roadmap-phase-aligned `NNN` prefix — see `/spec` for the numbering rules. If multiple specs match, ask which.
 - `/feature <path>.md` → use explicit path
 - `/feature #<N>` → fetch the GitHub issue `#<N>` via `gh issue view <N>`, extract the title and body, then resolve the spec by scanning `docs/specs/` for a file whose `Issue: #<N>` field matches. If found, proceed with that spec. If not found, treat the issue title/body as the feature description and ask (via **AskUserQuestion**) whether to create a spec first or build inline.
-- **`--commit`** — after the feature is complete and verified, commit by following the `/commit` skill, skipping its plan-approval step. Output only the `git log --oneline -<N>` lines for the new commits.
-- **`--pr`** — implies `--commit`, then open the PR by following the `/pr` skill, skipping its draft-approval step. `/pr`'s fresh-context review loop still runs. Output only the `git log` lines, the PR URL, and the review verdict.
+- **`--commit`** — after the feature is complete and verified, commit by following the `/commit` skill, skipping only the step where it presents the commit plan for approval. Output only the `git log --oneline -<N>` lines for the new commits.
+- **`--pr`** — implies `--commit`, then open the PR by following the `/pr` skill, skipping only the step where it presents the title and body for approval. `/pr`'s fresh-context review loop still runs. Output only the `git log` lines, the PR URL, and the review verdict.
 
 If the spec doesn't exist, use **AskUserQuestion** to ask whether to create one via `/spec <name>` first or build without a spec (they describe the feature inline). For bugfixes, use `/fix` instead.
 
