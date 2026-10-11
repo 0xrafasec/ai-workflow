@@ -4,7 +4,7 @@ Thanks for your interest in contributing. This guide covers how to report issues
 
 ## Reporting Bugs
 
-Open an [issue](https://github.com/0xrafasec/ai-workflow/issues/new?template=bug_report.md) with:
+Open an [issue](https://github.com/rafagomes/ai-workflow/issues/new?template=bug_report.md) with:
 
 - **What happened** — the actual behavior
 - **What you expected** — the correct behavior
@@ -13,7 +13,7 @@ Open an [issue](https://github.com/0xrafasec/ai-workflow/issues/new?template=bug
 
 ## Suggesting Features
 
-Open an [issue](https://github.com/0xrafasec/ai-workflow/issues/new?template=feature_request.md) with:
+Open an [issue](https://github.com/rafagomes/ai-workflow/issues/new?template=feature_request.md) with:
 
 - **Problem** — what you're trying to do and why the current toolkit doesn't support it
 - **Proposed solution** — how you'd like it to work
@@ -36,13 +36,14 @@ Open an [issue](https://github.com/0xrafasec/ai-workflow/issues/new?template=fea
 
 ### Development
 
-After making changes, run the installer to verify symlinks work:
+After making changes, validate the plugin and try it in a session:
 
 ```bash
-./install.sh
+claude plugin validate .
+claude --plugin-dir .
 ```
 
-If you added new skills, agents, or files, make sure `install.sh` and `uninstall.sh` both handle them.
+Skills and agents are discovered from `skills/` and `agents/`; nothing needs registering. `install.sh` and `uninstall.sh` only handle the global `CLAUDE.md`, the status line and `settings.json`.
 
 ### Commit Conventions
 
@@ -64,7 +65,7 @@ Each commit should leave the toolkit in a working state. Split unrelated changes
 1. Keep PRs focused — one concern per PR
 2. Write a clear description of what changed and why
 3. Link to any related issues
-4. Verify that `install.sh` and `uninstall.sh` still work correctly
+4. Run `claude plugin validate .`; if you touched `install.sh` or `uninstall.sh`, run them against a throwaway `CLAUDE_DIR`
 
 ### What Makes a Good Skill
 
@@ -81,4 +82,4 @@ This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md). By particip
 
 ## Questions?
 
-Open a [discussion](https://github.com/0xrafasec/ai-workflow/discussions) or an issue. No question is too small.
+Open a [discussion](https://github.com/rafagomes/ai-workflow/discussions) or an issue. No question is too small.

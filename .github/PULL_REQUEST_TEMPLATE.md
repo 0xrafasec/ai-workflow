@@ -16,7 +16,6 @@
 
 ## Checklist
 
-- [ ] `install.sh` handles any new files
-- [ ] `uninstall.sh` handles any new files
+- [ ] `claude plugin validate .` passes
 - [ ] README updated (if adding skills, agents, or guides)
-- [ ] Tested with a fresh `./install.sh` run
+- [ ] Tried in a session with `claude --plugin-dir .`

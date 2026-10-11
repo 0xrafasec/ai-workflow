@@ -6,7 +6,7 @@ If you discover a security vulnerability in this project, please report it respo
 
 **Do not open a public issue.**
 
-Instead, use [GitHub's private vulnerability reporting](https://github.com/0xrafasec/ai-workflow/security/advisories/new) to submit your report. This ensures the issue is handled privately until a fix is available.
+Instead, use [GitHub's private vulnerability reporting](https://github.com/rafagomes/ai-workflow/security/advisories/new) to submit your report. This ensures the issue is handled privately until a fix is available.
 
 ### What to Include
 
