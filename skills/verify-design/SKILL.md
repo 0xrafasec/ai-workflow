@@ -19,8 +19,8 @@ This skill does a **fix-in-place fidelity pass** against Paper design references
 ## Parse Arguments
 
 - **No argument:** check all pages with design refs
-- **Page / route name:** `/verify-design dashboard` — check that page
-- **Component name / file path:** `/verify-design Hero` or a path to the component file
+- **Page / route name:** `/wf:verify-design dashboard` — check that page
+- **Component name / file path:** `/wf:verify-design Hero` or a path to the component file
 
 Arguments may include free-form notes from the user (specific bugs, reference screenshots, which page to use as a style anchor). Treat those as priority work items.
 
@@ -32,7 +32,7 @@ Priority:
 
 Build a scope table (Page → Paper artboard (desktop) → Paper artboard (mobile) → source file). If both a desktop and mobile artboard exist, check **both**.
 
-If no design docs exist at all, stop and tell the user to run `/design` first.
+If no design docs exist at all, stop and tell the user to run `/wf:design` first.
 
 ## Step 2 — Load design tokens
 
@@ -105,7 +105,7 @@ After edits:
 
 This skill is a **single-pass agent**: one invocation reviews + fixes + re-verifies. Do not split into a separate "review" and "fix" cycle — that duplicates the Paper MCP + Playwright load and doubles spend for the same result.
 
-Writer/reviewer separation (from global workflow rules) applies to *code-review* skills. `/verify-design` is a fidelity-fix skill, not a reviewer — it is authored to mutate code. Treating its output as a review-only gate is a misuse.
+Writer/reviewer separation (from global workflow rules) applies to *code-review* skills. `/wf:verify-design` is a fidelity-fix skill, not a reviewer — it is authored to mutate code. Treating its output as a review-only gate is a misuse.
 
 Model guidance for agents that dispatch this skill to sub-agents:
 

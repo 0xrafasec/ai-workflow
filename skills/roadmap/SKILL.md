@@ -7,9 +7,9 @@ Create a phased roadmap for: $ARGUMENTS
 ## Parse Arguments
 
 The argument can be:
-- **Phase name:** `/roadmap auth-system` — creates `docs/roadmap/NNN_auth-system.md` where `NNN` is the next available 3-digit prefix
-- **No argument:** `/roadmap` — reads PRD, architecture, and any existing specs to create a full roadmap with numbered phase files
-- **Doc path:** `/roadmap docs/specs/feature_x.md` — creates a roadmap for a single spec or feature area
+- **Phase name:** `/wf:roadmap auth-system` — creates `docs/roadmap/NNN_auth-system.md` where `NNN` is the next available 3-digit prefix
+- **No argument:** `/wf:roadmap` — reads PRD, architecture, and any existing specs to create a full roadmap with numbered phase files
+- **Doc path:** `/wf:roadmap docs/specs/feature_x.md` — creates a roadmap for a single spec or feature area
 
 ## Phase Numbering
 
@@ -53,7 +53,7 @@ Before anything, read what exists:
    - When writing UI tasks, include a **Design reference** field pointing to the specific frame/artboard/image the task implements. If nothing is found, flag it and ask the user to provide a reference before the task is executable.
 
 **Minimum required context:** A PRD or architecture doc. The roadmap breaks down *what the design docs describe* into phased, executable work. If neither exists, stop and tell the user:
-"No PRD or architecture doc found. Create one first with `/prd` or `/architecture`, then come back to build the roadmap."
+"No PRD or architecture doc found. Create one first with `/wf:prd` or `/wf:architecture`, then come back to build the roadmap."
 
 ## Interview
 
@@ -81,7 +81,7 @@ Create `docs/roadmap/` directory if it doesn't exist.
 
 If the user gave a phase name or single feature area, compute the next prefix (see Phase Numbering above) and write to `docs/roadmap/NNN_<phase-name>.md`.
 
-**Trunk rule for tasks.** One task = one vertical slice = one PR ≤200 lines (per root `CLAUDE.md`'s Trunk-Based Workflow). If a task is `complexity:high`, the spec it points to **must** be sliced (directory-based spec with a `## Slices` table, per `/spec`). The roadmap task then tracks the *spec*, not a PR — the actual PRs come from the spec's slices.
+**Trunk rule for tasks.** One task = one vertical slice = one PR ≤200 lines (per root `CLAUDE.md`'s Trunk-Based Workflow). If a task is `complexity:high`, the spec it points to **must** be sliced (directory-based spec with a `## Slices` table, per `/wf:spec`). The roadmap task then tracks the *spec*, not a PR — the actual PRs come from the spec's slices.
 
 ```markdown
 # Phase: [Name]
@@ -105,7 +105,7 @@ If the user gave a phase name or single feature area, compute the next prefix (s
 - **Feature flag:** `none` or `flag_name` (default off)
 - **Estimated complexity:** Low / Medium / High
 - **Milestone:** Phase NNN — [phase-name]
-- **Issues:** — (filled by `/issues`)
+- **Issues:** — (filled by `/wf:issues`)
 
 ### Task 2: [Name] — HIGH complexity → sliced spec
 - **Spec:** docs/specs/NNN_[name]/README.md (sliced — see its Slices table for PR-sized slices)
@@ -117,7 +117,7 @@ If the user gave a phase name or single feature area, compute the next prefix (s
 - **Feature flag:** `flag_name` (covers every slice)
 - **Estimated complexity:** High
 - **Milestone:** Phase NNN — [phase-name]
-- **Issues:** — (one GitHub issue per slice, filled by `/issues`)
+- **Issues:** — (one GitHub issue per slice, filled by `/wf:issues`)
 
 ### Task 3: [Name] (can parallelize with Task 2)
 - **Spec:** docs/specs/NNN_[name].md (exists | needs creation)
@@ -139,7 +139,7 @@ If the user gave a phase name or single feature area, compute the next prefix (s
 ## Phase Checklist
 - [ ] All tasks have detailed specs
 - [ ] All `complexity:high` tasks have sliced specs (≤200 lines per slice)
-- [ ] `/issues` has filed the phase milestone + one issue per task/slice
+- [ ] `/wf:issues` has filed the phase milestone + one issue per task/slice
 - [ ] All tasks completed
 - [ ] All verification commands pass
 - [ ] PRs reviewed and merged
@@ -183,7 +183,7 @@ Then create each `docs/roadmap/NNN_<phase-name>.md` using the single-phase forma
 
 ## Key Rules for Task Breakdown
 
-1. **One task = one vertical slice ≤200 lines = one PR** (trunk-based). If a task is `complexity:high`, point it at a **sliced spec** (directory form, see `/spec`). The roadmap task is the tracker; the PRs come from the slices.
+1. **One task = one vertical slice ≤200 lines = one PR** (trunk-based). If a task is `complexity:high`, point it at a **sliced spec** (directory form, see `/wf:spec`). The roadmap task is the tracker; the PRs come from the slices.
 2. **Every task names its commit type** — `feat` / `fix` / `refactor` / `chore` / `test` / `docs` / `perf` / `security`. This drives the branch prefix and the `type:*` GitHub label.
 3. **Every task names its feature flag** — or `none` if the task ships user-ready on merge. `main` must stay deployable after every merge.
 4. **Identify parallelizable tasks** — tasks that touch different files can run simultaneously in worktrees.
@@ -192,8 +192,8 @@ Then create each `docs/roadmap/NNN_<phase-name>.md` using the single-phase forma
 7. **Specify test layers per task** — based on the Testing Strategy in `docs/ARCHITECTURE.md` (in older projects, `docs/TECHNICAL_DESIGN_DOCUMENT.md`) (or inferred from the codebase), mark which test layers each task needs: Unit, Integration, E2E. A task that touches APIs needs integration tests. A task that implements a critical user flow needs e2e. Pure logic only needs unit.
 8. **Foundation first** — shared types, interfaces, data models, and config go in Phase 1. Implementation builds on top.
 9. **File overlap = sequential** — if two tasks modify the same file, they cannot run in parallel. Call this out explicitly.
-10. **Mark spec status per task** — indicate whether a detailed spec exists or needs to be created. Tasks without specs need `/spec` before execution. Tasks without GitHub issues need `/issues` before execution.
-11. **Spec prefix mirrors the phase number.** Specs for tasks in Phase `NNN` are written to `docs/specs/NNN_<name>.md` (or `docs/specs/NNN_<name>/` if sliced). When a phase has multiple tasks, disambiguate with a letter suffix: `NNN.A_<name>.md`, `NNN.B_<name>.md`. See `/spec` for full numbering rules.
+10. **Mark spec status per task** — indicate whether a detailed spec exists or needs to be created. Tasks without specs need `/wf:spec` before execution. Tasks without GitHub issues need `/wf:issues` before execution.
+11. **Spec prefix mirrors the phase number.** Specs for tasks in Phase `NNN` are written to `docs/specs/NNN_<name>.md` (or `docs/specs/NNN_<name>/` if sliced). When a phase has multiple tasks, disambiguate with a letter suffix: `NNN.A_<name>.md`, `NNN.B_<name>.md`. See `/wf:spec` for full numbering rules.
 
 ## After Writing
 
@@ -205,8 +205,8 @@ Then create each `docs/roadmap/NNN_<phase-name>.md` using the single-phase forma
 2. Iterate until the user is satisfied.
 
 3. Suggest next steps based on spec coverage:
-   - **Tasks need specs?** → "Create detailed specs before executing: `/spec <feature-name>` for each task. `complexity:high` tasks must produce a sliced directory-form spec."
-   - **All tasks have specs, no GitHub issues yet?** → "Run `/issues docs/roadmap/README.md` to file milestones (one per phase) and issues (one per task/slice)."
-   - **All tasks have specs + issues?** → "Run `/autopilot docs/roadmap/README.md` to execute the full roadmap"
-   - **Start one phase?** → "Run `/issues docs/roadmap/NNN_<phase-name>.md`, then `/autopilot docs/roadmap/NNN_<phase-name>.md`"
-   - **Single task?** → "`/feature docs/specs/NNN_<name>.md`" (or a specific slice file `docs/specs/NNN_<name>/MMM_<slice>.md` for sliced specs)
+   - **Tasks need specs?** → "Create detailed specs before executing: `/wf:spec <feature-name>` for each task. `complexity:high` tasks must produce a sliced directory-form spec."
+   - **All tasks have specs, no GitHub issues yet?** → "Run `/wf:issues docs/roadmap/README.md` to file milestones (one per phase) and issues (one per task/slice)."
+   - **All tasks have specs + issues?** → "Run `/wf:autopilot docs/roadmap/README.md` to execute the full roadmap"
+   - **Start one phase?** → "Run `/wf:issues docs/roadmap/NNN_<phase-name>.md`, then `/wf:autopilot docs/roadmap/NNN_<phase-name>.md`"
+   - **Single task?** → "`/wf:feature docs/specs/NNN_<name>.md`" (or a specific slice file `docs/specs/NNN_<name>/MMM_<slice>.md` for sliced specs)

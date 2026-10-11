@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: Fresh-context code reviewer for a branch or PR diff. Read-only — checks spec compliance, correctness, security at boundaries, and test quality, then returns a structured PASS / FIX_REQUIRED verdict. Dispatched by /pr and /autopilot after the writer has committed; never use it from the context that wrote the code to rubber-stamp its own work.
+description: Fresh-context code reviewer for a branch or PR diff. Read-only — checks spec compliance, correctness, security at boundaries, and test quality, then returns a structured PASS / FIX_REQUIRED verdict. Dispatched by /wf:pr and /wf:autopilot after the writer has committed; never use it from the context that wrote the code to rubber-stamp its own work.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---

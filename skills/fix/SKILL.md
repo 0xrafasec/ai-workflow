@@ -7,8 +7,8 @@ Fix the bug described in $ARGUMENTS.
 ## Parse Arguments
 
 The argument can be:
-- **Bug description:** `/fix users can't login when password contains special chars`
-- **Issue link:** `/fix https://github.com/org/repo/issues/42`
+- **Bug description:** `/wf:fix users can't login when password contains special chars`
+- **Issue link:** `/wf:fix https://github.com/org/repo/issues/42`
 
 ## Branch
 
@@ -38,7 +38,7 @@ Before writing code, ensure you are on a short-lived branch named `fix/<slug>`. 
 4. **Discover test strategy** — Before writing the fix, understand the project's test approach:
 
    a. **Check for a documented strategy:** Read `docs/ARCHITECTURE.md` (in older projects, `docs/TECHNICAL_DESIGN_DOCUMENT.md`) — if it has a Testing Strategy section, follow it.
-   b. **If there is none:** Infer from the codebase — look for existing test directories, frameworks, patterns, and naming conventions (same discovery as `/feature` step 2).
+   b. **If there is none:** Infer from the codebase — look for existing test directories, frameworks, patterns, and naming conventions (same discovery as `/wf:feature` step 2).
    c. **Determine which test layers the bug touches** — a bug in a pure function needs a unit test; a bug in an API endpoint needs an integration test; a bug in a user flow may need an e2e test.
 
 5. **Fix**
@@ -55,7 +55,7 @@ Before writing code, ensure you are on a short-lived branch named `fix/<slug>`. 
 
    **Slice-size gate (trunk-based).** Before reporting completion, run `git diff --stat main...HEAD -- . ':(exclude)**/tests/**' ':(exclude)**/*_test.*' ':(exclude)**/*.test.*' ':(exclude)**/test_*'` (or the same pathspec against `git diff` if working changes are unstaged). If the **non-test** diff exceeds **~200 lines**, stop and propose a split via **AskUserQuestion** — a "fix" that balloons into a refactor is two slices, not one. Never silently leave a >200-line fix in the working tree without the user's explicit override.
 
-7. **Report and stop.** Do not review your own fix here — `/pr` dispatches the fresh-context `reviewer` agent once the commits exist. Summarize for the user:
+7. **Report and stop.** Do not review your own fix here — `/wf:pr` dispatches the fresh-context `wf:reviewer` agent once the commits exist. Summarize for the user:
    - **Root cause** — 1–2 sentences on what was actually broken.
    - **Files changed** — `git diff --stat` output, or a short list.
    - **Regression tests** — which layers (unit/integration/e2e) you added, where they live, how to re-run them.
@@ -64,4 +64,4 @@ Before writing code, ensure you are on a short-lived branch named `fix/<slug>`. 
 
    Suggested conventional-commit subject for when the user commits: `fix: <what was broken>` (describe the bug, not the change). Example: `fix: login fails when password contains special characters`.
 
-   Then stop. The user reviews the working tree and decides next steps (typically `/commit`, then `/pr`, which runs the review).
+   Then stop. The user reviews the working tree and decides next steps (typically `/wf:commit`, then `/wf:pr`, which runs the review).

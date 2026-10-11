@@ -1,6 +1,6 @@
 ---
 name: spec
-description: "Create a feature implementation spec at docs/specs/NNN_<feature>.md (prefix mirrors the roadmap phase) — scope, approach, affected files, verification. Use when the user says 'spec out feature X', 'write the implementation plan for Y', 'turn this idea into a spec', 'document how we'll build this', or needs a doc the /feature skill can execute from later."
+description: "Create a feature implementation spec at docs/specs/NNN_<feature>.md (prefix mirrors the roadmap phase) — scope, approach, affected files, verification. Use when the user says 'spec out feature X', 'write the implementation plan for Y', 'turn this idea into a spec', 'document how we'll build this', or needs a doc the /wf:feature skill can execute from later."
 ---
 Create a feature implementation spec for: $ARGUMENTS
 
@@ -54,16 +54,16 @@ Estimate implementation size in **source lines only** — tests are written in f
 - Every slice must leave `main` deployable. If a slice adds user-visible behavior that isn't ready to ship, name a **feature flag** (default off) in its spec.
 - Slice **vertically** (DB → API → UI for *one* capability), not horizontally. Vertical slices ship value; horizontal slices pile up un-shippable intermediate state.
 - No slice depends on an unmerged slice. If B truly needs A merged first, mark the dependency and don't start B until A is merged.
-- Each slice = its own branch, its own PR, deleted after merge. Branch naming: `<type>/<slice-slug>` before `/issues` runs, `<type>/<issue-number>-<slice-slug>` after (e.g., `feat/42-jira-sync`).
+- Each slice = its own branch, its own PR, deleted after merge. Branch naming: `<type>/<slice-slug>` before `/wf:issues` runs, `<type>/<issue-number>-<slice-slug>` after (e.g., `feat/42-jira-sync`).
 
 **Trunk metadata fields** (used in both the Slices table and single-file specs):
 - **Type** — conventional-commit prefix (`feat`, `fix`, `refactor`, `chore`, `test`, `docs`, `perf`, `security`). Drives the branch prefix and the `type:*` label on GitHub.
 - **Flag** — exact flag name (default off), or `none` if the slice ships user-ready.
 - **Depends on** *(sliced only)* — other slice numbers that must merge first; `—` if independent.
 - **Complexity** — `low` / `med` / `high`. `high` is a smell that the slice should be re-sliced; if you keep it, include a `## Slicing` section explaining why one PR is still defensible.
-- **Issue** — `—` until `/issues` fills it with `#<number>`, which then unlocks the issue-numbered branch name.
+- **Issue** — `—` until `/wf:issues` fills it with `#<number>`, which then unlocks the issue-numbered branch name.
 
-**Sliced index** (`docs/specs/NNN_<slug>/README.md`) — the Slices table is the **source of truth for `/issues`**:
+**Sliced index** (`docs/specs/NNN_<slug>/README.md`) — the Slices table is the **source of truth for `/wf:issues`**:
 
 ```markdown
 # Feature: [Name]
@@ -91,7 +91,7 @@ Write each sub-spec using the single-file template below.
 - **Type:** feat
 - **Flag:** `none` or `flag_name`
 - **Complexity:** low/med/high
-- **Issue:** — (filled by `/issues`)
+- **Issue:** — (filled by `/wf:issues`)
 - **Branch (post-/issues):** `<type>/<issue-number>-<slug>`
 ```
 
@@ -150,7 +150,7 @@ Single (≤200 line) spec or sub-spec:
 
 1. Present the spec to the user for review. Iterate until they're satisfied.
 2. Suggest next steps based on what exists:
-   - No architecture doc? → "Define system structure and testing strategy with `/architecture`"
-   - No threat model and there are security concerns? → "Consider `/threat-model`"
-   - Spec approved? → "File GitHub issues with `/issues docs/specs/NNN_<name>.md` (or `/issues docs/specs/NNN_<name>/README.md` for a sliced spec). This populates the `Issue` column and unlocks `<type>/<issue-number>-<slug>` branch naming."
-   - Issues filed? → "Ready for `/feature docs/specs/NNN_<name>.md` (single) or `/feature docs/specs/NNN_<name>/MMM_<slice>.md` (one slice at a time)."
+   - No architecture doc? → "Define system structure and testing strategy with `/wf:architecture`"
+   - No threat model and there are security concerns? → "Consider `/wf:threat-model`"
+   - Spec approved? → "File GitHub issues with `/wf:issues docs/specs/NNN_<name>.md` (or `/wf:issues docs/specs/NNN_<name>/README.md` for a sliced spec). This populates the `Issue` column and unlocks `<type>/<issue-number>-<slug>` branch naming."
+   - Issues filed? → "Ready for `/wf:feature docs/specs/NNN_<name>.md` (single) or `/wf:feature docs/specs/NNN_<name>/MMM_<slice>.md` (one slice at a time)."

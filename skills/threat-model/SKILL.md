@@ -98,5 +98,5 @@ Write to `docs/THREAT_MODEL.md`:
 
 1. Present the document to the user for review. Iterate until they're satisfied.
 2. Suggest next steps based on what exists:
-   - No architecture doc? → "Define system structure with `/architecture`"
-   - Ready to build? → "Create feature specs with `/spec <name>`, then `/roadmap`"
+   - No architecture doc? → "Define system structure with `/wf:architecture`"
+   - Ready to build? → "Create feature specs with `/wf:spec <name>`, then `/wf:roadmap`"

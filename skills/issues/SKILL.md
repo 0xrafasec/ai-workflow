@@ -1,28 +1,28 @@
 ---
 name: issues
-description: "File GitHub milestones + issues for a roadmap, a phase, or a spec — one milestone per phase, one issue per task/slice — using the trunk-based patterns from /spec, /roadmap, and /feature. Use when the user says 'create the GitHub issues', 'file the issues for this roadmap', 'open issues for this spec', 'make the milestones', or points at docs/roadmap/*.md or docs/specs/*.md and asks to hand them to GitHub."
+description: "File GitHub milestones + issues for a roadmap, a phase, or a spec — one milestone per phase, one issue per task/slice — using the trunk-based patterns from /wf:spec, /wf:roadmap, and /wf:feature. Use when the user says 'create the GitHub issues', 'file the issues for this roadmap', 'open issues for this spec', 'make the milestones', or points at docs/roadmap/*.md or docs/specs/*.md and asks to hand them to GitHub."
 ---
 File GitHub milestones and issues for: $ARGUMENTS
 
 ## What this skill does
 
-`/issues` is the hand-off between planning artifacts (`docs/roadmap/*.md`, `docs/specs/*.md`) and GitHub. It files:
+`/wf:issues` is the hand-off between planning artifacts (`docs/roadmap/*.md`, `docs/specs/*.md`) and GitHub. It files:
 
 - **One milestone per phase** — `Phase NNN — <phase-name>`
 - **One issue per task/slice** — title `[NNN.N] <task-name>` for a roadmap task, `[NNN.N.N] <slice-name>` for a sliced sub-task, or `[<feature>.NNN] <slice-name>` for a standalone spec's slice.
 - **Labels per issue** — `type:<type>`, `complexity:<low|med|high>`, `mvp` or `post-mvp` (if derivable), and `needs-spec` / `spec-ready` / `blocked` as appropriate.
 - **Issue body** — spec link, file list, dependencies, verification command, feature flag, acceptance criteria pulled from the spec.
 
-After filing, `/issues` writes the issue numbers back into the source `Issue:` / `Issues:` columns so `/feature` can read them when building branch names.
+After filing, `/wf:issues` writes the issue numbers back into the source `Issue:` / `Issues:` columns so `/wf:feature` can read them when building branch names.
 
 ## Parse arguments
 
 The argument is one of:
 
-- **Roadmap index** — `/issues docs/roadmap/README.md` files *everything*: one milestone per phase file, one issue per task, one issue per slice where a task points at a sliced spec.
-- **Phase file** — `/issues docs/roadmap/NNN_<phase>.md` files one milestone + the phase's tasks (and slices where applicable).
-- **Sliced spec index** — `/issues docs/specs/NNN_<feature>/README.md` files one issue per row in the Slices table. Uses the feature's existing milestone if found (matched by phase reference in the spec), otherwise creates a standalone no-milestone batch.
-- **Single spec** — `/issues docs/specs/NNN_<feature>.md` files one issue. No milestone unless the spec references a phase.
+- **Roadmap index** — `/wf:issues docs/roadmap/README.md` files *everything*: one milestone per phase file, one issue per task, one issue per slice where a task points at a sliced spec.
+- **Phase file** — `/wf:issues docs/roadmap/NNN_<phase>.md` files one milestone + the phase's tasks (and slices where applicable).
+- **Sliced spec index** — `/wf:issues docs/specs/NNN_<feature>/README.md` files one issue per row in the Slices table. Uses the feature's existing milestone if found (matched by phase reference in the spec), otherwise creates a standalone no-milestone batch.
+- **Single spec** — `/wf:issues docs/specs/NNN_<feature>.md` files one issue. No milestone unless the spec references a phase.
 
 No argument? Default to `docs/roadmap/README.md` if it exists; otherwise prompt.
 
@@ -151,7 +151,7 @@ Create via `gh api "repos/{owner}/{repo}/milestones" -f title="..." -f descripti
 `<type>/<issue-number>-<slug>` — created with `gh issue develop` after this issue is filed, or manually via `git checkout -b <type>/<this-issue-number>-<slug>`.
 
 ---
-Filed by `/issues` from `<source-file>`.
+Filed by `/wf:issues` from `<source-file>`.
 ```
 
 Create via `gh issue create --title "..." --body-file <tmp> --milestone "Phase NNN — <name>" --label "type:feat" --label "complexity:med" ...`.
@@ -196,12 +196,12 @@ Why this is the default (team practice that translates cleanly to solo):
 
 1. Identify the **current phase** — first phase whose status is not `Completed` in the index table, or whose tasks don't all have filled `Issue` values.
 2. Identify the **next phase** — the phase directly after the current one in the index.
-3. Propose filing *only those two* in the dry-run. Explicitly list the phases being skipped ("Phases 004–009 stay in docs/roadmap/ for now — re-run `/issues` when you're ready to start the next wave").
+3. Propose filing *only those two* in the dry-run. Explicitly list the phases being skipped ("Phases 004–009 stay in docs/roadmap/ for now — re-run `/wf:issues` when you're ready to start the next wave").
 4. Ask the user via `AskUserQuestion` (see "User prompts" above) with the `Horizon` question — options "Current + next phase (Recommended)" and "Full roadmap". If they pick full, proceed without the horizon cap — but warn them about the label-rot cost. Batch this with the dry-run `Proceed?` question in the same call to save a click.
 
 This rule does not apply to phase-file or single-spec inputs — those are already scoped.
 
-**Rolling forward:** re-running `/issues docs/roadmap/README.md` later is idempotent on already-filed phases (see Idempotency rules) and picks up the next two-phase window. Typical rhythm: when you're mid-way through the current milestone, re-run to file the next-next phase, keeping the two-phase buffer ahead of active work.
+**Rolling forward:** re-running `/wf:issues docs/roadmap/README.md` later is idempotent on already-filed phases (see Idempotency rules) and picks up the next two-phase window. Typical rhythm: when you're mid-way through the current milestone, re-run to file the next-next phase, keeping the two-phase buffer ahead of active work.
 
 ## Execution mode: per-milestone confirmation
 
@@ -222,7 +222,7 @@ After filing, update the source Markdown in place:
 
 - **Roadmap tasks:** replace `- **Issues:** —` with `- **Issues:** #<N>` (or `#<N>, #<N+1>, ...` for sliced tasks).
 - **Spec Slices table:** replace the `—` in the `Issue` column with `#<N>`.
-- **Single-spec Trunk Metadata:** replace `- **Issue:** — (filled by `/issues`)` with `- **Issue:** #<N>`.
+- **Single-spec Trunk Metadata:** replace `- **Issue:** — (filled by `/wf:issues`)` with `- **Issue:** #<N>`.
 
 Do this with `Edit` (exact-string replace), not by rewriting the file — preserve surrounding formatting.
 
@@ -240,6 +240,6 @@ If a row was updated in place (not newly filed), leave the `Issue:` column alone
 1. Print a final summary: N milestones created, M issues created, K updated, list the URLs.
 2. Remind the user of the horizon: which phases were filed, which stayed in the roadmap doc, and when to re-run to advance the window.
 3. Suggest the next step based on what's now in place:
-   - **Current phase filed?** → "Run `/feature docs/specs/NNN_<name>.md` (or a slice file `docs/specs/NNN_<name>/MMM_<slice>.md`) to implement one task, or `/autopilot docs/roadmap/NNN_<phase>.md` to run the phase end-to-end."
-   - **Mid-phase check-in?** → "When you're ~halfway through the current phase, re-run `/issues docs/roadmap/README.md` to file the next phase and keep a two-phase buffer ahead."
-   - **Finished a phase?** → "Mark the phase `Completed` in the roadmap index's Status column, then re-run `/issues docs/roadmap/README.md` — it'll advance the window to the next unstarted phase."
+   - **Current phase filed?** → "Run `/wf:feature docs/specs/NNN_<name>.md` (or a slice file `docs/specs/NNN_<name>/MMM_<slice>.md`) to implement one task, or `/wf:autopilot docs/roadmap/NNN_<phase>.md` to run the phase end-to-end."
+   - **Mid-phase check-in?** → "When you're ~halfway through the current phase, re-run `/wf:issues docs/roadmap/README.md` to file the next phase and keep a two-phase buffer ahead."
+   - **Finished a phase?** → "Mark the phase `Completed` in the roadmap index's Status column, then re-run `/wf:issues docs/roadmap/README.md` — it'll advance the window to the next unstarted phase."

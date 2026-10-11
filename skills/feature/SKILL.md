@@ -6,24 +6,24 @@ Implement the feature described in $ARGUMENTS.
 
 ## Parse arguments
 
-- `/feature <name>` → resolve to `docs/specs/NNN_<name>.md` (or `docs/specs/NNN_<name>/` for a sliced spec) by matching the suffix after the prefix. Specs carry a roadmap-phase-aligned `NNN` prefix — see `/spec` for the numbering rules. If multiple specs match, ask which.
-- `/feature <path>.md` → use explicit path
-- `/feature #<N>` → fetch the GitHub issue `#<N>` via `gh issue view <N>`, extract the title and body, then resolve the spec by scanning `docs/specs/` for a file whose `Issue: #<N>` field matches. If found, proceed with that spec. If not found, treat the issue title/body as the feature description and ask (via **AskUserQuestion**) whether to create a spec first or build inline.
-- **`--commit`** — after the feature is complete and verified, commit by following the `/commit` skill, skipping only the step where it presents the commit plan for approval. Output only the `git log --oneline -<N>` lines for the new commits.
-- **`--pr`** — implies `--commit`, then open the PR by following the `/pr` skill, skipping only the step where it presents the title and body for approval. `/pr`'s fresh-context review loop still runs. Output only the `git log` lines, the PR URL, and the review verdict.
+- `/wf:feature <name>` → resolve to `docs/specs/NNN_<name>.md` (or `docs/specs/NNN_<name>/` for a sliced spec) by matching the suffix after the prefix. Specs carry a roadmap-phase-aligned `NNN` prefix — see `/wf:spec` for the numbering rules. If multiple specs match, ask which.
+- `/wf:feature <path>.md` → use explicit path
+- `/wf:feature #<N>` → fetch the GitHub issue `#<N>` via `gh issue view <N>`, extract the title and body, then resolve the spec by scanning `docs/specs/` for a file whose `Issue: #<N>` field matches. If found, proceed with that spec. If not found, treat the issue title/body as the feature description and ask (via **AskUserQuestion**) whether to create a spec first or build inline.
+- **`--commit`** — after the feature is complete and verified, commit by following the `/wf:commit` skill, skipping only the step where it presents the commit plan for approval. Output only the `git log --oneline -<N>` lines for the new commits.
+- **`--pr`** — implies `--commit`, then open the PR by following the `/wf:pr` skill, skipping only the step where it presents the title and body for approval. `/wf:pr`'s fresh-context review loop still runs. Output only the `git log` lines, the PR URL, and the review verdict.
 
-If the spec doesn't exist, use **AskUserQuestion** to ask whether to create one via `/spec <name>` first or build without a spec (they describe the feature inline). For bugfixes, use `/fix` instead.
+If the spec doesn't exist, use **AskUserQuestion** to ask whether to create one via `/wf:spec <name>` first or build without a spec (they describe the feature inline). For bugfixes, use `/wf:fix` instead.
 
 **Asking the user questions.** Whenever this skill needs a decision from the user mid-flight (missing spec, slice-size override, split shape, ambiguous metadata, etc.), use the **AskUserQuestion** tool — never plain free-text prompts. Phrase the question clearly, lead with your recommendation as the first option labelled "(Recommended)", and keep options mutually exclusive. Free-text follow-up is always available to the user via the auto-injected "Other" choice, so don't pad with a custom-input option.
 
-If the spec lives under `docs/specs/NNN_<feature>/` (sliced spec, per `/spec`'s trunk-based slicing), `/feature` implements **one slice at a time**. The argument must point to a specific slice file (`docs/specs/NNN_<feature>/MMM_<slice>.md`), never the index `README.md`.
+If the spec lives under `docs/specs/NNN_<feature>/` (sliced spec, per `/wf:spec`'s trunk-based slicing), `/wf:feature` implements **one slice at a time**. The argument must point to a specific slice file (`docs/specs/NNN_<feature>/MMM_<slice>.md`), never the index `README.md`.
 
 ## Branch
 
 Before writing code, ensure you are on a short-lived branch named for this slice, **always cut from `main`** (never from another feature branch — trunk forbids stacking).
 
 Branch-name resolution order:
-1. If the spec's `## Trunk Metadata` (or its row in the Slices table) has a filled `Issue: #<N>` field, use `<type>/<N>-<slug>` — e.g., `feat/42-jira-sync`. This is the canonical form after `/issues` has run.
+1. If the spec's `## Trunk Metadata` (or its row in the Slices table) has a filled `Issue: #<N>` field, use `<type>/<N>-<slug>` — e.g., `feat/42-jira-sync`. This is the canonical form after `/wf:issues` has run.
 2. If no issue is filed yet, fall back to `<type>/<slug>` — e.g., `feat/jira-sync`. When the issue later gets filed, do NOT rename the branch mid-flight; keep the name and put `Closes #<N>` in the PR body.
 3. `<type>` comes from the spec's `Type` field (`feat`/`fix`/`refactor`/`chore`/`test`/`docs`/`perf`/`security`).
 
@@ -53,13 +53,13 @@ See the global **Trunk-Based Workflow** in root `CLAUDE.md` for worktree convent
 
    **Feature flag wiring.** If the spec's `## Feature Flag` section names a flag, verify the new behavior is gated by it. If the flag doesn't exist yet in the project, create it (default off) as part of this slice.
 
-6. **Report and stop.** Do not review your own work here. The fresh-context review belongs to `/pr`, which dispatches the `reviewer` agent once the commits exist — reviewing an uncommitted tree from the context that wrote it is the thing the writer/reviewer rule forbids.
+6. **Report and stop.** Do not review your own work here. The fresh-context review belongs to `/wf:pr`, which dispatches the `wf:reviewer` agent once the commits exist — reviewing an uncommitted tree from the context that wrote it is the thing the writer/reviewer rule forbids.
 
    **With `--commit` or `--pr`,** run the flow described under Parse arguments. On a pre-commit hook failure, stop and surface the error — never bypass with `--no-verify`.
 
    **Otherwise (no flag),** summarize for the user:
    - **Files changed** — `git diff --stat` output, or a short list.
    - **Verification** — lint / typecheck / test commands run and their tail output.
-   - **Slice metadata** — for the eventual PR body the user will write: spec link, `Closes #<N>` line from the spec's `Issue:` field (or `Closes: (none — ran before /issues)`), feature-flag state from `## Feature Flag`, and a one-paragraph test plan (which layers were touched, how to re-run them).
+   - **Slice metadata** — for the eventual PR body the user will write: spec link, `Closes #<N>` line from the spec's `Issue:` field (or `Closes: (none — ran before /wf:issues)`), feature-flag state from `## Feature Flag`, and a one-paragraph test plan (which layers were touched, how to re-run them).
 
-   Then stop. The user reviews the working tree and decides next steps (typically `/commit`, then `/pr`, which runs the review).
+   Then stop. The user reviews the working tree and decides next steps (typically `/wf:commit`, then `/wf:pr`, which runs the review).
