@@ -75,14 +75,6 @@ If you're contributing a new skill:
 - **Consistent** — follow the patterns in existing skills
 - **Documented** — update the README skills table
 
-### What Makes a Good Review Guide
-
-If you're contributing a language-specific review guide:
-
-- **Practical** — focus on issues that actually occur, not theoretical risks
-- **Specific** — include code patterns, not just category names
-- **Framework-aware** — cover the major frameworks for that language
-
 ## Code of Conduct
 
 This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md). By participating, you agree to uphold it.

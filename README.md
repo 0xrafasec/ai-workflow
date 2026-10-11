@@ -3,7 +3,7 @@
   <p align="center">
     Full SDLC (Software Development Life Cycle) for AI-assisted coding — from idea to production.<br/>
     Built on SDD (Spec-Driven Development): specs are the source of truth, AI agents execute them.<br/>
-    Skills, agents, review guides, and conventions — installed globally, applied everywhere.<br/><br/>
+    Skills, a reviewer agent, and conventions — installed globally, applied everywhere.<br/><br/>
     For <a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a>.
   </p>
 </p>
@@ -27,14 +27,13 @@ Each phase of development has dedicated tooling:
 - **Specification** — detailed feature specs with verification criteria (`/spec`)
 - **Planning** — phased roadmaps with dependency tracking (`/roadmap`)
 - **Implementation** — parallel execution across isolated worktrees (`/feature`, `/autopilot`)
-- **Review** — independent, language-aware review with specialized agents (`/review`, `/sec-review`; for stack-aware code review, use Anthropic's official `code-review` skill from `claude-code-plugins`)
+- **Review** — every PR is reviewed by a fresh-context `reviewer` agent before it is marked ready (`/pr`); for ad-hoc reviews use Claude Code's built-in `/code-review` and `/security-review`
 - **Governance** — decision records and change proposals at any point (`/adr`, `/rfc`)
 
 ## Features
 
 - **18 slash-command skills** covering every phase from idea to merged PR
-- **Specialized review agents** — architecture and security reviewers spawned as subagents
-- **Language-aware code review** — auto-detects Go, Rust, TypeScript, or Python and loads stack-specific best practices
+- **One reviewer agent** — a read-only, fresh-context reviewer with a fixed checklist and verdict format, dispatched by `/pr` and `/autopilot`
 - **Parallel execution** — worktree-based development with `/autopilot` for full roadmap execution
 - **Writer/reviewer separation** — a fresh-context reviewer is always spawned for every branch, never the session that wrote it; merging stays a separate, human-gated decision
 - **Notification hooks** — desktop notifications when Claude needs attention
@@ -58,10 +57,8 @@ The workflow uses a tiered model strategy — Opus for decisions, Sonnet for exe
 |------|-------|-----------|
 | Spec writing, design, interviews | **Opus** | Creative reasoning, edge case discovery |
 | Implementation (main session) | **Opus** | Complex design decisions |
-| Security review | **Opus** | False negatives are catastrophic |
 | Orchestration (`/autopilot`) | **Opus** | Dependency logic, phase management |
-| Architecture review | **Sonnet** | Structured criteria, checklist-driven |
-| Stack-specific review | **Sonnet** | Pattern matching against review guides |
+| Review (`reviewer` agent) | **Sonnet** | Small, checklist-driven input: diff + spec |
 | Worktree agents (`/autopilot`) | **Sonnet** | Following detailed specs, not designing |
 
 ## Quick Start
@@ -199,39 +196,20 @@ Skills are multi-step workflows invoked as slash commands inside Claude Code.
 
 ### Review
 
-| Skill | Description |
-|-------|-------------|
-| `/review` | PR/branch review using the writer/reviewer pattern |
-| `/sec-review` | Full security audit with parallel analysis agents |
-
-> **Stack-aware code review:** use Anthropic's official `code-review` skill from [`claude-code-plugins`](https://github.com/anthropics/claude-code). The previous in-repo `/code-review` skill was deprecated after a benchmark showed no detection lift over baseline at ~1.5× the cost. Language-specific guides in `reviews/` are still loaded on demand by `/review`, `/feature`, and `/fix`.
+There is no review skill. `/pr` dispatches the `reviewer` agent on every branch before marking the PR ready. To review someone else's branch or PR, use Claude Code's built-in `/code-review`; for a security pass, the built-in `/security-review`.
 
 ### Delivery
 
 | Skill | Description |
 |-------|-------------|
 | `/commit` | Stage and commit the working tree as one or more logical conventional commits (local-only, never pushes) |
-| `/pr [--draft]` | Open a pull request for the current branch — analyzes all commits in the range, drafts title + body, pushes if needed. `--draft` opens as a draft PR. |
+| `/pr [--draft] [--no-review]` | Push the branch and open a pull request as a **draft**, have the fresh-context `reviewer` agent review it, fix HIGH/MED findings (max 2 cycles), then mark it ready. `--draft` keeps it a draft; `--no-review` skips the review loop |
 
 ## Agents
 
-Agents are specialized reviewers spawned as subagents during implementation or review.
-
-| Agent | What it reviews |
-|-------|-----------------|
-| `architecture-reviewer` | Pattern consistency, separation of concerns, API stability, dependency hygiene |
-| `security-reviewer` | Injection flaws, auth issues, secrets in code, crypto weaknesses, data exposure |
-
-## Language-Specific Review Guides
-
-`/review`, `/feature`, and `/fix` load the matching guide on demand (and you can pass them to Anthropic's `code-review` skill as stack criteria). Polyglot projects load multiple guides.
-
-| Guide | Covers |
-|-------|--------|
-| Go | Error handling, concurrency, injection, interface design, project layout |
-| Rust | Unsafe audit, FFI, ownership, async patterns, error design, type system |
-| TypeScript | Node.js, Next.js, Nest.js — prototype pollution, SSR, DI, async patterns |
-| Python | Django, FastAPI, Flask — injection, path traversal, async, ORM patterns |
+| Agent | What it does |
+|-------|--------------|
+| `reviewer` | Read-only review of a branch diff against its spec: spec compliance, correctness, security at boundaries, test quality, convention drift. Runs the project's checks itself and returns `PASS` / `FIX_REQUIRED` with `HIGH` / `MED` / `LOW` findings |
 
 ## How It Works
 
@@ -257,7 +235,7 @@ The typical flow from idea to shipped code:
   ├── /factory <phase>     Ship one milestone/phase: parallel PRs + per-PR review loop
   └── /feature <spec>      Or implement one feature at a time
         │
-      /review              Independent review in a fresh session
+      /pr                  Draft PR → fresh-context reviewer → ready
 ```
 
 `/fix` can be used anytime for bug fixes (no spec needed). `/adr` and `/rfc` can be used at any point to capture decisions or propose changes.
@@ -296,15 +274,7 @@ ai-workflow/
 ├── uninstall.sh               # Claude Code uninstaller
 ├── bootstrap.sh               # One-liner bootstrap
 ├── agents/
-│   ├── architecture-reviewer.md
-│   └── security-reviewer.md
-├── commands/
-│   └── sec-review.md
-├── reviews/
-│   ├── go.md
-│   ├── rust.md
-│   ├── typescript.md
-│   └── python.md
+│   └── reviewer.md
 ├── skills/
 │   ├── prd/
 │   ├── architecture/
@@ -316,7 +286,6 @@ ai-workflow/
 │   ├── roadmap/
 │   ├── feature/
 │   ├── fix/
-│   ├── review/
 │   ├── autopilot/
 │   ├── new-project/
 │   ├── commit/

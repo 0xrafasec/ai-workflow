@@ -118,7 +118,7 @@ The skill-creator's `aggregate_benchmark.py` expects a specific layout we didn't
 
 Not for every skill change. The cost of benchmarking is real (spawning 8–10 subagents burns tokens), so we reserve it for:
 
-- **Workhorse skills** — `/feature`, `/fix`, `/review`. These fire constantly; regressions compound fast.
+- **Workhorse skills** — `/feature`, `/fix`, `/pr`. These fire constantly; regressions compound fast.
 - **Structural rewrites** — any change that drops, adds, or reorders a full step.
 - **Skills under suspicion** — if a skill "feels" slow or inconsistent, benchmark before tuning.
 
