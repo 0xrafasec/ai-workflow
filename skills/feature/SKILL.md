@@ -46,11 +46,11 @@ See the global **Trunk-Based Workflow** in root `CLAUDE.md` for worktree convent
 
 5. **Quality checks.** Run the project's lint, typecheck, and full test suite (check CLAUDE.md / Makefile for commands).
 
-   **Slice-size gate (trunk-based).** Before reporting completion, run `git diff --stat main...HEAD -- . ':(exclude)**/tests/**' ':(exclude)**/*_test.*' ':(exclude)**/*.test.*' ':(exclude)**/test_*'` (or the same pathspec against `git diff` if working changes are unstaged). If the **non-test** diff exceeds **~500 lines**, and it is more than one concern, stop and surface the overrun via **AskUserQuestion**: Count hand-written source only: tests, generated files, lockfiles, pure moves or renames, and deletions do not count.
+   **Slice-size gate (trunk-based).** Before reporting completion, measure the hand-written source this change adds: run `git diff --numstat main...HEAD -- . ':(exclude,glob)**/tests/**' ':(exclude,glob)**/*_test.*' ':(exclude,glob)**/*.test.*' ':(exclude,glob)**/test_*' ':(exclude,glob)**/*.lock' ':(exclude,glob)**/*-lock.*'` (or the same pathspec against `git diff` for unstaged work) and sum the first column — added lines. Leave out generated files and files that only moved; deletions are not in that column. If the total is over **~500 lines**, decide whether the change is one concern. **One concern:** carry on, and say in your report how large it is and why it stays together. **More than one:** stop and ask via **AskUserQuestion**:
    - If the spec is a single file: include a "ship as-is" override option plus 1–2 concrete split proposals (e.g., "Split into N sub-slices under `docs/specs/NNN_<name>/MMM_*.md`"). Recommend the option that best matches the diff shape — recommend "ship as-is" only when the bulk is mechanical (formatter reflow, generated lockfile, mass rename) and the substantive review surface is small.
    - If the spec is already one slice of a sliced feature: include "ship as-is", "defer hunks X/Y to a follow-up slice", and any other relevant choice for the user.
 
-   Never silently leave a >500-line slice in the working tree. The gate can be overridden by the user ("ship as-is"), but never by the skill.
+   The number is a prompt to ask the question, not a cap: never split one concern to get under it, and never silently ship a >500-line change that is more than one concern. Only the user can override the gate ("ship as-is").
 
    **Feature flag wiring.** If the spec's `## Feature Flag` section names a flag, verify the new behavior is gated by it. If the flag doesn't exist yet in the project, create it (default off) as part of this slice.
 

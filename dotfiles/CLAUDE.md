@@ -6,15 +6,16 @@
 - Check the result against the spec or design it implements, not only against the checks.
 
 ## Workflow
-- Spec first, code second: read the spec before implementing. A change with no spec (a fix, a small chore) does not need one written for it.
+- Spec first, code second: read the spec before implementing. A bug fix, or a chore that adds no behaviour, does not need a spec written for it.
 - Commits are conventional (`feat:`, `fix:`, `refactor:`, `chore:`, `test:`, `docs:`, `perf:`, `security:`), split by logical concern, and each leaves the codebase working.
 - Security-sensitive changes — auth, crypto, input parsing, secrets, permissions, anything that runs automatically — get the built-in `/security-review` before the PR is marked ready.
 
 ## Review
 - **Every PR that changes behaviour is reviewed by a fresh context before it is ready** — the `wf:reviewer` agent, which `/wf:pr` dispatches, or a fresh session. The context that wrote the code never reviews it. Do this unprompted; a small or test-only diff is not a reason to skip it.
 - **One reviewer per PR, not per commit.** Fix `HIGH` and `MED` findings and re-review once per round, at most two rounds. `LOW` findings are fixed or listed, and never trigger another round. A PR that has not converged after two rounds stays a draft and comes to me with the findings.
-- **What may skip the reviewer:** a change that cannot alter behaviour — a typo or wording fix in docs, a changelog or version bump, a pure file move, a revert. Say in the PR that it was not reviewed and why.
-- **Merging is my call, not the review's.** After the review, report the findings and stop. Merge on your own only when I said so for that piece of work ("merge it", "merge if it passes", "autonomous", or `/wf:autopilot` without `--supervised`). That authorization covers the work I gave it for and does not carry to the next task.
+- **What may skip the reviewer:** only a diff that is entirely typo, spelling or formatting fixes in prose, or a changelog entry or project-version bump. Text that instructs an agent — a skill, an agent definition, a `CLAUDE.md`, a prompt — is behaviour and never qualifies; neither does a revert, a file move, or a dependency bump. When unsure, review. State a skipped review in the PR body (`Review: skipped — <reason>`).
+- A PR that changes after a `PASS` is re-reviewed only if the new commits change behaviour.
+- **Merging is my call, not the review's.** After the review, report the findings and stop. Merge on your own only when I said so for that piece of work ("merge it", "merge if it passes", "autonomous", or `/wf:autopilot` without `--supervised`). That authorization covers only the task I gave it for and never carries to the next one.
 
 ## Git
 - Before a commit or PR, confirm you are in the intended repository and on the intended branch.
@@ -28,7 +29,7 @@
 - Large features ship as independently mergeable slices off `main`, not stacked on each other. A slice that is not user-ready merges behind a feature flag.
 - Worktrees live outside the repo (`../<repo>-<slug>`), so `git status` stays clean.
 - After a merge, delete the branch (local and remote) and remove the worktree. Never reuse a merged branch.
-- A PR description has a summary, a test plan, and — when they apply — a link to the spec and a security note.
+- A PR description has a summary, a test plan, and — when they apply — a link to the spec and a security checklist.
 - The reasoning, recipes and FAQ are in `docs/TRUNK_BASED_WORKFLOW.md` in the ai-workflow repo.
 
 ## Code Quality
