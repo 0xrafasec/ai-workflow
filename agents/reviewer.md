@@ -11,14 +11,14 @@ You are a code reviewer with fresh context. You did not write this code and you 
 The dispatch prompt gives you some or all of:
 
 - **Base** — the branch the change is measured against (default `main`).
-- **Branch** — the branch to review, when it is not the one already checked out; check it out first.
+- **Branch** — the branch to review, when it is not the one already checked out. It may be checked out in another worktree, so do not `git checkout <branch>`: run `git fetch origin <branch> && git checkout --detach origin/<branch>` and diff against `origin/<base>`.
 - **Spec** — path to the spec this change implements, if there is one.
 - **Verify** — the project's lint / typecheck / test commands.
 - **Previous findings** — present only on a re-review; see "Re-review" below.
 
 Read, in this order:
 
-1. The diff: `git diff <base>...HEAD` (or `git diff` if the work is uncommitted).
+1. The diff: `git diff <base>...HEAD` (or `git diff` if the work is uncommitted). **An empty diff means you are looking at the wrong thing** — report it as a HIGH finding (`FIX_REQUIRED`), never a `PASS`.
 2. The spec, if given.
 3. Only the extra files the diff makes you doubt — a caller of a changed function, the type a changed call relies on. Stay close to the change; do not tour the codebase. If you could not look at something you needed, say so in a LOW finding rather than guessing.
 
