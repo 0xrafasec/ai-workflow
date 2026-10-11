@@ -82,6 +82,10 @@ Write to `docs/ARCHITECTURE.md`:
 
 [Infrastructure, environments, how a release reaches production, rollback.]
 
+## Scale and Performance
+
+[Expected load, known bottlenecks, what must be fast.]
+
 ## Key Decisions
 
 | Decision | Choice | Alternatives Considered | Rationale |
@@ -134,6 +138,7 @@ Write to `docs/ARCHITECTURE.md`:
 |-------|---------|-------------|
 | [e.g., Lint] | [e.g., make lint] | Yes |
 | [e.g., Unit tests] | [e.g., make test-unit] | Yes |
+| [e.g., E2E tests] | [e.g., make test-e2e] | No (nightly) |
 
 ## Coding Standards
 
@@ -154,7 +159,7 @@ Write to `docs/ARCHITECTURE.md`:
 - **Vulnerability scanning and update cadence:** [tool, frequency, owner]
 ```
 
-Adapt the structure to the project. A small project may not need Deployment, Scale or Observability; a monorepo may need a package layout section or per-package testing notes. Keep the `## Testing Strategy` heading whatever else changes.
+Adapt the structure to the project. A small project may not need Deployment, Scale and Performance, or Observability; a monorepo may need a package layout section or per-package testing notes. Keep the `## Testing Strategy` heading whatever else changes.
 
 ## After Writing
 
