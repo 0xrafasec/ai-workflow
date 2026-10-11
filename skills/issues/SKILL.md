@@ -1,6 +1,7 @@
 ---
 name: issues
 description: "File GitHub milestones + issues for a roadmap, a phase, or a spec — one milestone per phase, one issue per task/slice — using the trunk-based patterns from /wf:spec, /wf:roadmap, and /wf:feature. Use when the user says 'create the GitHub issues', 'file the issues for this roadmap', 'open issues for this spec', 'make the milestones', or points at docs/roadmap/*.md or docs/specs/*.md and asks to hand them to GitHub."
+argument-hint: "<roadmap, phase or spec file>"
 ---
 File GitHub milestones and issues for: $ARGUMENTS
 

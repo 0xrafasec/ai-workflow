@@ -1,6 +1,7 @@
 ---
 name: new-project
 description: "Scaffold a new project with the full AI-assisted development workflow — Makefile targets, linter/formatter configs, pre-commit hooks, CLAUDE.md, docs skeleton, tailored to the chosen stack (python, go, typescript/nextjs, rust, etc.). Use when the user says 'start a new project', 'bootstrap a repo', 'scaffold X', 'set up a fresh codebase for Y', 'init a new service'."
+argument-hint: "<project-name> [language/framework]"
 ---
 Scaffold a new project with the AI-assisted development workflow.
 

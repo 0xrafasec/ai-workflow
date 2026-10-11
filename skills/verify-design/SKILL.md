@@ -1,6 +1,7 @@
 ---
 name: verify-design
 description: "Diff the running UI against Paper design refs with Playwright runtime fidelity checks, then fix mismatches in place. Use when the user says 'verify the design', 'does this match Paper', 'check design fidelity', 'the UI drifted from the mock', or before and during UI work on a page that has a Paper artboard."
+argument-hint: "[page]"
 ---
 Verify current UI against Paper design references for: $ARGUMENTS
 

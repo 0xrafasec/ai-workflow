@@ -1,6 +1,7 @@
 ---
 name: spec
 description: "Create a feature implementation spec at docs/specs/NNN_<feature>.md (prefix mirrors the roadmap phase) — scope, approach, affected files, verification. Use when the user says 'spec out feature X', 'write the implementation plan for Y', 'turn this idea into a spec', 'document how we'll build this', or needs a doc the /wf:feature skill can execute from later."
+argument-hint: "<feature>"
 ---
 Create a feature implementation spec for: $ARGUMENTS
 
