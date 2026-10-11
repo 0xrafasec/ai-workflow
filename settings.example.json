@@ -12,11 +12,6 @@
       }
     ]
   },
-  "statusLine": {
-    "type": "command",
-    "command": "bash \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/statusline-command.sh\"",
-    "refreshInterval": 30
-  },
   "enabledPlugins": {
     "wf@ai-workflow": true,
     "skill-creator@claude-plugins-official": true,

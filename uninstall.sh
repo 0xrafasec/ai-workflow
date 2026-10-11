@@ -59,6 +59,8 @@ echo ""
 echo "=== AI Workflow Uninstaller ==="
 echo ""
 
+# statusline-command.sh is no longer installed from here (it moved to
+# rafagomes/claude-code-mods); the entry removes the link an older install left.
 for f in CLAUDE.md settings.json statusline-command.sh skills/rlabs-design; do
     unlink_if_ours "$CLAUDE_DIR/$f"
 done
