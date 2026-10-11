@@ -1,6 +1,7 @@
 ---
 name: roadmap
 description: "Create a phased roadmap from design docs — one numbered phase per file under docs/roadmap/NNN_*.md. Use when the user asks to plan phases, break work into milestones, sequence a build, says 'what order should we ship in', 'lay out the roadmap', 'split this into phases', or wants a delivery plan derived from the PRD and architecture."
+argument-hint: "[phase name | doc path]"
 ---
 Create a phased roadmap for: $ARGUMENTS
 

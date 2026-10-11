@@ -1,6 +1,7 @@
 ---
 name: fix
 description: "Diagnose and fix a bug from a description, a stack trace, or a GitHub issue link — reproduce and patch. Stops with a working tree the user can review. Use when the user says 'fix this', 'debug X', 'something is broken', 'why isn't Y working', pastes an error/traceback, or links an issue expecting a patch. Covers root-cause diagnosis, not just symptom patching."
+argument-hint: "<description | issue link>"
 ---
 Fix the bug described in $ARGUMENTS.
 

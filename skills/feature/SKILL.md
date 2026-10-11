@@ -1,6 +1,7 @@
 ---
 name: feature
 description: "Implement a feature end-to-end from a spec file at docs/specs/<name>.md — code it and verify it. Stops with a working tree the user can review. Supports --commit (auto-commit) and --pr (auto-commit, open the PR, run its review). Use when the user says 'implement the auth spec', 'build feature X', 'code up the Y spec', 'work through docs/specs/<name>.md', or points at a spec and asks to execute it."
+argument-hint: "<spec name | path | #issue> [--commit | --pr]"
 ---
 Implement the feature described in $ARGUMENTS.
 

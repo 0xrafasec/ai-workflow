@@ -1,6 +1,7 @@
 ---
 name: pr
 description: "Push the current branch and open a pull request via gh — assumes commits already exist. Use when the user says 'open a PR', 'push this up for review', 'ship this branch', 'create a draft PR', 'put this up on GitHub', or is ready to hand a branch off to reviewers. By default opens the PR as a draft, runs a fresh-context review + bounded fixes, then marks it ready on PASS. Supports --draft (stay draft) and --no-review (skip the review loop)."
+argument-hint: "[--draft] [--no-review]"
 ---
 Open a pull request for the current branch. Assumes commits already exist (from `/wf:commit`, `/wf:feature`, `/wf:fix`, or manual commits).
 
