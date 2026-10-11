@@ -1,119 +1,70 @@
 ---
 name: verify-design
-description: "Diff the running UI against Paper design refs with Playwright runtime fidelity checks, then fix mismatches in place. Use when the user says 'verify the design', 'does this match Paper', 'check design fidelity', 'the UI drifted from the mock', or before and during UI work on a page that has a Paper artboard."
-argument-hint: "[page]"
+description: "Compare the running UI with its Paper artboards in a real browser (Playwright, desktop and mobile) and fix the mismatches in the code. Use when the user says 'verify the design', 'does this match Paper', 'check design fidelity', 'the UI drifted from the mock', or after building a page that has a Paper artboard. Edits source files; needs the Paper MCP, Playwright and a runnable dev server."
+argument-hint: "[page | component | path] [notes]"
 ---
-Verify current UI against Paper design references for: $ARGUMENTS
+Verify the current UI against its Paper design references for: $ARGUMENTS
 
-## Purpose
+This is a fix-in-place fidelity pass: load the Paper artboards and tokens, drive the running app in a real browser, fix what differs, and re-verify. Fix what you find in the same session; a report of mismatches leaves the user to redo the work you just did. Ask only when a mismatch looks intentional or the fix changes scope.
 
-This skill does a **fix-in-place fidelity pass** against Paper design references. It:
+Tools are named by short name (Paper's `get_basic_info`, Playwright's `browser_navigate`); the MCP prefix depends on how each is installed. Paper preflight: load Paper's guide first (`get_guide`, topic `paper-mcp-instructions`), call `get_font_family_info` before any typographic styling, call `finish_working_on_nodes` if you edit the canvas, and never show raw node IDs to the user. If the Paper MCP is not connected, or the open file is not the project's, stop and say so. Only if the user agrees, fall back to `docs/design/DESIGN_SYSTEM.md` and `docs/design/assets/` screenshots, and mark every finding "doc-derived, not verified in Paper". If the Playwright MCP is not available, stop and suggest installing it; a static comparison cannot catch console errors, clipping or broken interactions.
 
-1. Loads Paper artboards + design tokens (source of truth)
-2. Reads the corresponding source files
-3. Uses **Playwright** to exercise the running app at real viewports (desktop + mobile), capturing screenshots, console errors, and interaction flows
-4. **Fixes** mismatches directly — do NOT stop at a report
-5. Re-verifies with Playwright and runs lint / typecheck / tests before reporting done
+## Arguments
 
-> The user does NOT want a pure report. They want the issues found AND resolved in the same session. Only stop to ask if a mismatch looks intentional or the fix would change scope.
+- none: every page with design references. If that is more than about 5 pages, show the scope table and ask which to start with, or work in roadmap priority order.
+- A page or route name (`dashboard`), or a component name or file path (`Hero`).
+- Free-form notes (specific bugs, reference screenshots, a page to use as style anchor) are priority work items.
 
-## Parse Arguments
+## 1. Locate design references
 
-- **No argument:** check all pages with design refs
-- **Page / route name:** `/wf:verify-design dashboard` — check that page
-- **Component name / file path:** `/wf:verify-design Hero` or a path to the component file
+Find artboards in this order: the roadmap's `Design reference` field and the Canvas Map in `docs/design/DESIGN_SYSTEM.md`; then the `Flow / Screen / State / Platform` artboard names via `find_nodes`; then artboard IDs in specs. Names survive a rebuilt Paper file; IDs go stale.
 
-Arguments may include free-form notes from the user (specific bugs, reference screenshots, which page to use as a style anchor). Treat those as priority work items.
+Build a scope table (page, desktop artboard, mobile artboard, source file). If there is a desktop and a mobile artboard, check both. If there is no design material at all, stop and tell the user to run `/wf:design` first.
 
-## Step 1 — Locate design references
+## 2. Load tokens and artboards
 
-Priority:
-1. `docs/design/` (page-level docs, artboard exports, `DESIGN_SYSTEM.md`)
-2. Wherever the project keeps specs and roadmap (`docs/specs/`, `docs/roadmap/`) — extract the Paper artboard IDs they reference (short IDs such as `4P-0`)
+Read `docs/design/DESIGN_SYSTEM.md` and the project's token sources (global stylesheet, theme config such as `globals.css` or `tailwind.config.*`; find them, do not assume a path). Record palette, type scale, spacing, radii, shadows, and flag hardcoded values that duplicate a token.
 
-Build a scope table (Page → Paper artboard (desktop) → Paper artboard (mobile) → source file). If both a desktop and mobile artboard exist, check **both**.
+From Paper: `get_basic_info` once per session (it gives artboard sizes), `get_screenshot` per artboard in scope, and `get_jsx` / `get_computed_styles` on key nodes. Never read sizes or colours from screenshots.
 
-If no design docs exist at all, stop and tell the user to run `/wf:design` first.
+## 3. Read the source
 
-## Step 2 — Load design tokens
+Read every file the target page touches: page, components, global CSS, UI primitives.
 
-Read `docs/design/DESIGN_SYSTEM.md` and the project's token sources — the global stylesheet and the theme config (e.g. `globals.css`, `tailwind.config.*`; find them, don't assume a path). Record palette, type scale, spacing, radii, shadows. Flag hardcoded values in source that duplicate a token.
+## 4. Check in a real browser
 
-## Step 3 — Load Paper artboard context
+Take the dev server's start command and URL from the project's `CLAUDE.md`, `package.json` scripts or `Makefile`; if it is not running, start it in the background, and stop any server you started when done. If you cannot tell how to start it, ask. If the page needs authentication, ask once for test credentials or a seed route; do not guess or create accounts.
 
-Use the Paper MCP:
-- `get_basic_info` once per session
-- `get_screenshot` on each artboard in scope (desktop + mobile)
-- `get_jsx` / `get_computed_styles` on key nodes — **never read sizes/colors from screenshots alone**
+For each page in scope:
 
-## Step 4 — Read source files
+1. `browser_resize` to the desktop artboard's size (default 1440x900), `browser_navigate`, full-page `browser_take_screenshot`.
+2. The same at the mobile artboard's size (default 390x844). If a page has an artboard for only one viewport, still load the other to check overflow and clipping, and report that it has no design reference.
+3. `browser_console_messages` with `level: "error"`. Any runtime error is HIGH.
+4. If the artboard has a `/ Dark` variant and the app supports dark mode, repeat with `browser_emulate_media` `colorScheme: "dark"`.
+5. Exercise interactive elements the user flagged (menus, drawers, dialogs, forms): open, screenshot, close by every documented path (button, Esc, backdrop). If motion is in scope, repeat with `reducedMotion: "reduce"`.
+6. Compare each browser screenshot with its Paper screenshot: typography, colour, spacing, alignment, overflow and clipping.
 
-Read every file the target page touches (page, components, global CSS, relevant UI primitives). Don't guess.
-
-## Step 5 — Playwright runtime fidelity (MANDATORY for any UI check)
-
-Ensure the dev server is running. Take the start command and URL from the project's `CLAUDE.md`, `package.json` scripts, or `Makefile`; if it isn't up, start it in the background before using Playwright. If you can't determine how to start it, ask.
-
-For each in-scope page, drive a real browser:
-
-1. `browser_resize` to desktop (`1440x900`) → `browser_navigate` → `browser_take_screenshot` (full page)
-2. `browser_resize` to mobile (`390x844`) → same navigation → full-page screenshot
-3. `browser_console_messages` (`level: "error"`) — any runtime error is a HIGH finding
-4. Exercise any interactive element the user flagged (menus, drawers, dialogs, forms):
-   - Open it, screenshot, try to close it by every documented path (close button, Esc, backdrop click)
-   - Trigger the same flow after `prefers-reduced-motion` if motion is in scope
-5. Compare the Playwright screenshots against the corresponding Paper screenshots side by side. Diff typography, color, spacing, alignment, and overflow/clipping.
-
-Record findings in memory (not a file) — severity guide below. Track hard failures (console errors, overflow clipping, inoperable controls) as **HIGH**.
-
-## Step 6 — Fix in place
-
-Apply targeted edits. Rules:
-
-- **Don't rewrite entire components** unless truly necessary.
-- Prefer token fixes (Tailwind class / CSS var) over ad-hoc values.
-- Keep changes scoped to the mismatches found; do not bundle unrelated refactors.
-- If a fix would change documented behavior or scope, stop and ask.
-- For interactive bugs (menu can't close, backdrop error): fix the interaction, not just the visual.
-
-## Step 7 — Re-verify
-
-After edits:
-1. Re-run the Playwright pass (desktop + mobile + interaction flow). Confirm screenshots match Paper and consoles are clean.
-2. Run the project's lint, typecheck, and test commands (from `CLAUDE.md`, `package.json` scripts, or the `Makefile`).
-3. Paste the tail of each run to the user.
-
-## Severity guide
+Keep the findings list in your working notes; do not write a report file.
 
 | Severity | Examples |
-|----------|---------|
-| HIGH | Wrong font family, wrong primary color, missing page section, broken responsive layout, runtime console errors, inoperable interactive components (menu/drawer can't close), content overflow / clipping visible at a supported viewport |
-| MEDIUM | Font size off by >2 steps, wrong spacing in a primary content area, missing loading/error state, token replaced by hardcoded value |
-| LOW | ≤2px spacing drift, slightly off shadow, minor border-radius mismatch |
+|---|---|
+| HIGH | wrong font family or primary colour; missing page section; broken responsive layout; console errors; inoperable controls (menu cannot close); visible overflow or clipping; a loading, empty or error state that Paper shows but the UI lacks |
+| MEDIUM | font size off by more than 2 steps; wrong spacing in a primary content area; a token replaced by a hardcoded value |
+| LOW | spacing drift of 2px or less; slightly off shadow; minor radius mismatch |
 
-## Rules
+A state that neither Paper nor the UI has: note it, do not invent it. Source of truth, in order: Paper computed values, design doc values, token config, screenshots.
 
-1. **Fix, don't just report.** This skill modifies code. The final message is a summary of what changed + verification output, not a mismatch list.
-2. **Source-of-truth order:** Paper computed values > design doc values > token config > screenshots (lowest trust).
-3. **Quote exact values** in any before/after explanation.
-4. **Token violations are at minimum MEDIUM.** Raw hex/px/font names that should be tokens get replaced.
-5. **Missing states are HIGH.** Loading/empty/error/not-found for a user-facing page must exist.
-6. **Never skip responsive checks.** Every target is exercised at desktop (1440x900) AND mobile (390x844) via Playwright.
-7. **Never skip Playwright.** A static-only pass is not sufficient for this skill. If Playwright is unavailable, say so and stop.
-8. **Only ask the user when scope changes** or when a "mismatch" looks like an intentional deviation you can't verify from the spec.
+## 5. Fix in place
 
-## Dispatch & model fit
+- Make targeted edits; do not rewrite components unless necessary, and do not bundle unrelated refactors.
+- Prefer a token (class or CSS variable) over an ad-hoc value, and replace raw hex, px and font names that should be tokens.
+- For interactive bugs, fix the interaction, not only the visual.
+- If a fix would change documented behaviour or scope, stop and ask.
 
-This skill is a **single-pass agent**: one invocation reviews + fixes + re-verifies. Do not split into a separate "review" and "fix" cycle — that duplicates the Paper MCP + Playwright load and doubles spend for the same result.
+## 6. Re-verify
 
-Writer/reviewer separation (from global workflow rules) applies to *code-review* skills. `/wf:verify-design` is a fidelity-fix skill, not a reviewer — it is authored to mutate code. Treating its output as a review-only gate is a misuse.
+Repeat the browser pass (desktop, mobile, flagged interactions) and confirm the screenshots match Paper and the console is clean. Run the project's lint, typecheck and tests (from `CLAUDE.md`, `package.json` or the `Makefile`); report each in one line (command, result) and show output only for a failure.
 
-Model guidance for agents that dispatch this skill to sub-agents:
+## Report
 
-| Dispatch mode | Model | Rationale |
-|---------------|-------|-----------|
-| First-pass on a new/changed PR | Sonnet | Analytical comparison + targeted edits; Opus is overkill for rule-matching work |
-| Re-verify against a prior delta list | Haiku | Checklist walking on a known set of items |
-| Design + implementation from scratch in one shot | Opus | Wider synthesis, ambiguous token choice, layout decisions |
-
-If invoked directly by the user (not via a parent agent), run in the current session at whatever model the user has chosen — do not downgrade for cost.
+Final message: pages checked; mismatches fixed (before -> after, with exact values); anything left because it looked intentional; the check results. Leave the changes uncommitted unless asked and suggest `/wf:commit`. This skill edits code, so the changes still go through the normal commit and `/wf:pr` review; it does not replace `wf:reviewer`.
