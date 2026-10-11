@@ -73,7 +73,7 @@ Based on iter-1 findings:
 
 ### What shipped
 
-v2. See `skills/feature/SKILL.md`. The review step (originally v1's step 7) was kept but compressed — the rate-limiter finding shows it occasionally catches real concurrency bugs that would otherwise ship.
+v2. See `skills/feature/SKILL.md`. The review step (originally v1's step 7) was kept but compressed — the rate-limiter finding shows it occasionally catches real concurrency bugs that would otherwise ship. (The review has since moved out of `/feature`: `/pr` dispatches the `reviewer` agent on the committed branch.)
 
 ### What didn't
 

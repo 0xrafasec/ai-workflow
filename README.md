@@ -26,14 +26,14 @@ Each phase of development has dedicated tooling:
 - **Design** — architecture, technical design, and threat modeling (`/architecture`, `/tdd`, `/security`)
 - **Specification** — detailed feature specs with verification criteria (`/spec`)
 - **Planning** — phased roadmaps with dependency tracking (`/roadmap`)
-- **Implementation** — parallel execution across isolated worktrees (`/feature`, `/autopilot`)
+- **Implementation** — one slice at a time from a spec (`/feature`), or a whole roadmap in parallel across isolated worktrees (`/autopilot`)
 - **Review** — every PR is reviewed by a fresh-context `reviewer` agent before it is marked ready (`/pr`); for ad-hoc reviews use Claude Code's built-in `/code-review` and `/security-review`
 - **Governance** — decision records and change proposals at any point (`/adr`, `/rfc`)
 
 ## Features
 
 - **18 slash-command skills** covering every phase from idea to merged PR
-- **One reviewer agent** — a read-only, fresh-context reviewer with a fixed checklist and verdict format, dispatched by `/pr` and `/autopilot`
+- **One reviewer agent** — a read-only, fresh-context reviewer with a fixed checklist and verdict format, dispatched by `/pr`
 - **Parallel execution** — worktree-based development with `/autopilot` for full roadmap execution
 - **Writer/reviewer separation** — a fresh-context reviewer is always spawned for every branch, never the session that wrote it; merging stays a separate, human-gated decision
 - **Notification hooks** — desktop notifications when Claude needs attention
@@ -188,7 +188,7 @@ Skills are multi-step workflows invoked as slash commands inside Claude Code.
 |-------|-------------|
 | `/spec <feature>` | Feature implementation spec with verification criteria |
 | `/roadmap` | Phased task breakdown from specs |
-| `/feature <spec>` | End-to-end feature implementation from a spec. `--commit` auto-commits after completion (outputs log only); `--pr` auto-commits + opens PR (outputs log + URL only) |
+| `/feature <spec>` | End-to-end feature implementation from a spec. `--commit` auto-commits after completion; `--pr` also opens the PR and runs its review loop |
 | `/fix <issue>` | Diagnose and fix a bug from a description, stack trace, or GitHub issue |
 | `/autopilot` | Execute a full roadmap **autonomously** — develop → review → fix → **merge to main**, phase after phase, no human gate. `--supervised` restores per-phase checkpoints |
 | `/factory <phase>` or `--milestone <N>` | Single-milestone/phase pipeline: implements every open issue as conflict-free parallel PRs, each pre-reviewed by a fresh-context reviewer agent (2-cycle bounded fix loop, no auto-merge) |

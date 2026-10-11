@@ -10,7 +10,7 @@ Open a pull request for the current branch. Assumes commits already exist (from 
 
 $ARGUMENTS may contain:
 - **`--draft`** — leave the PR as a draft even after the review passes (explicit work-in-progress). The fresh review still runs; only the final `gh pr ready` transition is skipped.
-- **`--no-review`** — skip the fresh-context review loop entirely and open the PR directly (ready-for-review, unless `--draft`). Use for trivial or time-critical PRs, or when a fresh-context review of these exact commits already ran (say so when you use it).
+- **`--no-review`** — skip the fresh-context review loop entirely and open the PR directly (ready-for-review, unless `--draft`). Use only when a fresh-context review of these exact commits already ran (say which one when you use it) — a small or urgent diff is not a reason to skip.
 - **No flags** — the default flow: open as draft, run the fresh review + bounded fixes, auto-mark ready on PASS.
 
 ## Guardrails
@@ -21,7 +21,7 @@ A few things that matter, and why:
 - **Don't force-push any branch without explicit user confirmation.** Even on feature branches, someone may have pulled or based work off it — ask first.
 - **Don't merge, request reviewers, add labels, or close issues as part of this skill.** Those are human judgment calls that depend on team conventions and context this skill doesn't have. Open the PR; let the user drive the rest.
 - **Don't add Claude / Anthropic co-author tags in the PR body.** Co-authorship belongs on individual commits (where configured), not repeated in PR descriptions where it just adds noise.
-- **If the working tree is dirty, stop and point the user at `/commit`.** This skill opens PRs; it doesn't commit. Mixing the two obscures what the PR actually contains.
+- **If the working tree is dirty, stop and point the user at `/commit`.** This skill doesn't commit pre-existing working-tree changes — mixing the two obscures what the PR actually contains. The only commits it makes are review fixes in step 9, staging just the files it fixed.
 
 ## Steps
 
@@ -133,7 +133,7 @@ A few things that matter, and why:
    )
    ```
 
-   The agent definition carries the checklist and the output format; the prompt only supplies the inputs. It returns `VERDICT`, `CHECKS`, `FINDINGS` (`HIGH` / `MED` / `LOW`) and a one-line `SUMMARY`.
+   The agent definition carries the checklist and the output format; the prompt only supplies the inputs. Take the `Verify` commands from `CLAUDE.md`, the `Makefile`, or the package scripts; pass `none` if the project has none. It returns `VERDICT`, `CHECKS`, `FINDINGS` (`HIGH` / `MED` / `LOW`) and a one-line `SUMMARY`.
 
    **Process the verdict:**
    - `PASS`, no findings → record `Review: PASS`. Go to step 10.
