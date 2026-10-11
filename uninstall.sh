@@ -6,9 +6,9 @@ set -euo pipefail
 # The plugin itself is removed with `claude plugin uninstall wf@ai-workflow`.
 #
 # CLAUDE_DIR selects which Claude config dir to clean (default ~/.claude), and
-# must match the one install.sh was run against. Only symlinks are removed, so
-# a profile that kept its own settings.json (install.sh --no-settings) is left
-# untouched.
+# must match the one install.sh was run against. Only symlinks that point into
+# this clone are removed, so a profile that kept its own settings.json
+# (install.sh --no-settings), or links it to its own dotfiles, is left untouched.
 
 # Resolve a directory to its canonical form so that ~/.claude, ~/.claude/,
 # ~/./.claude and a symlinked ~/.claude all compare equal. The primary-dir
@@ -23,6 +23,7 @@ canonical_dir() {
 PRIMARY_CLAUDE_DIR="$(canonical_dir "$HOME/.claude")"
 CLAUDE_DIR="$(canonical_dir "${CLAUDE_DIR:-$HOME/.claude}")"
 BIN_DIR="${AIWF_BIN_DIR:-$HOME/.local/bin}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -32,9 +33,15 @@ NC='\033[0m'
 info()  { echo -e "${GREEN}[+]${NC} $1"; }
 warn()  { echo -e "${YELLOW}[!]${NC} $1"; }
 
-unlink_if_symlink() {
+# True only for a symlink whose target is inside this clone.
+is_ours() {
+    [ -L "$1" ] || return 1
+    case "$(readlink "$1")" in "$SCRIPT_DIR"/*) return 0 ;; *) return 1 ;; esac
+}
+
+unlink_if_ours() {
     local target="$1"
-    if [ -L "$target" ]; then
+    if is_ours "$target"; then
         rm "$target"
         info "Removed symlink: $target"
 
@@ -53,26 +60,28 @@ echo "=== AI Workflow Uninstaller ==="
 echo ""
 
 for f in CLAUDE.md settings.json statusline-command.sh skills/rlabs-design; do
-    unlink_if_symlink "$CLAUDE_DIR/$f"
+    unlink_if_ours "$CLAUDE_DIR/$f"
 done
 
 # Before the toolkit became a plugin, install.sh symlinked every skill, agent,
 # command and review guide into the config dir. Sweep any of those that still
 # point into this clone, so upgrading does not leave them shadowing the plugin.
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 for dir in skills agents commands reviews; do
     [ -d "$CLAUDE_DIR/$dir" ] || continue
     while IFS= read -r -d '' link; do
-        case "$(readlink "$link")" in
-            "$SCRIPT_DIR"/*) rm "$link"; info "Removed legacy symlink: $link" ;;
-        esac
+        is_ours "$link" || continue
+        rm "$link"
+        info "Removed legacy symlink: $link"
+        # Old skills were skills/<name>/SKILL.md; drop the directory the link
+        # leaves empty, and nothing else.
+        parent="$(dirname "$link")"
+        [ "$parent" = "$CLAUDE_DIR/$dir" ] || rmdir "$parent" 2>/dev/null || true
     done < <(find "$CLAUDE_DIR/$dir" -type l -print0)
-    find "$CLAUDE_DIR/$dir" -depth -type d -empty -delete
 done
 
 # The aiwf launcher no longer exists; remove the link an older install left.
 if [ "$CLAUDE_DIR" = "$PRIMARY_CLAUDE_DIR" ]; then
-    unlink_if_symlink "$BIN_DIR/aiwf"
+    unlink_if_ours "$BIN_DIR/aiwf"
 fi
 
 echo ""
