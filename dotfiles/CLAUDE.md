@@ -23,7 +23,7 @@
 
 ## Trunk-Based Workflow
 - `main` is trunk and always deployable. No long-lived `develop` or `release/*` branches.
-- Branches are short-lived (hours to about two days) and named by type: `feat/<slug>`, `fix/<slug>`, `refactor/<slug>`, `docs/<slug>`, `chore/<slug>`, `test/<slug>`, `perf/<slug>`, `security/<slug>`.
+- Branches are short-lived (hours to about two days) and named by type: `feat/<slug>`, `fix/<slug>`, `refactor/<slug>`, `docs/<slug>`, `chore/<slug>`, `test/<slug>`, `perf/<slug>`, `build/<slug>`, `ci/<slug>`, `security/<slug>`.
 - **One branch = one PR = one concern.** A PR should be something a reviewer can hold in one pass: one vertical slice, independently mergeable, with its docs.
 - **Size is a signal, not a quota.** Past roughly **500 added source lines**, stop and ask whether it is really one concern; split it if it is two. Tests, generated files, lockfiles, pure moves or renames, and deletions do not count, so never trim tests to fit. Do not split one concern into several PRs just to stay under the number — small PRs that only make sense together cost more review than one coherent PR.
 - Large features ship as independently mergeable slices off `main`, not stacked on each other. A slice that is not user-ready merges behind a feature flag.

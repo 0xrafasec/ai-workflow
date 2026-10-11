@@ -30,7 +30,7 @@ $ARGUMENTS may contain:
    - `git status` and `git rev-parse --abbrev-ref HEAD`.
    - **Dirty tree:** stop — *"Working tree has uncommitted changes. Run `/wf:commit` first, then re-run `/wf:pr`."*
    - **On `<base>`:** stop — *"You're on `<base>`. Create a feature branch first."*
-   - **Branch name off the convention** (`feat|fix|refactor|docs|chore|test|perf|security/<slug>`, see **Trunk-Based Workflow** in your global `CLAUDE.md`): warn and offer to rename before pushing.
+   - **Branch name off the convention** (`feat|fix|refactor|docs|chore|test|perf|build|ci|security/<slug>`, see **Trunk-Based Workflow** in your global `CLAUDE.md`): warn and offer to rename before pushing.
    - **Size.** Measure the added hand-written source:
      `git diff --numstat origin/<base>...HEAD -- . ':(exclude,glob)**/tests/**' ':(exclude,glob)**/__tests__/**' ':(exclude,glob)**/*_test.*' ':(exclude,glob)**/*.test.*' ':(exclude,glob)**/*.spec.*' ':(exclude,glob)**/*_spec.*' ':(exclude,glob)**/test_*' ':(exclude,glob)**/*.lock' ':(exclude,glob)**/*-lock.*'`
      and sum the first column. Leave out generated files and files that only moved. Over ~500: decide whether it is one concern. One concern: carry on, say in your report how large it is and why it stays together, and add that line to the PR body. More than one: warn, suggest the split, and proceed only if the user confirms. Never split one concern to get under the number.

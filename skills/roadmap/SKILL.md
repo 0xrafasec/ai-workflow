@@ -55,7 +55,7 @@ A task is one vertical slice, one PR, one concern (see the size guide in your gl
 ### Task 1: [Name]
 - **Spec:** docs/specs/NNN_[name].md (exists | needs creation)
 - **Design reference:** [Paper artboard id | Figma node | image path | MISSING | N/A for non-UI]
-- **Type:** feat / fix / refactor / chore / test / docs / perf / security
+- **Type:** feat / fix / refactor / chore / test / docs / perf / build / ci / security
 - **Files:** [files to create or modify]
 - **Depends on:** None
 - **Tests:** Unit + Integration (sets up data models and API layer)
