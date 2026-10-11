@@ -3,6 +3,7 @@ set -euo pipefail
 
 # AI Workflow Uninstaller
 # Removes symlinks created by install.sh and restores backups if they exist.
+# The plugin itself is removed with `claude plugin uninstall wf@ai-workflow`.
 #
 # CLAUDE_DIR selects which Claude config dir to clean (default ~/.claude), and
 # must match the one install.sh was run against. Only symlinks are removed, so
@@ -51,63 +52,28 @@ echo ""
 echo "=== AI Workflow Uninstaller ==="
 echo ""
 
-FILES=(
-    "CLAUDE.md"
-    "settings.json"
-    "statusline-command.sh"
-    "agents/reviewer.md"
-    # Removed from the toolkit; still listed so an older install is cleaned up.
-    "agents/security-reviewer.md"
-    "agents/architecture-reviewer.md"
-    "commands/sec-review.md"
-    "skills/feature/SKILL.md"
-    "skills/fix/SKILL.md"
-    "skills/spec/SKILL.md"
-    "skills/review/SKILL.md"
-    "skills/new-project/SKILL.md"
-    "skills/prd/SKILL.md"
-    "skills/autopilot/SKILL.md"
-    "skills/roadmap/SKILL.md"
-    "skills/architecture/SKILL.md"
-    "skills/threat-model/SKILL.md"
-    "skills/tdd/SKILL.md"
-    "skills/security/SKILL.md"
-    "skills/adr/SKILL.md"
-    "skills/rfc/SKILL.md"
-    "skills/commit/SKILL.md"
-    "skills/pr/SKILL.md"
-    "skills/design/SKILL.md"
-    "skills/verify-design/SKILL.md"
-    "skills/factory/SKILL.md"
-    "skills/issues/SKILL.md"
-    "reviews/go.md"
-    "reviews/rust.md"
-    "reviews/typescript.md"
-    "reviews/python.md"
-)
-
-for f in "${FILES[@]}"; do
+for f in CLAUDE.md settings.json statusline-command.sh skills/rlabs-design; do
     unlink_if_symlink "$CLAUDE_DIR/$f"
 done
 
-# Extras (opt-in in install.sh via --extra). Always cleaned up on uninstall
-# regardless of whether they were installed, so this is safe to run.
-EXTRA_SKILLS=(
-    "skills/rlabs-design"
-)
-for f in "${EXTRA_SKILLS[@]}"; do
-    unlink_if_symlink "$CLAUDE_DIR/$f"
+# Before the toolkit became a plugin, install.sh symlinked every skill, agent,
+# command and review guide into the config dir. Sweep any of those that still
+# point into this clone, so upgrading does not leave them shadowing the plugin.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+for dir in skills agents commands reviews; do
+    [ -d "$CLAUDE_DIR/$dir" ] || continue
+    while IFS= read -r -d '' link; do
+        case "$(readlink "$link")" in
+            "$SCRIPT_DIR"/*) rm "$link"; info "Removed legacy symlink: $link" ;;
+        esac
+    done < <(find "$CLAUDE_DIR/$dir" -type l -print0)
+    find "$CLAUDE_DIR/$dir" -depth -type d -empty -delete
 done
 
-# The aiwf launcher is shared by every profile, so only the primary uninstall
-# takes it away. Otherwise cleaning up one profile would strip the command the
-# others still rely on.
+# The aiwf launcher no longer exists; remove the link an older install left.
 if [ "$CLAUDE_DIR" = "$PRIMARY_CLAUDE_DIR" ]; then
     unlink_if_symlink "$BIN_DIR/aiwf"
-else
-    warn "Left $BIN_DIR/aiwf in place (shared by all profiles)"
 fi
 
 echo ""
 info "Done! Symlinks removed. Original backups restored where available."
-echo ""
