@@ -25,7 +25,7 @@ Instead, use [GitHub's private vulnerability reporting](https://github.com/rafag
 
 This project is a configuration toolkit (markdown files, shell scripts, JSON config). Relevant vulnerabilities include:
 
-- Command injection in `install.sh`, `uninstall.sh`, or `hooks/session-fetch.sh`
+- Command injection in `install.sh` or `uninstall.sh`
 - Path traversal in symlink operations
 - Sensitive data exposure through default configurations
 - Skill or agent definitions that could lead to unintended code execution
