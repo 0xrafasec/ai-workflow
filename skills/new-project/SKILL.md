@@ -80,7 +80,7 @@ Adapt the build commands and style section to the chosen language/framework.
 
 ### 5. Create project-level settings
 
-Create `.claude/settings.json` with hooks appropriate to the language:
+Create `.claude/settings.json` with hooks appropriate to the language. A `PostToolUse` hook only reaches Claude when it exits 2 and writes to stderr, so the lint command must fail loudly rather than pipe into `head`:
 
 ```json
 {
@@ -91,7 +91,7 @@ Create `.claude/settings.json` with hooks appropriate to the language:
         "hooks": [
           {
             "type": "command",
-            "command": "make lint-changed 2>&1 | head -20"
+            "command": "out=$(make lint-changed 2>&1) || { echo \"$out\" | head -20 >&2; exit 2; }"
           }
         ]
       }

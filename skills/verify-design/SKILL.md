@@ -19,7 +19,7 @@ This skill does a **fix-in-place fidelity pass** against Paper design references
 ## Parse Arguments
 
 - **No argument:** check all pages with design refs
-- **Page / route name:** `/verify-design owner` — check that page
+- **Page / route name:** `/verify-design dashboard` — check that page
 - **Component name / file path:** `/verify-design Hero` or a path to the component file
 
 Arguments may include free-form notes from the user (specific bugs, reference screenshots, which page to use as a style anchor). Treat those as priority work items.
@@ -28,8 +28,7 @@ Arguments may include free-form notes from the user (specific bugs, reference sc
 
 Priority:
 1. `docs/design/` (page-level docs, artboard exports, `DESIGN_SYSTEM.md`)
-2. `specs/**/plan.md` / `tasks.md` / `spec.md` — extract the Paper artboard IDs they reference
-3. `docs/specs/` / `docs/roadmap/` cross-refs
+2. Wherever the project keeps specs and roadmap (`docs/specs/`, `docs/roadmap/`) — extract the Paper artboard IDs they reference (short IDs such as `4P-0`)
 
 Build a scope table (Page → Paper artboard (desktop) → Paper artboard (mobile) → source file). If both a desktop and mobile artboard exist, check **both**.
 
@@ -80,7 +79,7 @@ Apply targeted edits. Rules:
 
 After edits:
 1. Re-run the Playwright pass (desktop + mobile + interaction flow). Confirm screenshots match Paper and consoles are clean.
-2. Run the project's lint, typecheck, and test commands (from `CLAUDE.md` or the `Makefile`).
+2. Run the project's lint, typecheck, and test commands (from `CLAUDE.md`, `package.json` scripts, or the `Makefile`).
 3. Paste the tail of each run to the user.
 
 ## Severity guide

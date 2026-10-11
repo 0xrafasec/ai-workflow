@@ -32,15 +32,15 @@ Every read and write goes through the `gh` CLI. Run `gh auth status` once at ski
 
 | Operation | Command |
 |-----------|---------|
-| List milestones | `gh api "repos/{owner}/{repo}/milestones?state=all" --jq '.[]'` |
+| List milestones | `gh api "repos/{owner}/{repo}/milestones?state=all&per_page=100" --paginate --jq '.[]'` |
 | Create milestone | `gh api "repos/{owner}/{repo}/milestones" -f title=... -f description=...` |
-| List labels | `gh label list --json name,color` |
+| List labels | `gh label list --limit 200 --json name,color` |
 | Create label | `gh label create "<name>" --color <hex>` |
 | Create issue | `gh issue create --title ... --body-file <tmp> --milestone "..." --label "..."` |
 | View issue | `gh issue view <N> --json title,state,milestone,labels,body` |
 | Edit issue | `gh issue edit <N> --title ... --add-label ... --remove-label ... --milestone ...` |
 | Close issue | `gh issue close <N> --comment "..."` |
-| List issues | `gh issue list --state all --json number,title,labels,milestone` |
+| List issues | `gh issue list --state all --limit 500 --json number,title,labels,milestone` |
 
 ## User prompts — use `AskUserQuestion`
 
@@ -101,7 +101,7 @@ Create via `gh api "repos/{owner}/{repo}/milestones" -f title="..." -f descripti
 - `spec-ready` — if the spec exists and has a filled-in Verification section.
 - `blocked` — if `Dependencies` names another task whose issue is still open.
 
-**Bootstrap the labels on first run.** Use `gh label list --json name --jq '.[].name'` + `gh label create "<name>" --color <color>`. Enumerate existing labels and create only what's missing, using this default palette:
+**Bootstrap the labels on first run.** Use `gh label list --limit 200 --json name --jq '.[].name'` + `gh label create "<name>" --color <color>`. Enumerate existing labels and create only what's missing, using this default palette:
 
 - `type:feat` — `1d76db` (blue)
 - `type:fix` — `d73a4a` (red)
