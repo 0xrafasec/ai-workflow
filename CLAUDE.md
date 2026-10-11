@@ -50,7 +50,7 @@ If you're not sure whether a change is doc-relevant, it is. Default to updating 
 
 ## Testing changes locally
 
-- After editing a skill: in any project, invoke the slash command (e.g., `/factory --dry-run`) — Claude reads from `~/.claude/skills/<name>/SKILL.md`, which is the symlink to your edit.
+- After editing a skill: in any project, invoke the slash command (e.g., `/autopilot --dry-run`) — Claude reads from `~/.claude/skills/<name>/SKILL.md`, which is the symlink to your edit.
 - After editing `install.sh` or `uninstall.sh`: run them in a throwaway shell and verify the symlinks land where expected.
 
 ## When in doubt, ask

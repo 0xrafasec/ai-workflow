@@ -28,7 +28,6 @@ Before anything, read what exists:
 1. **Design docs (primary input for the roadmap):**
    - Read `docs/PRD.md` or `docs/prd/` — the source of *what* needs to be built
    - Read `docs/ARCHITECTURE.md` — the source of *how* the system is structured
-   - Read `docs/TECHNICAL_DESIGN_DOCUMENT.md` — testing strategy, dev environment, CI/CD
    - Read `docs/THREAT_MODEL.md` — security constraints, trust boundaries
    - Read `CLAUDE.md` for build commands and conventions
    - Read `README.md` for project overview
@@ -190,10 +189,10 @@ Then create each `docs/roadmap/NNN_<phase-name>.md` using the single-phase forma
 4. **Identify parallelizable tasks** — tasks that touch different files can run simultaneously in worktrees.
 5. **Mark dependencies explicitly** — if Task B needs Task A's output, say so and explain what specifically it needs.
 6. **Include verification commands** — every task needs a concrete way to prove it works.
-7. **Specify test layers per task** — based on the Testing Strategy in `docs/TECHNICAL_DESIGN_DOCUMENT.md` (or inferred from the codebase), mark which test layers each task needs: Unit, Integration, E2E. A task that touches APIs needs integration tests. A task that implements a critical user flow needs e2e. Pure logic only needs unit.
+7. **Specify test layers per task** — based on the Testing Strategy in `docs/ARCHITECTURE.md` (in older projects, `docs/TECHNICAL_DESIGN_DOCUMENT.md`) (or inferred from the codebase), mark which test layers each task needs: Unit, Integration, E2E. A task that touches APIs needs integration tests. A task that implements a critical user flow needs e2e. Pure logic only needs unit.
 8. **Foundation first** — shared types, interfaces, data models, and config go in Phase 1. Implementation builds on top.
 9. **File overlap = sequential** — if two tasks modify the same file, they cannot run in parallel. Call this out explicitly.
-10. **Mark spec status per task** — indicate whether a detailed spec exists or needs to be created. Tasks without specs need `/spec` or `/speckit.specify` before execution. Tasks without GitHub issues need `/issues` before execution.
+10. **Mark spec status per task** — indicate whether a detailed spec exists or needs to be created. Tasks without specs need `/spec` before execution. Tasks without GitHub issues need `/issues` before execution.
 11. **Spec prefix mirrors the phase number.** Specs for tasks in Phase `NNN` are written to `docs/specs/NNN_<name>.md` (or `docs/specs/NNN_<name>/` if sliced). When a phase has multiple tasks, disambiguate with a letter suffix: `NNN.A_<name>.md`, `NNN.B_<name>.md`. See `/spec` for full numbering rules.
 
 ## After Writing
@@ -206,7 +205,7 @@ Then create each `docs/roadmap/NNN_<phase-name>.md` using the single-phase forma
 2. Iterate until the user is satisfied.
 
 3. Suggest next steps based on spec coverage:
-   - **Tasks need specs?** → "Create detailed specs before executing: `/spec <feature-name>` for each task (or `/speckit.specify` with GitHub Spec Kit). `complexity:high` tasks must produce a sliced directory-form spec."
+   - **Tasks need specs?** → "Create detailed specs before executing: `/spec <feature-name>` for each task. `complexity:high` tasks must produce a sliced directory-form spec."
    - **All tasks have specs, no GitHub issues yet?** → "Run `/issues docs/roadmap/README.md` to file milestones (one per phase) and issues (one per task/slice)."
    - **All tasks have specs + issues?** → "Run `/autopilot docs/roadmap/README.md` to execute the full roadmap"
    - **Start one phase?** → "Run `/issues docs/roadmap/NNN_<phase-name>.md`, then `/autopilot docs/roadmap/NNN_<phase-name>.md`"

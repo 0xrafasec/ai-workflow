@@ -105,7 +105,6 @@ Show the user the PRD and ask for feedback. Iterate until they're satisfied.
 ### 4. Suggest Next Steps
 
 Based on the PRD complexity, suggest which specs to create next:
-- "This needs an architecture doc — run `/architecture`"
-- "Define testing and dev workflow — run `/tdd`"
-- "There are security-sensitive parts — run `/security`"
+- "This needs an architecture doc (system structure + testing strategy) — run `/architecture`"
+- "There are security-sensitive parts — run `/threat-model`"
 - "Ready to break into features — run `/spec <feature-name>` for each"

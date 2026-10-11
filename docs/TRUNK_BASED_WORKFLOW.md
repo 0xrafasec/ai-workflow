@@ -203,7 +203,7 @@ A: No. A `const FEATURE_X_ENABLED = false` in a config file is a feature flag. G
 A: They flood less than big PRs. Small PRs review in minutes; big PRs bounce between author and reviewer for days. Throughput goes up. Tooling matters too — auto-assign reviewers, require only one approval for small changes, use merge queues.
 
 **Q: How does this work with multiple worktrees at once?**
-A: Perfectly — it's the reason worktrees exist. Each slice gets its own worktree (outside the repo), its own branch, its own Claude session. You can run 3–5 in parallel without context collisions. See `/autopilot` and `/factory` for agent-orchestrated versions.
+A: Perfectly — it's the reason worktrees exist. Each slice gets its own worktree (outside the repo), its own branch, its own Claude session. You can run 3–5 in parallel without context collisions. See `/autopilot` for the agent-orchestrated version.
 
 **Q: Isn't "commit to main" dangerous?**
 A: No one commits to main. Trunk-based = PRs to main. The trunk is protected by branch-protection rules (require PR, passing CI, linear history). The difference from Git Flow isn't "less safety" — it's "safety via gates on one branch, not via isolation on five."

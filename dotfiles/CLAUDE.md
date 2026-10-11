@@ -10,7 +10,7 @@
 - Split commits by logical concern; each commit leaves the codebase working
 - Security-sensitive changes require the built-in `/security-review` before PR
 - **Writer/reviewer pattern — ALWAYS trigger a fresh reviewer.** This is an obligation, not just a prohibition. "Don't review your own code" is true but insufficient: once an implementation is on a branch, actively spawn a reviewer with clean context — the `reviewer` agent (which `/pr` dispatches by default), or a fresh session. Do this every time, unprompted. Never skip it because the diff is small, test-only, or "obviously fine".
-- **Merging is gated on me, not on the review passing.** Default: after the review, report the findings and stop — I merge. Merge autonomously only when I have said so for that specific piece of work ("autonomous", "you can merge", "merge if it passes", `/autopilot`, `/factory`). That authorization is per-task and never carries to the next one.
+- **Merging is gated on me, not on the review passing.** Default: after the review, report the findings and stop — I merge. Merge autonomously only when I have said so for that specific piece of work ("autonomous", "you can merge", "merge if it passes", or by invoking `/autopilot` without `--supervised`). That authorization is per-task and never carries to the next one.
 
 ## UI Work
 - Before implementing UI work, always load and reference the Paper design source; do not proceed without it.
@@ -48,6 +48,6 @@
 - /rewind when an approach fails after 2 corrections
 
 ## Toolkit (available skills)
-- Core skills installed under `~/.claude/skills/`: `/prd`, `/architecture`, `/tdd`, `/security`, `/adr`, `/rfc`, `/spec`, `/roadmap`, `/issues`, `/feature`, `/fix`, `/commit`, `/pr`, `/autopilot`, `/factory`, `/new-project`, `/design`, `/verify-design`. One agent: `reviewer`.
+- Core skills installed under `~/.claude/skills/`: `/prd`, `/architecture`, `/threat-model`, `/adr`, `/spec`, `/roadmap`, `/issues`, `/feature`, `/fix`, `/commit`, `/pr`, `/autopilot`, `/new-project`, `/design`, `/verify-design`. One agent: `reviewer`.
 - To review someone else's branch or PR, use the built-in `/code-review`; for a security pass, the built-in `/security-review`.
 - Skill sources, installer, and maintenance rules live in the `ai-workflow` repo. Maintenance instructions only apply when working inside that repo — see its project-level `CLAUDE.md`.

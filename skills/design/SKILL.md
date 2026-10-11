@@ -26,7 +26,6 @@ Before anything, read what exists:
 1. **Design docs (required input):**
    - Read `docs/PRD.md` or `docs/prd/` — the source of *what* screens are needed, user flows, user types
    - Read `docs/ARCHITECTURE.md` — understand the system structure, API shapes, data models
-   - Read `docs/TECHNICAL_DESIGN_DOCUMENT.md` — understand tech stack context
    - Read `docs/THREAT_MODEL.md` — security-sensitive screens (auth, payments, admin)
    - Read `README.md`, `CLAUDE.md` for project overview
 
@@ -115,7 +114,7 @@ Create the design system document and the corresponding design system artboard i
 
 ### 2a. Generate the Design System Document
 
-Write to `docs/design/DESIGN_SYSTEM.md`. **The doc must always open with an Implementation Fidelity Protocol and a Paper Canvas Map before anything else.** Downstream skills (`/feature`, `/factory`, etc.) read this doc when implementing — the protocol is what makes them stop and consult Paper instead of eyeballing from screenshots.
+Write to `docs/design/DESIGN_SYSTEM.md`. **The doc must always open with an Implementation Fidelity Protocol and a Paper Canvas Map before anything else.** Downstream skills (`/feature`, `/autopilot`, etc.) read this doc when implementing — the protocol is what makes them stop and consult Paper instead of eyeballing from screenshots.
 
 ```markdown
 # Design System
@@ -144,7 +143,7 @@ This document is the **rules and tokens** layer. The **pixel-perfect source of t
 4. **If Paper and this doc disagree, Paper wins.** Update the doc immediately with the correct value; don't silently diverge.
 5. **After implementing, run `/verify-design`** to diff the built UI against Paper and close any gaps before declaring done.
 
-Agents calling this from `/feature`, `/factory`, `/fix`, or any UI work **must** follow this protocol. Steps 1–3 are not optional — implementing from markdown + memory produces drift.
+Agents calling this from `/feature`, `/fix`, `/autopilot`, or any UI work **must** follow this protocol. Steps 1–3 are not optional — implementing from markdown + memory produces drift.
 
 ## Paper Canvas Map
 
@@ -669,7 +668,7 @@ Dark mode is generated per flow group, not as a separate pass. This keeps relate
 
 ## Rules
 
-1. **Paper is the pixel-perfect source of truth; the doc is the rules layer.** The generated `DESIGN_SYSTEM.md` must open with the Implementation Fidelity Protocol + Paper Canvas Map sections (template above). Every component block must end with a `📐 Paper reference` line pointing to its canvas location. Downstream skills (`/feature`, `/factory`, `/fix`) read this doc — the protocol is what stops them from implementing from markdown alone.
+1. **Paper is the pixel-perfect source of truth; the doc is the rules layer.** The generated `DESIGN_SYSTEM.md` must open with the Implementation Fidelity Protocol + Paper Canvas Map sections (template above). Every component block must end with a `📐 Paper reference` line pointing to its canvas location. Downstream skills (`/feature`, `/autopilot`, `/fix`) read this doc — the protocol is what stops them from implementing from markdown alone.
 2. **Docs are the source of truth for *what* to build.** Every screen must trace back to a PRD flow, spec, or user story. Don't invent screens.
 3. **Design system first.** Never create layouts without an approved design system. If none exists, create it.
 4. **Incremental HTML.** One visual group per `write_html` call. Never dump an entire page in one call.

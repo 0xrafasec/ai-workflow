@@ -69,6 +69,7 @@ FILES=(
     "skills/autopilot/SKILL.md"
     "skills/roadmap/SKILL.md"
     "skills/architecture/SKILL.md"
+    "skills/threat-model/SKILL.md"
     "skills/tdd/SKILL.md"
     "skills/security/SKILL.md"
     "skills/adr/SKILL.md"

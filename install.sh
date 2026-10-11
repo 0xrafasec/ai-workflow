@@ -214,7 +214,7 @@ link "statusline-command.sh"    "statusline-command.sh"
 link "agents/reviewer.md"   "agents/reviewer.md"
 
 # Skills
-for skill in feature fix spec new-project prd autopilot roadmap architecture tdd security adr rfc commit pr design verify-design factory issues; do
+for skill in feature fix spec new-project prd autopilot roadmap architecture threat-model adr commit pr design verify-design issues; do
     mkdir -p "$CLAUDE_DIR/skills/$skill"
     link "skills/$skill/SKILL.md" "skills/$skill/SKILL.md"
 done
