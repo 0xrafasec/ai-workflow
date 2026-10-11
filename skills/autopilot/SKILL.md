@@ -27,7 +27,7 @@ This skill can only be invoked by the user typing `/autopilot`. That invocation 
   1. `git pull --ff-only origin main`, then read the state of every PR of the phase with `gh pr view <n> --json state`.
   2. Remove the writer worktree of each PR that is now `MERGED`.
   3. Dispatch the tasks whose dependencies are all `MERGED`.
-  4. Advance to the next phase only when every PR of the phase is `MERGED` (or its task was skipped). Then run step 5f — in this mode the status commit goes through its own small PR, which you also leave for the human. While any PR of the phase is still open, list those PRs and stop again instead of advancing.
+  4. Advance to the next phase only when every PR of the phase is `MERGED` (or its task was skipped). Then run step 5f — in this mode the status commit goes through its own small PR, cut from the current `main`, which you also leave for the human and list in the final summary if it is still open when the run ends. While any PR of the phase is still `OPEN`, or was `CLOSED` without merging, list those PRs and stop again instead of advancing; a closed one needs `retry <task>` or `skip <task>`.
 - **`--dry-run`** — do steps 1–4, print the wave plan, dispatch nothing.
 
 Never switch modes silently. If `main` turns out to be protected against your merge, say so and continue as `--supervised`.
@@ -78,10 +78,10 @@ Goal: <goal>   Flag: <feature flag or none>
 Wave 1: <task>, <task>     Wave 2: <task>
 ```
 
-Skip phases whose Status in the roadmap index is `Completed`. Within a phase, look each task up by the branch the writer template gives it — `gh pr list --state all --head <branch> --json number,state` — before planning it:
+Skip phases whose Status in the roadmap index is `Completed`. Within a phase, look each task up by its branch before planning it: `gh pr list --state all --head <branch> --json number,state`. The branch name is derived from the task, never invented per run — `<type>/<issue-number>-<slug>` (or `<type>/<slug>` when there is no issue), the slug being the spec file's name — so a later run finds the same PR.
 
 - `MERGED` → done; leave it out of the plan.
-- `OPEN` → already in flight; report it instead of dispatching a second writer.
+- `OPEN` → an earlier run got this far. Do not dispatch a second writer; pick the PR up at step 5b. If its last comment is already a `PASS` verdict, go straight to 5e (autonomous) or report it as waiting on the human (`--supervised`). If it needs fixes there is no writer to resume, so dispatch a fresh one on the existing branch with the findings.
 - no PR (or only `CLOSED` ones) → dispatch.
 
 ### 5. Run the pipeline per task
@@ -111,7 +111,7 @@ A phase that ships behind a flag lands every task with the flag **off**. Flip it
 
 ### 7. Phase and final summary
 
-After each phase:
+When a phase finishes — or, as `## Phase N status`, when `--supervised` stops part-way through one:
 
 ```
 ## Phase N complete
@@ -136,7 +136,7 @@ Phase: <phase>   Task: <task>   Issue: <#N or none>
 Spec: <path> — read it first, in full, plus: <architecture / threat-model / referenced specs>
 Files to create or modify: <list> — do not touch anything else unless strictly necessary
 Test layers: <from the roadmap task>
-Base: origin/main (run `git fetch origin` first)   Branch to create: <type>/<issue-number>-<slug>, or <type>/<slug> when there is no issue
+Base: origin/main (run `git fetch origin` first)   Branch to create: <the branch name from step 4>
 
 ## Instructions
 1. Confirm you are in your worktree and on the branch above before changing anything.
