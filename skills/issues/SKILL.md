@@ -46,7 +46,7 @@ If `AskUserQuestion` is unavailable (a headless run), do not file anything: prin
 2. **Confirm a GitHub remote:** `gh repo view --json nameWithOwner` must succeed (this also covers GitHub Enterprise). If not, stop.
 3. **Read the source file(s) top to bottom.** Collect `Type`, `Complexity`, `Flag`, `Depends on`, `Spec` and the existing `Issue` / `Issues` values from the Tasks and Slices tables and Trunk Metadata.
 4. **Detect already-filed issues.**
-   - For each row with a `#<N>`, run `gh issue view`. Classify it `match` (aligned with the source), `drift` (title, labels, milestone or body need an update) or `gone` (closed or deleted).
+   - For each row with a `#<N>`, run `gh issue view`. Classify it `match` (aligned with the source), `drift` (title, labels, milestone or body need an update) or `gone` (closed or deleted). The body's Dependencies section matches when every task or slice in `Depends on` appears as its filed `#N` and every phase as `Needs all of <milestone title>`; an `Also needs:` sentence is never drift, and an update in place keeps it.
    - For rows with no `Issue` value, search open and closed issues by title prefix (`gh issue list --state all --search "[003.2] in:title"`). Adopt a match instead of creating a duplicate: a previous run may have died between creating the issue and the writeback.
    - Print `X rows already filed: Y match / Z drift / W gone`, then ask the **Reconcile** question. If the user names specific rows under "Other", re-plan per row.
 5. **Fetch existing milestones** and match them against the phase titles so reruns are idempotent.
@@ -83,7 +83,7 @@ Create missing labels on first run (`gh label list --limit 200 --json name`, the
 <bullet list of files from the task's Files field>
 
 ## Dependencies
-<`None.` or `Blocked by #<N>[, #<N>...].`>
+<`None.` or, one sentence each and in this order, whichever apply: `Blocked by #<N>[, #<N>...].` `Needs all of <milestone title>.` `Also needs: <text>.`>
 
 ## Verification
 ```
@@ -104,7 +104,11 @@ Filed by `/wf:issues` from `<source-file>`.
 
 File issues in dependency order. Roadmap order already puts dependencies first, and `/wf:spec` forbids a slice depending on an unmerged slice. Each body then names the real `#N` of an already-filed blocker. A dependency already filed earlier is looked up in the source docs' `Issue` / `Issues` values. If a dependency points forward (to something not yet filed), stop and fix the source ordering.
 
-A dependency on a whole phase (`Depends on: Phase 002`) has no single issue: write `Needs all of <that phase's milestone title>.` instead of a `Blocked by` line. A dependency that is not a task at all (an owner decision, a design artboard to draw first) goes in the same section as `Also needs: <text>.`
+A `Depends on` value can mix three kinds, and the body's `## Dependencies` section gets one sentence per kind present, in this order:
+
+- **Tasks or slices:** `Blocked by #<N>[, #<N>...].`
+- **A whole phase** (`Depends on: Phase 002`), which has no single issue: `Needs all of <milestone title>.`, with the title built as in Milestone shape. One sentence per phase.
+- **Something that is not a task** (an owner decision, a design artboard to draw first): `Also needs: <text>.`, copying the source's wording.
 
 **Never write the source's `001`, `002`, ... as `#001` in a body.** GitHub auto-links `#N` to the issue with that number, so `#001` silently points at issue #1, not the slice you meant.
 
