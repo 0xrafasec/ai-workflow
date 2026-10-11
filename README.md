@@ -23,17 +23,17 @@ AI Workflow covers the entire software development lifecycle for AI-assisted cod
 Each phase of development has dedicated tooling:
 
 - **Discovery** — interview-driven requirements gathering (`/prd`)
-- **Design** — architecture, technical design, and threat modeling (`/architecture`, `/tdd`, `/security`)
+- **Design** — architecture with testing strategy, and threat modeling (`/architecture`, `/threat-model`)
 - **Specification** — detailed feature specs with verification criteria (`/spec`)
 - **Planning** — phased roadmaps with dependency tracking (`/roadmap`)
 - **Implementation** — one slice at a time from a spec (`/feature`), or a whole roadmap in parallel across isolated worktrees (`/autopilot`)
 - **Review** — every PR is reviewed by a fresh-context `reviewer` agent before it is marked ready (`/pr`); for ad-hoc reviews use Claude Code's built-in `/code-review` and `/security-review`
-- **Governance** — decision records and change proposals at any point (`/adr`, `/rfc`)
+- **Governance** — decision records at any point (`/adr`)
 
 ## Features
 
-- **18 slash-command skills** covering every phase from idea to merged PR
-- **One reviewer agent** — a read-only, fresh-context reviewer with a fixed checklist and verdict format, dispatched by `/pr`
+- **15 slash-command skills** covering every phase from idea to merged PR
+- **One reviewer agent** — a read-only, fresh-context reviewer with a fixed checklist and verdict format, dispatched by `/pr` and `/autopilot`
 - **Parallel execution** — worktree-based development with `/autopilot` for full roadmap execution
 - **Writer/reviewer separation** — a fresh-context reviewer is always spawned for every branch, never the session that wrote it; merging stays a separate, human-gated decision
 - **Notification hooks** — desktop notifications when Claude needs attention
@@ -169,11 +169,9 @@ Skills are multi-step workflows invoked as slash commands inside Claude Code.
 | Skill | Description |
 |-------|-------------|
 | `/prd` | Interview-driven Product Requirements Document |
-| `/architecture` | System architecture document |
-| `/tdd` | Technical Design Document (testing, dev env, CI/CD, coding standards) |
-| `/security` | STRIDE-style threat model (`docs/THREAT_MODEL.md`) |
+| `/architecture` | One `docs/ARCHITECTURE.md`: the system (components, data flow, stack, deployment) and how it is engineered (testing strategy, dev env, CI/CD, coding standards) |
+| `/threat-model` | STRIDE-style threat model (`docs/THREAT_MODEL.md`) |
 | `/adr <title>` | Architecture Decision Record |
-| `/rfc <title>` | Request for Comments |
 
 ### Design
 
@@ -190,8 +188,7 @@ Skills are multi-step workflows invoked as slash commands inside Claude Code.
 | `/roadmap` | Phased task breakdown from specs |
 | `/feature <spec>` | End-to-end feature implementation from a spec. `--commit` auto-commits after completion; `--pr` also opens the PR and runs its review loop |
 | `/fix <issue>` | Diagnose and fix a bug from a description, stack trace, or GitHub issue |
-| `/autopilot` | Execute a full roadmap **autonomously** — develop → review → fix → **merge to main**, phase after phase, no human gate. `--supervised` restores per-phase checkpoints |
-| `/factory <phase>` or `--milestone <N>` | Single-milestone/phase pipeline: implements every open issue as conflict-free parallel PRs, each pre-reviewed by a fresh-context reviewer agent (2-cycle bounded fix loop, no auto-merge) |
+| `/autopilot <roadmap>` · `--phase <NNN>` · `--milestone <N>` | Deliver a roadmap, one phase, or one GitHub milestone: develop each task in a worktree → fresh-context review → bounded fix loop → **merge to main**. `--supervised` stops with PRs open for you to merge; `--dry-run` prints the plan. User-invoked only |
 | `/new-project <name>` | Scaffold a new project with the full workflow |
 
 ### Review
@@ -220,9 +217,8 @@ The typical flow from idea to shipped code:
 ```
 /prd                       Define what to build and why
   │
-/architecture              System structure
-/tdd                       Technical design (testing, dev env, CI/CD, standards)
-/security                  Threat model
+/architecture              System structure + testing strategy, dev env, CI/CD
+/threat-model              Threat model
   │
 /roadmap                   Phase breakdown from design docs
   │
@@ -231,14 +227,13 @@ The typical flow from idea to shipped code:
   │   /design [flow]       UI designs in Paper (for UI features)
   │   /verify-design       Diff running UI against Paper refs, fix in place
   │
-  ├── /autopilot           Execute the roadmap autonomously (build, review, fix, merge to main)
-  ├── /factory <phase>     Ship one milestone/phase: parallel PRs + per-PR review loop
+  ├── /autopilot           Deliver a roadmap, phase or milestone (build, review, fix, merge to main)
   └── /feature <spec>      Or implement one feature at a time
         │
       /pr                  Draft PR → fresh-context reviewer → ready
 ```
 
-`/fix` can be used anytime for bug fixes (no spec needed). `/adr` and `/rfc` can be used at any point to capture decisions or propose changes.
+`/fix` can be used anytime for bug fixes (no spec needed). `/adr` can be used at any point to capture a decision.
 
 ### Parallel Development
 
@@ -278,10 +273,8 @@ ai-workflow/
 ├── skills/
 │   ├── prd/
 │   ├── architecture/
-│   ├── tdd/
-│   ├── security/
+│   ├── threat-model/
 │   ├── adr/
-│   ├── rfc/
 │   ├── spec/
 │   ├── roadmap/
 │   ├── feature/
@@ -291,8 +284,8 @@ ai-workflow/
 │   ├── commit/
 │   ├── pr/
 │   ├── design/
-│   ├── verify-design/
-│   └── factory/
+│   ├── issues/
+│   └── verify-design/
 └── docs/
     ├── TRUNK_BASED_WORKFLOW.md  # Trunk-based rules, recipes, FAQ
     └── SKILL_QUALITY.md         # How skills are benchmarked

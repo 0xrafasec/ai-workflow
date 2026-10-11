@@ -45,7 +45,6 @@ docs/
 docs/specs/
 docs/roadmap/
 docs/adr/
-docs/rfc/
 ```
 
 **Note:** The workflow skills are installed globally. Do NOT create project-level copies of them — they'd duplicate and drift from the global versions. Only create project-level settings.
@@ -131,7 +130,6 @@ Create `.gitkeep` files to preserve directory structure:
 - `docs/specs/.gitkeep`
 - `docs/roadmap/.gitkeep`
 - `docs/adr/.gitkeep`
-- `docs/rfc/.gitkeep`
 
 ### 10. Summary
 
@@ -139,8 +137,7 @@ Tell the user what was created and suggest next steps:
 1. `cd <project-name>`
 2. `pre-commit install`
 3. `/prd <project-name>` — define what we're building
-4. `/architecture` — define system structure
-5. `/tdd` — define testing strategy, dev environment, CI/CD
-6. `/security` — define the threat model (if applicable)
-7. `/spec <first-feature>` — write your first feature spec
-8. `/feature docs/specs/<first-feature>.md` — implement it
+4. `/architecture` — define system structure, testing strategy, dev environment, CI/CD
+5. `/threat-model` — define the threat model (if applicable)
+6. `/spec <first-feature>` — write your first feature spec
+7. `/feature docs/specs/<first-feature>.md` — implement it

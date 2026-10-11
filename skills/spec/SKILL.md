@@ -24,7 +24,7 @@ Before writing any file, state the target path and confirm it satisfies the rule
 
 Read what already exists before interviewing:
 
-1. **Existing docs:** `docs/PRD.md` or `docs/prd/`, `docs/ARCHITECTURE.md`, `docs/TECHNICAL_DESIGN_DOCUMENT.md`, `docs/THREAT_MODEL.md`, `README.md`, `CLAUDE.md`.
+1. **Existing docs:** `docs/PRD.md` or `docs/prd/`, `docs/ARCHITECTURE.md` (and `docs/TECHNICAL_DESIGN_DOCUMENT.md` in older projects), `docs/THREAT_MODEL.md`, `README.md`, `CLAUDE.md`.
 2. **Roadmap and specs directory:** list `docs/roadmap/` and `docs/specs/` to pick the correct `NNN` per the rules above.
 3. **Existing spec for this feature** — if the user is revising, don't start from scratch.
 4. **Inherited project with no docs:** read `README.md`, explore directory structure, read key entry points, check `git log --oneline -20`, read `package.json` / `Cargo.toml` / `pyproject.toml` / equivalent. Summarize what you learned to the user before the interview — "Here's what I understand about this project so far: ..."
@@ -140,7 +140,7 @@ Single (≤200 line) spec or sub-spec:
 ### E2E Tests (if applicable)
 - [ ] [user flow]: [steps] → [expected outcome]
 
-*Adapt the layers to what the feature touches. A pure logic change may only need unit tests. An API feature needs unit + integration. A critical user-facing flow needs all three. Reference the Testing Strategy in `docs/TECHNICAL_DESIGN_DOCUMENT.md` if it exists.*
+*Adapt the layers to what the feature touches. A pure logic change may only need unit tests. An API feature needs unit + integration. A critical user-facing flow needs all three. Reference the Testing Strategy in `docs/ARCHITECTURE.md` (in older projects, `docs/TECHNICAL_DESIGN_DOCUMENT.md`) if it exists.*
 
 ## Out of Scope
 [What this does NOT include]
@@ -150,8 +150,7 @@ Single (≤200 line) spec or sub-spec:
 
 1. Present the spec to the user for review. Iterate until they're satisfied.
 2. Suggest next steps based on what exists:
-   - No architecture doc? → "Define system structure with `/architecture`"
-   - No TDD? → "Define testing and dev workflow with `/tdd`"
-   - No threat model and there are security concerns? → "Consider `/security`"
+   - No architecture doc? → "Define system structure and testing strategy with `/architecture`"
+   - No threat model and there are security concerns? → "Consider `/threat-model`"
    - Spec approved? → "File GitHub issues with `/issues docs/specs/NNN_<name>.md` (or `/issues docs/specs/NNN_<name>/README.md` for a sliced spec). This populates the `Issue` column and unlocks `<type>/<issue-number>-<slug>` branch naming."
    - Issues filed? → "Ready for `/feature docs/specs/NNN_<name>.md` (single) or `/feature docs/specs/NNN_<name>/MMM_<slice>.md` (one slice at a time)."
