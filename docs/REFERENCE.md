@@ -526,13 +526,10 @@ Does not merge, request reviewers, add labels, or close issues — those are exp
 <project-name>/
   CLAUDE.md                          # Project-specific Claude instructions
   Makefile                           # test, lint, typecheck, build, security-scan targets
-  .gitignore                         # Language-appropriate + .claude/ + .env
+  .gitignore                         # Language-appropriate + .claude/settings.local.json + .env
   .pre-commit-config.yaml            # Linter + type checker + tests + gitleaks
   .claude/
     settings.json                    # Hooks (lint on edit)
-    agents/
-      security-reviewer.md           # Tailored to project language
-      architecture-reviewer.md       # Tailored to project language
   docs/
     specs/                           # Feature specifications go here
     roadmap/                         # Phase/task breakdowns go here
