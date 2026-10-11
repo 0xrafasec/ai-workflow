@@ -117,7 +117,7 @@ There is no review skill. To review someone else's branch or PR, use Claude Code
 
 ### The session-start hook
 
-The plugin ships one hook. When a session starts in a git repository whose branch tracks a remote, it runs `git fetch` on that remote and, only if the branch is behind or has diverged, tells Claude so before any work begins. It prints nothing otherwise, never prompts for credentials, and gives up quietly when the remote is unreachable.
+The plugin ships one hook. When a session starts in a git repository whose branch tracks a remote, it runs `git fetch` on that remote and, only if the branch is behind or has diverged, tells Claude so before any work begins. It prints nothing otherwise, never prompts for credentials, and gives up quietly when the remote is unreachable. The repository is treated as untrusted: config keys that would make git run a program are overridden for the fetch, and the message contains commit counts only.
 
 ### The reviewer agent
 
