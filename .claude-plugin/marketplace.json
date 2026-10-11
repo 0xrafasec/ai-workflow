@@ -1,0 +1,14 @@
+{
+  "name": "ai-workflow",
+  "description": "The wf plugin: a spec-driven, trunk-based delivery workflow for Claude Code.",
+  "owner": {
+    "name": "Rafa Gomes"
+  },
+  "plugins": [
+    {
+      "name": "wf",
+      "source": "./",
+      "description": "Spec-driven, trunk-based delivery workflow: 15 skills and a fresh-context reviewer agent."
+    }
+  ]
+}
