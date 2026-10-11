@@ -1,6 +1,6 @@
 ---
 name: roadmap
-description: "Turn the PRD and architecture into a phased delivery plan: docs/roadmap/README.md plus one numbered phase file per phase (docs/roadmap/NNN_<phase>.md), each with sized, ordered tasks that name their spec, flag, files and verification command. Use when the user wants to plan phases, sequence a build, decide what ships first or where the MVP ends, or says 'lay out the roadmap', 'what order should we ship in', 'split this into phases', 'add a phase for X'. Can hand the finished roadmap to /wf:issues at the end. Not for filing issues for a roadmap that already exists (/wf:issues) or a single feature's spec (/wf:spec)."
+description: "Turn the PRD and architecture into a phased delivery plan: docs/roadmap/README.md plus one numbered phase file per phase (docs/roadmap/NNN_<phase>.md), each with sized, ordered tasks that name their spec, flag, files and verification command. Use when the user wants to plan phases, sequence a build, decide what ships first or where the MVP ends, or says 'lay out the roadmap', 'what order should we ship in', 'split this into phases', 'add a phase for X'. Not for filing issues for a roadmap that already exists (/wf:issues) or a single feature's spec (/wf:spec)."
 argument-hint: "[phase name | spec path]"
 ---
 Create a phased roadmap for: $ARGUMENTS
@@ -29,7 +29,7 @@ Draft the phase split, the MVP boundary and the parallelism from the docs first.
 
 A full roadmap needs an MVP boundary: the last phase required to ship the MVP. Take it from the PRD's "in scope (v1)" section; if that does not settle it, ask.
 
-**GitHub hand-off.** In the same AskUserQuestion call, always ask: "File GitHub milestones and issues when the roadmap is settled?" with options *Yes, once it is on the trunk branch* / *No, only the roadmap*. It counts toward the 4. Skip it when the repository has no GitHub remote (`gh repo view` fails). The answer is intent only: nothing is filed during the interview or while the roadmap is being written, because the draft still changes and issue titles are numbered by task position. Act on it in After Writing. If the user cannot be asked, the answer is No.
+**GitHub hand-off.** In the same AskUserQuestion call, also ask: "File GitHub milestones and issues when the roadmap is settled?" with options *Yes, once it is on the trunk branch* / *No, only the roadmap*. This question is always asked and does not count toward the 4 (the tool takes at most 4 per call, so when 4 gaps are already open, ask it in a second call). Skip it only when the repository has no GitHub remote (`gh repo view --json nameWithOwner` fails). The answer is intent only: nothing is filed during the interview or while the roadmap is being written, because the draft still changes and issue titles are numbered by task position. Act on it in After Writing. If the user cannot be asked, the answer is No.
 
 ## Generate the Roadmap
 
@@ -133,9 +133,11 @@ Status is one of `Not started`, `In progress`, `Completed`. `/wf:autopilot` sets
 
 1. Present the roadmap: critical path, parallelization, which tasks have specs. Iterate until the user is satisfied.
 2. Commit the roadmap and any specs; `/wf:autopilot` needs them on the trunk branch.
-3. **Hand off to `/wf:issues`, if the user answered Yes** in the interview. File from what is on the trunk branch, never from a draft:
-   - The roadmap is on the trunk branch (`git fetch`, then the files exist unchanged in `origin/<trunk>`): invoke `/wf:issues` on the file you wrote (`docs/roadmap/README.md` for a full roadmap, the phase file for a single phase). It runs its own preflight, dry-run and confirmation; do not file anything yourself and do not answer its questions for the user.
-   - The roadmap is still on a branch or in an open PR: do not file. Say so and give the command to run after the merge: `/wf:issues docs/roadmap/README.md` (or the phase file).
+3. **Hand off to `/wf:issues`, if the user answered Yes** in the interview. File only from what is on the trunk branch, never from a draft.
+   - **Target file:** `docs/roadmap/README.md` for a full roadmap; the phase file (`docs/roadmap/NNN_<phase>.md`) for a single phase or a spec path, even though the index was edited too. Passing the index there would file the whole roadmap.
+   - **Gate:** resolve the trunk branch `<base>` as `/wf:autopilot` does (`gh repo view --json defaultBranchRef -q .defaultBranchRef.name`, fallback `git symbolic-ref --short refs/remotes/origin/HEAD` with `origin/` stripped), run `git fetch origin <base>`, then check both: `git status --porcelain -- docs/roadmap docs/specs` prints nothing (no uncommitted or untracked files, which `git diff` alone would miss), and `git diff --quiet origin/<base> -- docs/roadmap docs/specs` exits 0. Together they mean every roadmap and spec file in the working tree is identical to the trunk branch.
+   - **Gate passes:** invoke `/wf:issues <target file>`. It runs its own preflight, dry-run and confirmation. Its questions (Reconcile, Horizon, Proceed?) are the user's to answer: the Yes given in the interview is not an answer to any of them, and in particular does not choose the full-roadmap horizon. Do not file anything yourself. Tasks without a spec are fine: their issues carry `needs-spec`; do not hold the hand-off back or ask again because of them.
+   - **Gate fails** (untracked, uncommitted, committed but not pushed, on a branch, or in an open PR; any output from the first command or a non-zero exit from the second): do not file. Say why and give the command to run once it is merged: `/wf:issues <target file>`.
    - The user answered No or could not be asked: do not file, and do not ask again.
 4. Suggest the next step:
    - Specs missing: `/wf:spec <task>` for each (a `high` task gets a sliced spec). Issues filed before a spec exists carry `needs-spec`; re-run `/wf:issues` after writing it.
