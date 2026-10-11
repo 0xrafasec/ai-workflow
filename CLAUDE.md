@@ -10,7 +10,6 @@ This repo is the source of truth for everything installed under `~/.claude/`:
 - `CLAUDE.md` (this file) — project-specific rules, loaded only when `cwd` is this repo
 - `skills/<name>/SKILL.md` — slash-command skills, symlinked into `~/.claude/skills/`
 - `agents/`, `commands/`, `reviews/`, `settings.json` — symlinked similarly via `install.sh`
-- `adapters/codex/`, `adapters/cursor/` — compile the skills + global CLAUDE.md into formats those tools understand
 - `extras/` — opt-in personal skills, only installed via `./install.sh --extra`
 
 ## Editing rules
@@ -28,8 +27,8 @@ When you change something in this list (left), update the docs on the right in t
 |--------|--------|
 | Skill behavior, args, or removal/rename | `skills/<name>/SKILL.md` (the source), `docs/REFERENCE.md` skill section, `README.md` Skills table + tree, `CHANGELOG.md` |
 | Workflow convention (trunk rules, commit style, etc.) | `dotfiles/CLAUDE.md`, `docs/WORKFLOW.md`, `docs/TRUNK_BASED_WORKFLOW.md`, `CHANGELOG.md` |
-| Adding/removing a skill | `install.sh`, `uninstall.sh`, `README.md` "Available skills" list, `dotfiles/CLAUDE.md` "Toolkit" section, adapters (codex/cursor), `CHANGELOG.md` |
-| Installer or symlink layout | `install.sh`, `uninstall.sh`, adapters, `README.md` install section, `docs/REFERENCE.md` layout section, `CHANGELOG.md` |
+| Adding/removing a skill | `install.sh`, `uninstall.sh`, `README.md` "Available skills" list, `dotfiles/CLAUDE.md` "Toolkit" section, `CHANGELOG.md` |
+| Installer or symlink layout | `install.sh`, `uninstall.sh`, `README.md` install section, `docs/REFERENCE.md` layout section, `CHANGELOG.md` |
 | New or repurposed top-level convention file | `README.md` repo-tree section, `docs/REFERENCE.md` layout section |
 
 If you're not sure whether a change is doc-relevant, it is. Default to updating docs. The cost of a stale doc is much higher than the cost of a one-line CHANGELOG entry.
@@ -47,13 +46,12 @@ If you're not sure whether a change is doc-relevant, it is. Default to updating 
 
 - Conventional commits per global rule (`feat:`, `fix:`, `refactor:`, `chore:`, `docs:`, `test:`, `security:`).
 - Skill changes: `feat(skill-name): ...` or `fix(skill-name): ...`. Doc-only: `docs: ...`.
-- Splitting commits by concern is especially important here because skill, doc, installer, and adapter edits often land together — keep each commit independently revertible.
+- Splitting commits by concern is especially important here because skill, doc, and installer edits often land together — keep each commit independently revertible.
 
 ## Testing changes locally
 
 - After editing a skill: in any project, invoke the slash command (e.g., `/factory --dry-run`) — Claude reads from `~/.claude/skills/<name>/SKILL.md`, which is the symlink to your edit.
 - After editing `install.sh` or `uninstall.sh`: run them in a throwaway shell and verify the symlinks land where expected.
-- After editing adapters: re-run the matching `aiwf install-codex` / `aiwf install-cursor` and check the generated output.
 
 ## When in doubt, ask
 
