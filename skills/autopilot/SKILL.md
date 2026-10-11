@@ -130,8 +130,8 @@ FINDINGS:
 PASS = green build and no CRITICAL/HIGH. FIX_REQUIRED otherwise.
 
 **3 — Security gate (when warranted).** If the task touches a trust boundary, auth, crypto, input
-validation/parsing, secrets, or dependency/supply-chain, run `/sec-review` (or a security-reviewer
-agent, `model: "opus"`) on the diff before merge. A HIGH+ security finding **blocks merge** until
+validation/parsing, secrets, or dependency/supply-chain, run the built-in `/security-review` on the
+diff before merge. A HIGH+ security finding **blocks merge** until
 fixed. For plainly non-security tasks (theme tokens, layout chrome, copy), skip — don't burn tokens.
 
 **4 — Fix loop (bounded).** On FIX_REQUIRED, **resume the writer agent via `SendMessage`** (warm
@@ -251,7 +251,7 @@ Base branch: main   Branch to create: <type>/<slug>
 8. **Preserve commit structure on merge.** Rebase or merge-commit, not squash (unless the repo
    mandates squash).
 9. **Security gate for risky diffs.** Trust boundaries / auth / crypto / parsing / secrets / deps →
-   `/sec-review` before merge; HIGH+ blocks the merge.
+   `/security-review` before merge; HIGH+ blocks the merge.
 10. **Feature flags off until phase end.** Flip the flag on only once the phase's flow is coherent.
 11. **Stop on genuine blockers** (see below) — surface them, don't barrel through.
 12. **Resumable.** Keep roadmap status updated and committed so an interrupted run can pick up where

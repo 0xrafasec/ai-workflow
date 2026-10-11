@@ -55,6 +55,8 @@ FILES=(
     "CLAUDE.md"
     "settings.json"
     "statusline-command.sh"
+    "agents/reviewer.md"
+    # Removed from the toolkit; still listed so an older install is cleaned up.
     "agents/security-reviewer.md"
     "agents/architecture-reviewer.md"
     "commands/sec-review.md"
