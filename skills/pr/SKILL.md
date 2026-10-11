@@ -11,7 +11,7 @@ Open a pull request for the current branch. Assumes commits already exist (from 
 
 $ARGUMENTS may contain:
 - **`--draft`** — leave the PR as a draft even after the review passes (explicit work-in-progress). The fresh review still runs; only the final `gh pr ready` transition is skipped.
-- **`--no-review`** — skip the fresh-context review loop entirely and open the PR directly (ready-for-review, unless `--draft`). Use only when a fresh-context review of these exact commits already ran (say which one), or when the change cannot alter behaviour — a docs wording fix, a changelog or version bump, a pure file move, a revert — and say in the PR body that it was not reviewed and why. A small or urgent diff is not a reason to skip.
+- **`--no-review`** — skip the fresh-context review loop entirely and open the PR directly (ready-for-review, unless `--draft`). Use only when a fresh-context review of these exact commits already ran (say which one), or when the whole diff is a typo, spelling or formatting fix in prose, or a changelog entry or project-version bump. Text that instructs an agent — a skill, an agent definition, a `CLAUDE.md`, a prompt — is behaviour and never qualifies; neither does a revert, a file move, or a dependency bump. When unsure, review. A skipped review is stated in the PR body as `Review: skipped — <reason>`. A small or urgent diff is not a reason to skip.
 - **No flags** — the default flow: open as draft, run the fresh review + bounded fixes, auto-mark ready on PASS.
 
 ## Guardrails
@@ -36,7 +36,7 @@ A few things that matter, and why:
    - **Dirty tree?** Stop and tell the user: *"Working tree has uncommitted changes. Run `/wf:commit` first, then re-run `/wf:pr`."*
    - **On `main` / `master`?** Stop and tell the user: *"You're on `<base>`. Create a feature branch first."*
    - **Branch name doesn't match the trunk-based convention?** (`feat/*`, `fix/*`, `refactor/*`, `docs/*`, `chore/*`, `test/*`, `perf/*`, `security/*`) Warn the user and offer to rename before pushing. The convention lives in root `CLAUDE.md` → **Trunk-Based Workflow**.
-   - **Diff >500 lines?** Run `git diff --stat <base>...HEAD -- . ':(exclude)**/tests/**' ':(exclude)**/*_test.*' ':(exclude)**/*.test.*' ':(exclude)**/test_*'`; if the **non-test** diff exceeds ~500 lines (generated files, lockfiles, pure moves and deletions aside) and it covers more than one concern, warn the user and suggest splitting. One coherent concern over the number is fine — say so in the PR body. Proceed only if the user explicitly confirms ("ship it anyway") — this is a warning, not a hard block, since `/wf:pr` runs after commits already exist.
+   - **Over ~500 lines?** To check, measure the hand-written source this change adds: run `git diff --numstat <base>...HEAD -- . ':(exclude,glob)**/tests/**' ':(exclude,glob)**/*_test.*' ':(exclude,glob)**/*.test.*' ':(exclude,glob)**/test_*' ':(exclude,glob)**/*.lock' ':(exclude,glob)**/*-lock.*'` (or the same pathspec against `git diff` for unstaged work) and sum the first column — added lines. Leave out generated files and files that only moved; deletions are not in that column. If the total is over **~500 lines**, decide whether the change is one concern. **One concern:** carry on, and say in your report how large it is and why it stays together. **More than one:** warn the user, suggest the split, and proceed only if they confirm ("ship it anyway") — a warning, not a hard block, since `/wf:pr` runs after the commits exist. For a single concern over the number, add a line to the PR body saying why it is one PR.
    - Record the base branch name (usually `main`, sometimes `master` or `develop`).
 
 2. **Gather the commit range** — with the base branch resolved:
@@ -75,6 +75,9 @@ A few things that matter, and why:
    <link to the spec file if one exists — scan docs/specs/, specs/, or
    a feature dir for a matching spec. Omit this section entirely if
    there is no spec.>
+
+   ## Review
+   <Only when `--no-review` was used: `Review: skipped — <reason>`. Omit otherwise.>
 
    ## Security checklist
    <Only include this section if the diff touches: auth, sessions, crypto,

@@ -105,11 +105,11 @@ This toolkit is wired so the trunk-based rules are defaults, not discipline:
 
 | Skill | What it enforces |
 |-------|------------------|
-| **`/wf:spec`** | If the feature is estimated >500 lines, produces N sub-specs under `docs/specs/<feature>/NNN_<slice>.md` with an index. Each sub-spec has a `## Feature Flag` section. |
-| **`/wf:feature`** | Requires a typed branch (`feat/<slug>`). Runs a slice-size gate (`git diff --stat`) before committing — blocks if >500 lines. Verifies the feature flag wiring from the spec. Implements sliced specs one slice at a time. |
+| **`/wf:spec`** | If the feature is estimated at over ~500 source lines and is more than one concern, produces N sub-specs under `docs/specs/<feature>/NNN_<slice>.md` with an index. Each sub-spec has a `## Feature Flag` section. |
+| **`/wf:feature`** | Requires a typed branch (`feat/<slug>`). Runs a slice-size gate (`git diff --numstat`, added source lines) — stops and asks when the change is over ~500 lines and more than one concern. Verifies the feature flag wiring from the spec. Implements sliced specs one slice at a time. |
 | **`/wf:fix`** | Requires `fix/<slug>`. Same slice-size gate. |
 | **`/wf:commit`** | One concern per commit. Each commit leaves the tree green. |
-| **`/wf:pr`** | Validates the branch name against the convention. Warns on >500-line diffs. Prints the post-merge cleanup command (branch delete + worktree remove). |
+| **`/wf:pr`** | Validates the branch name against the convention. Warns when the diff is over ~500 source lines and more than one concern. Prints the post-merge cleanup command (branch delete + worktree remove). |
 | **`/wf:roadmap`** | "One task = one PR." Phases are independently mergeable units. |
 | **`/wf:autopilot`** | Executes phases via worktrees — natural fit for parallel, short-lived branches. |
 

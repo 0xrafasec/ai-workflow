@@ -82,7 +82,7 @@ Create `docs/roadmap/` directory if it doesn't exist.
 
 If the user gave a phase name or single feature area, compute the next prefix (see Phase Numbering above) and write to `docs/roadmap/NNN_<phase-name>.md`.
 
-**Trunk rule for tasks.** One task = one vertical slice = one PR ≤500 lines (per root `CLAUDE.md`'s Trunk-Based Workflow). If a task is `complexity:high`, the spec it points to **must** be sliced (directory-based spec with a `## Slices` table, per `/wf:spec`). The roadmap task then tracks the *spec*, not a PR — the actual PRs come from the spec's slices.
+**Trunk rule for tasks.** One task = one vertical slice = one PR = one concern, with ~500 added source lines as the point to check it still is one (per the global `CLAUDE.md`'s Trunk-Based Workflow). If a task is `complexity:high`, the spec it points to **must** be sliced (directory-based spec with a `## Slices` table, per `/wf:spec`). The roadmap task then tracks the *spec*, not a PR — the actual PRs come from the spec's slices.
 
 ```markdown
 # Phase: [Name]
@@ -139,7 +139,7 @@ If the user gave a phase name or single feature area, compute the next prefix (s
 
 ## Phase Checklist
 - [ ] All tasks have detailed specs
-- [ ] All `complexity:high` tasks have sliced specs (≤500 lines per slice)
+- [ ] All `complexity:high` tasks have sliced specs (one concern per slice, roughly ≤500 source lines)
 - [ ] `/wf:issues` has filed the phase milestone + one issue per task/slice
 - [ ] All tasks completed
 - [ ] All verification commands pass
@@ -184,7 +184,7 @@ Then create each `docs/roadmap/NNN_<phase-name>.md` using the single-phase forma
 
 ## Key Rules for Task Breakdown
 
-1. **One task = one vertical slice ≤500 lines = one PR** (trunk-based). If a task is `complexity:high`, point it at a **sliced spec** (directory form, see `/wf:spec`). The roadmap task is the tracker; the PRs come from the slices.
+1. **One task = one vertical slice = one PR = one concern** (trunk-based; ~500 added source lines is the prompt to check, not a cap). If a task is `complexity:high`, point it at a **sliced spec** (directory form, see `/wf:spec`). The roadmap task is the tracker; the PRs come from the slices.
 2. **Every task names its commit type** — `feat` / `fix` / `refactor` / `chore` / `test` / `docs` / `perf` / `security`. This drives the branch prefix and the `type:*` GitHub label.
 3. **Every task names its feature flag** — or `none` if the task ships user-ready on merge. `main` must stay deployable after every merge.
 4. **Identify parallelizable tasks** — tasks that touch different files can run simultaneously in worktrees.
