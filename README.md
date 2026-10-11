@@ -40,7 +40,6 @@ Each phase of development has dedicated tooling:
 - **Writer/reviewer separation** — a fresh-context reviewer is always spawned for every branch, never the session that wrote it; merging stays a separate, human-gated decision
 - **Notification hooks** — desktop notifications when Claude needs attention (Claude Code)
 - **Custom status line** — git branch, model and context on one quiet row; rate limits and their reset times appear only once they need attention (Claude Code)
-- **Composable with other tools** — works alongside [GitHub Spec Kit](https://github.com/github/spec-kit) and other SDD toolkits ([integration guide](docs/speckit-integration.md))
 
 ## Platform Support
 
@@ -246,7 +245,7 @@ Skills are multi-step workflows invoked as slash commands inside Claude Code.
 | `/review` | PR/branch review using the writer/reviewer pattern |
 | `/sec-review` | Full security audit with parallel analysis agents |
 
-> **Stack-aware code review:** use Anthropic's official `code-review` skill from [`claude-code-plugins`](https://github.com/anthropics/claude-code). The previous in-repo `/code-review` skill was deprecated after a benchmark (see `code-review-workspace/iteration-1/`) showed no detection lift over baseline at ~1.5× the cost. Language-specific guides in `reviews/` are still loaded on demand by `/review`, `/feature`, and `/fix`.
+> **Stack-aware code review:** use Anthropic's official `code-review` skill from [`claude-code-plugins`](https://github.com/anthropics/claude-code). The previous in-repo `/code-review` skill was deprecated after a benchmark showed no detection lift over baseline at ~1.5× the cost. Language-specific guides in `reviews/` are still loaded on demand by `/review`, `/feature`, and `/fix`.
 
 ### Delivery
 
@@ -423,7 +422,6 @@ Details worth knowing:
 | Document | Description |
 |----------|-------------|
 | [Spec-Driven Development](docs/spec-driven-development.md) | Detailed explanation of the SDD methodology with Mermaid diagrams |
-| [Spec Kit Integration](docs/speckit-integration.md) | How to combine AI Workflow with GitHub Spec Kit |
 | [Workflow Guide](docs/WORKFLOW.md) | Full workflow guide — phases, conventions, CI/CD integration, team practices |
 | [Reference](docs/REFERENCE.md) | Quick reference for all agents, skills, settings, and daily patterns |
 | [Changelog](CHANGELOG.md) | Release notes — what changed in each version |
