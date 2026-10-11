@@ -1,6 +1,6 @@
 ---
-name: security
-description: "Create or update docs/THREAT_MODEL.md — STRIDE-style threat model, trust boundaries, attack surface, mitigations. Use when the user asks for a threat model, security review, attack-surface analysis, STRIDE pass, or says 'what could go wrong security-wise', 'identify the threats', 'lock this down before launch', 'review the security posture'."
+name: threat-model
+description: "Create or update docs/THREAT_MODEL.md — STRIDE-style threat model, trust boundaries, attack surface, mitigations. Use when the user asks for a threat model, attack-surface analysis, STRIDE pass, or says 'what could go wrong security-wise', 'identify the threats', 'lock this down before launch', 'review the security posture'."
 ---
 Create the threat model. Argument: $ARGUMENTS
 
@@ -99,5 +99,4 @@ Write to `docs/THREAT_MODEL.md`:
 1. Present the document to the user for review. Iterate until they're satisfied.
 2. Suggest next steps based on what exists:
    - No architecture doc? → "Define system structure with `/architecture`"
-   - No TDD? → "Define testing and dev workflow with `/tdd`"
    - Ready to build? → "Create feature specs with `/spec <name>`, then `/roadmap`"
