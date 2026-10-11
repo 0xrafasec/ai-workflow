@@ -64,8 +64,7 @@ info "Linking aiwf into $BIN_DIR"
 mkdir -p "$BIN_DIR"
 ln -sf "$INSTALL_DIR/aiwf" "$BIN_DIR/aiwf"
 
-# --- Claude Code (always) ----------------------------------------------------
-info "Running 'aiwf install' (Claude Code)"
+info "Running 'aiwf install'"
 AIWF_INSTALL_DIR="$INSTALL_DIR" "$INSTALL_DIR/aiwf" install
 
 echo ""

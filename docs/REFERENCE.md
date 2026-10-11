@@ -42,7 +42,7 @@ curl -fsSL https://raw.githubusercontent.com/0xrafasec/ai-workflow/main/bootstra
 ### From a clone
 
 ```bash
-aiwf install           # symlinks into ~/.claude/
+./install.sh           # symlinks into ~/.claude/ and installs the aiwf launcher
 ```
 
 ### Manage
