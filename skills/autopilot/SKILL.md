@@ -1,42 +1,41 @@
 ---
 name: autopilot
-description: "Deliver a roadmap, one phase, or one GitHub milestone end-to-end: develop each task in a worktree, review it in a fresh context, fix findings, and merge to main. Autonomous by default; --supervised stops with PRs open for a human to merge."
-argument-hint: "<roadmap or phase file> | --phase <NNN> | --milestone <N> [--supervised] [--dry-run]"
+description: "Deliver a roadmap, one phase, or one GitHub milestone end-to-end: develop each task in a worktree, review it in a fresh context, fix findings, and merge to the trunk branch. Autonomous by default; --supervised stops with PRs open for a human to merge."
+argument-hint: "[roadmap or phase file] | --phase <NNN> | --milestone <N> [--supervised] [--dry-run]"
 disable-model-invocation: true
 ---
 Run the delivery pipeline for: $ARGUMENTS
 
 ## What autopilot is
 
-Autopilot takes planned work and runs the whole delivery pipeline for every task in it — **develop → review → fix → merge to `main`** — looping until the scope is delivered or a real blocker stops it.
-
-You are the **orchestrator**. You parse the scope, dispatch writer agents in worktrees, dispatch the `wf:reviewer` agent on each PR, triage verdicts, perform the mechanical merge, update status, and loop. You do not implement, review, or read diffs yourself; everything intellectual is delegated, and you keep only compact results (`branch`, `PR`, `verdict`) in your own context.
-
-This skill can only be invoked by the user typing `/wf:autopilot`. That invocation is what grants merge authority for this run, and only for this run.
+You are the **orchestrator** of **develop → review → fix → merge** for every task in scope. You dispatch writer agents in worktrees and the `wf:reviewer` agent on each PR, triage verdicts, merge, update status, and loop. You do not implement, review, or read diffs yourself; you keep only compact results (`branch`, `PR`, `verdict`). Typing `/wf:autopilot` grants merge authority for this run only.
 
 ## Scope
 
 - **`/wf:autopilot docs/roadmap/README.md`** (or no path, if that file exists) — every phase in the roadmap, in order.
 - **`/wf:autopilot docs/roadmap/NNN_<phase>.md`** or **`--phase NNN`** — one phase.
-- **`--milestone <N>`** — one GitHub milestone. Read its title with `gh api "repos/{owner}/{repo}/milestones/<N>"`, match it to the phase file (`/wf:issues` titles milestones `Phase NNN — <phase-name>`), and take the milestone's **open** issues as the task list: `gh issue list --milestone "<title>" --state open --limit 200 --json number,title,body,url`. Closed issues are done. The phase file stays the source of truth for spec paths, files and dependencies: match each issue to its task or slice by the `#N` that `/wf:issues` wrote into the phase file's `Issues:` field or the spec's Slices table, falling back to the spec link in the issue body.
+- **`--milestone <N>`** — one GitHub milestone.
+  - Read its title with `gh api "repos/{owner}/{repo}/milestones/<N>"` and match it to the phase file (`/wf:issues` titles milestones `Phase NNN — <phase-name>`).
+  - The task list is its **open** issues: `gh issue list --milestone "<title>" --state open --limit 200 --json number,title,body,url`. Closed issues are done.
+  - The phase file stays the source of truth for spec paths, files and dependencies. Match each issue to its task or slice by the `#N` in the `**Issue:**` line of a single-file spec's Trunk Metadata, or in the `Issue` column of a sliced spec's Slices table (the phase file's `Issues:` field indexes both), falling back to the spec link in the issue body.
 
 ## Modes
 
-- **autonomous (default)** — merge each PR to `main` once its review passes, phase after phase, with no human gate. Stop only on a stop condition (below).
+- **autonomous (default)** — merge each PR to the trunk branch once its review passes, phase after phase, with no human gate. Stop only on a stop condition (below).
 - **`--supervised`** — do everything except merge. Each PR carries its review verdict as a PR **comment** (never `gh pr review --approve` or `--request-changes` — approval is the human's). Stop whenever every remaining task in the phase is waiting on an unmerged PR, or every task in the phase has a PR, and wait for `continue` / `retry <task>` / `skip <task>` / `stop`. On `continue`:
-  1. `git pull --ff-only origin main`, then read the state of every PR of the phase with `gh pr view <n> --json state`.
+  1. `git pull --ff-only origin <base>`, then read the state of every PR of the phase with `gh pr view <n> --json state`.
   2. Remove the writer worktree of each PR that is now `MERGED`.
   3. Dispatch the tasks whose dependencies are all `MERGED`.
-  4. Advance to the next phase only when every PR of the phase is `MERGED` (or its task was skipped). Then run step 5f — in this mode the status commit goes through its own small PR, cut from the current `main`, which you also leave for the human and list in the final summary if it is still open when the run ends. While any PR of the phase is still `OPEN`, or was `CLOSED` without merging, list those PRs and stop again instead of advancing; a closed one needs `retry <task>` or `skip <task>`.
+  4. Advance to the next phase only when every PR of the phase is `MERGED` (or its task was skipped). Then run step 5f — in this mode the status commit goes through its own small PR, cut from the current `<base>`, which you also leave for the human and list in the final summary if it is still open when the run ends. While any PR of the phase is still `OPEN`, or was `CLOSED` without merging, list those PRs and stop again instead of advancing; a closed one needs `retry <task>` or `skip <task>`.
 - **`--dry-run`** — do steps 1–4, print the wave plan, dispatch nothing.
 
-Never switch modes silently. If `main` turns out to be protected against your merge, say so and continue as `--supervised`.
+Never switch modes silently. If the trunk branch turns out to be protected against your merge, say so and continue as `--supervised`.
 
 ## Process
 
 ### 1. Parse the scope
 
-For each phase extract: name, goal, feature flag (if any), and its tasks — each with name, spec path, files touched, dependencies, verification command and test layers. A `complexity:high` task points at a sliced spec directory; every slice is its own task and its own PR.
+For each phase extract: name, goal, feature flag (if any), and its tasks — each with name, spec path, files touched, dependencies, verification command and test layers. A task with `Complexity: high` points at a sliced spec directory; every slice is its own task and its own PR.
 
 If a task's spec is missing, or the roadmap lacks the detail to plan (no file list, unclear dependencies), **stop and say what is missing**. Do not invent specs — that is `/wf:spec`'s job, and it needs the user.
 
@@ -44,23 +43,24 @@ If a task's spec is missing, or the roadmap lacks the detail to plan (no file li
 
 This is the only heavy reading you do:
 
-- `CLAUDE.md` — build/test commands, conventions, merge rules.
+- The project's `CLAUDE.md` — build/test commands, conventions, merge rules.
 - `docs/PRD.md` — what the project is.
 - `docs/ARCHITECTURE.md` — system structure and the **Testing Strategy** (in older projects the testing strategy lives in `docs/TECHNICAL_DESIGN_DOCUMENT.md`).
 - `docs/THREAT_MODEL.md` — trust boundaries, if it exists.
 
-Reduce it to 3–5 lines including the test strategy and the exact lint / typecheck / test commands. Every agent gets this summary instead of re-reading the docs.
+Reduce it to 3–5 lines including the test strategy and the exact lint / typecheck / test commands, preceded by the dependency setup command (e.g. `npm ci`): writers and reviewers start in a bare worktree with nothing installed. Every agent gets this summary instead of re-reading the docs.
 
 ### 3. Preflight (once)
 
 Verify, and fix or surface, before the first dispatch:
 
-- **Specs are committed and on `main`.** Worktree agents branch from committed history; an untracked spec is invisible to them.
+- **Trunk branch.** Resolve `<base>` once: `gh repo view --json defaultBranchRef -q .defaultBranchRef.name` (fallback `git symbolic-ref --short refs/remotes/origin/HEAD`, strip `origin/`), then `git fetch origin <base>`. Use it wherever this file names the trunk branch.
+- **Specs are committed and on `<base>`.** Worktree agents branch from committed history; an untracked spec is invisible to them.
 - **Toolchain present** — the build/test/lint tools resolve in a fresh login shell.
 - **`gh auth status` passes** and the remote is reachable.
-- **Merge authority** (autonomous mode) — you can merge to `main`. If not, fall back to `--supervised` and say so.
+- **Merge authority** (autonomous mode) — `gh repo view --json viewerPermission,rebaseMergeAllowed,mergeCommitAllowed,squashMergeAllowed` must show `viewerPermission` of WRITE or higher, and `<base>` must not require approvals you cannot supply. Otherwise, or if unsure, fall back to `--supervised` and say so. Record which merge methods are allowed (step 5e).
 - **Working tree is clean** of unrelated work.
-- **UI tasks have a design reference** — for a task that builds a page or component, check `docs/design/`. If there is none, warn and note "run `/wf:verify-design` before merge" on that task; don't block.
+- **UI tasks have a design reference** — for a task that builds a page or component, check its `Design reference` and `docs/design/`. If there is one, note "run `/wf:verify-design` on this page before merge" on that task. If there is none, warn that the design source is missing; don't block.
 
 ### 4. Plan waves
 
@@ -68,7 +68,7 @@ Within a phase, group tasks into **waves**:
 
 - A wave is a set of tasks with no dependency between them and **no file in common**. Two writers must never touch the same file; sequence them instead. A task whose spec lists no files runs alone.
 - **At most 5 writers per wave.** Split a larger wave.
-- A task that depends on another waits until that dependency is **merged to `main`**, not merely written — its worktree must branch from a `main` that contains it. In `--supervised` mode you do not merge, so a dependent task is reported as "waiting on merge of #N" and picked up on `continue` once the human has merged.
+- A task that depends on another waits until that dependency is **merged to `<base>`**, not merely written — its worktree must branch from a `<base>` that contains it. In `--supervised` mode you do not merge, so a dependent task is reported as "waiting on merge of #N" and picked up on `continue` once the human has merged.
 
 Announce the plan:
 
@@ -78,7 +78,7 @@ Goal: <goal>   Flag: <feature flag or none>
 Wave 1: <task>, <task>     Wave 2: <task>
 ```
 
-Skip phases whose Status in the roadmap index is `Completed`. Within a phase, look each task up by its branch before planning it: `gh pr list --state all --head <branch> --json number,state`. The branch name is derived from the task, never invented per run — `<type>/<issue-number>-<slug>` (or `<type>/<slug>` when there is no issue), the slug being the spec file's name — so a later run finds the same PR.
+Skip phases whose Status in the roadmap index is `Completed`. Within a phase, look each task up by its branch before planning it: `gh pr list --state all --head <branch> --json number,state`. The branch name is derived from the task, never invented per run — the one `/wf:feature` would create from the spec's metadata: `<type>/<issue-number>-<slug>`, or `<type>/<slug>` when there is no issue, the slug being the spec file's name — so a later run finds the same PR.
 
 - `MERGED` → done; leave it out of the plan.
 - `OPEN` → an earlier run got this far. Do not dispatch a second writer; pick the PR up at step 5b. If its last comment is already a `PASS` verdict, go straight to 5e (autonomous) or report it as waiting on the human (`--supervised`). If it needs fixes there is no writer to resume, so dispatch a fresh one on the existing branch with the findings; the same goes for a rebase in step 5e.
@@ -90,20 +90,21 @@ Tasks in one wave run concurrently — dispatch all their writers in a single me
 
 **a. Develop.** Dispatch a writer: `Agent(subagent_type: "general-purpose", model: "sonnet", isolation: "worktree", prompt: <writer template below>)` — writers follow a detailed spec, they don't design. Record its branch and PR URL. If a writer fails outright, do not retry on your own — record it and report it.
 
-**b. Review.** When the PR is open, dispatch the `wf:reviewer` agent on it with `isolation: "worktree"` (so it can run the checks) and the prompt `Base: main` / `Branch: <branch>` / `Spec: <path>` / `Verify: <commands>`. A verdict whose findings say the diff was empty is a dispatch error, not a pass — fix the prompt and re-dispatch once; if the second verdict is the same, mark the task `NEEDS_HUMAN`. Remove the reviewer's worktree once you have its verdict. Never review in your own context and never let the writer review itself. The verdict comes back as `VERDICT` / `CHECKS` / `FINDINGS` / `SUMMARY`. Post it on the PR as a comment.
+**b. Review.** When the PR is open, dispatch the `wf:reviewer` agent on it with `isolation: "worktree"` (so it can run the checks) and a prompt with one field per line: `Base: <base>`, `Branch: <branch>`, `Spec: <path>`, `Verify: <commands>`. A verdict whose findings say the diff was empty is a dispatch error, not a pass — fix the prompt and re-dispatch once; if the second verdict is the same, mark the task `NEEDS_HUMAN`. Remove the reviewer's worktree once you have its verdict. Never review in your own context and never let the writer review itself. The verdict comes back as `VERDICT` / `CHECKS` / `FINDINGS` / `SUMMARY`. Post it on the PR as a comment. `PASS` with LOW findings still merges: put the LOW list in that comment and in the phase table's Notes column.
 
-**c. Security gate, when warranted.** If the task touches a trust boundary, auth, crypto, input parsing, secrets, or dependencies, dispatch one more fresh agent with `isolation: "worktree"` to run `/security-review`, and take back only its HIGH findings. The branch is checked out in the writer's worktree, so tell it to `git fetch origin <branch> && git checkout --detach origin/<branch>` rather than check the branch out. A HIGH finding blocks the merge. Skip it for plainly non-security work.
+**c. Security gate, when warranted.** If the task touches a trust boundary, auth, crypto, input parsing, secrets, or dependencies, dispatch one more fresh agent with `isolation: "worktree"` to run `/security-review`, and take back only its HIGH findings. The branch is checked out in the writer's worktree, so tell it to `git fetch origin <branch> && git checkout --detach origin/<branch>` rather than check the branch out. A HIGH finding blocks the merge: send it to the writer as in 5d (same 2-cycle budget), then redo 5b and 5c on the new commits. Skip it for plainly non-security work.
 
-**d. Fix loop, bounded.** On `FIX_REQUIRED`, resume the **writer** with `SendMessage` and only the reviewer's HIGH/MED items — it already holds the spec and files; a fresh fixer would pay to load them again. The writer fixes, re-verifies and pushes; re-dispatch the reviewer with `Previous findings: <list>`. **Maximum 2 fix cycles.** A finding that survives both usually means the spec is ambiguous: mark the task `NEEDS_HUMAN`, leave the PR open with the reviewer's comment, and carry on with independent tasks.
+**d. Fix loop, bounded.** On `FIX_REQUIRED`, resume the **writer** with `SendMessage` and only the reviewer's HIGH/MED items — it already holds the spec and files; a fresh fixer would pay to load them again. The writer fixes, re-verifies and pushes; re-dispatch the reviewer with `Previous findings: <list>`. **Maximum 2 fix cycles.** A finding that survives both usually means the spec is ambiguous: mark the task `NEEDS_HUMAN` (an autopilot status, not a reviewer verdict), leave the PR open with the reviewer's comment, and carry on with independent tasks.
 
 **e. Merge** (autonomous mode only). On `PASS` with the security gate clear:
 
-- `gh pr merge <n> --rebase --delete-branch`. Do not `--squash` — it destroys the writer's logical commit split — unless the repo's `CLAUDE.md` mandates squash.
-- If the branch no longer applies because `main` moved under a parallel wave, have the writer rebase and re-verify, then merge. A conflict that is not mechanical is a stop condition.
+- Wait for remote CI: `gh pr checks <n> --watch --fail-fast`. A failing check goes to the fix loop like a reviewer finding; a PR with no checks configured is fine. Commits pushed after a `PASS` that change behaviour need a fresh review first.
+- `gh pr merge <n> --rebase --delete-branch`. Do not `--squash`, which destroys the writer's logical commit split, unless the project's `CLAUDE.md` mandates it. If preflight showed rebase merges disabled, use `--merge` and say so.
+- If the branch no longer applies because `<base>` moved under a parallel wave, have the writer rebase and re-verify, then merge. A conflict that is not mechanical is a stop condition.
 - Remove the writer's worktree. Never reuse a merged branch.
-- `git pull --ff-only origin main`, so the next wave and your own status commits start from what was just merged.
+- `git pull --ff-only origin <base>`, so the next wave and your own status commits start from what was just merged.
 
-**f. Record** (after a merge only — in `--supervised` mode an open PR is not done). The PR's `Closes #N` closes the issue. When every task in a phase is merged — by you, or by the human in `--supervised` mode — tick the phase file's Phase Checklist, set the phase's Status to `Completed` in `docs/roadmap/README.md`, and land that as one `docs:` commit on an up-to-date `main`: pushed directly in autonomous mode, or through a small PR when `main` only accepts PRs or the run is `--supervised`. A task's merged PR (step 4) and a phase's `Completed` status are what make an interrupted run resumable.
+**f. Record** (after a merge only — in `--supervised` mode an open PR is not done). The PR's `Closes #N` closes the issue. When every task in a phase is merged — by you, or by the human in `--supervised` mode — tick the phase file's Phase Checklist, set the phase's Status to `Completed` in `docs/roadmap/README.md`, and land that as one `docs:` commit on an up-to-date `<base>`: pushed directly in autonomous mode (a status-only docs commit changes no behaviour, so it skips the PR and the review), or through a small PR when `<base>` only accepts PRs or the run is `--supervised`. A task's merged PR (step 4) and a phase's `Completed` status are what make an interrupted run resumable.
 
 ### 6. Feature flags
 
@@ -136,15 +137,16 @@ Phase: <phase>   Task: <task>   Issue: <#N or none>
 Spec: <path> — read it first, in full, plus: <architecture / threat-model / referenced specs>
 Files to create or modify: <list> — do not touch anything else unless strictly necessary
 Test layers: <from the roadmap task>
-Base: origin/main (run `git fetch origin` first)   Branch: <the branch name from step 4> — create it, or check it out if it already exists on origin
+Base: origin/<base> (run `git fetch origin` first)   Branch: <the branch name from step 4> — create it, or check it out if it already exists on origin
 
 ## Instructions
 1. Confirm you are in your worktree and on the branch above before changing anything.
 2. Implement exactly what the spec says. Record any judgement call in the PR body.
 3. Write tests at the layers above, covering every verification criterion in the spec.
 4. Run lint, typecheck and tests; fix until all pass. No PR while any of them fails, and never `--no-verify`.
-5. Commit with conventional messages, split by logical concern. Push. Open a PR against main with: summary, spec link, `Closes #<N>` if there is an issue, a security checklist when the change touches a trust boundary, and a test plan listing each verification criterion.
-6. Report: branch, PR URL, the tail of each check, and any blocker.
+5. Commit with conventional messages, split by logical concern. Push. Open a PR against <base> (PR title: imperative, no type prefix, under 70 characters) with: summary, spec link, `Closes #<N>` if there is an issue, a security checklist when the change touches a trust boundary, and a test plan listing each verification criterion.
+6. Do not merge, force-push, or touch <base>.
+7. Report: branch, PR URL, the tail of each check, and any blocker.
 
 You may be resumed with review findings to fix — keep your context.
 ```

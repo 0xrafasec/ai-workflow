@@ -1,133 +1,98 @@
 ---
 name: pr
-description: "Push the current branch and open a pull request via gh — assumes commits already exist. Use when the user says 'open a PR', 'push this up for review', 'ship this branch', 'create a draft PR', 'put this up on GitHub', or is ready to hand a branch off to reviewers. By default opens the PR as a draft, runs a fresh-context review + bounded fixes, then marks it ready on PASS. Supports --draft (stay draft) and --no-review (skip the review loop)."
+description: "Push the current branch and open a pull request with gh (commits must already exist). Use when the user says 'open a PR', 'push this up for review', 'ship this branch', or 'create a draft PR'. Opens a draft, has the fresh-context wf:reviewer review it, fixes HIGH/MED findings (max 2 rounds), then marks it ready on PASS. Never merges."
 argument-hint: "[--draft] [--no-review]"
 ---
-Open a pull request for the current branch. Assumes commits already exist (from `/wf:commit`, `/wf:feature`, `/wf:fix`, or manual commits).
+Open a pull request for the current branch. Commits must already exist (from `/wf:commit`, `/wf:feature`, `/wf:fix`, or by hand).
 
-**Default flow (draft → review → fix → ready):** the PR is opened as a *draft*, a fresh-context reviewer subagent reviews the committed branch, HIGH/MED findings are fixed in a bounded loop, and the PR is then flipped to *ready* on a passing review. This honours the writer/reviewer rule in root `CLAUDE.md` — a reviewer with cold context always sees the branch before it becomes review-ready. The escape hatches below opt out.
+Default flow: open as a draft, have a fresh-context reviewer review the branch, fix HIGH/MED findings in a bounded loop, then mark the PR ready on a pass. This is the writer/reviewer rule in your global `CLAUDE.md`: a reviewer with cold context sees the branch before it becomes review-ready.
 
 ## Parse Arguments
 
 $ARGUMENTS may contain:
-- **`--draft`** — leave the PR as a draft even after the review passes (explicit work-in-progress). The fresh review still runs; only the final `gh pr ready` transition is skipped.
-- **`--no-review`** — skip the fresh-context review loop entirely and open the PR directly (ready-for-review, unless `--draft`). Use only when a fresh-context review of these exact commits already ran (say which one), or when the whole diff is a typo, spelling or formatting fix in prose, or a changelog entry or project-version bump. Text that instructs an agent — a skill, an agent definition, a `CLAUDE.md`, a prompt — is behaviour and never qualifies; neither does a revert, a file move, or a dependency bump. When unsure, review. A skipped review is stated in the PR body as `Review: skipped — <reason>`. A small or urgent diff is not a reason to skip.
-- **No flags** — the default flow: open as draft, run the fresh review + bounded fixes, auto-mark ready on PASS.
+- **`--draft`** — leave the PR a draft even after the review passes. The review still runs; only the final `gh pr ready` is skipped.
+- **`--no-review`** — skip the review loop and open the PR directly (ready, unless `--draft`). The allow-list is the one in your global `CLAUDE.md` → **Review**, repeated here so the skill is self-contained (update both together): a fresh-context review of these exact commits already ran (say which), or the whole diff is a typo, spelling or formatting fix in prose, or a changelog entry or project-version bump. Text that instructs an agent — a skill, an agent definition, a `CLAUDE.md`, a prompt — is behaviour and never qualifies; neither does a revert, a file move, or a dependency bump. When unsure, review. Small or urgent is not a reason to skip. State it in the PR body as `Review: skipped — <reason>`.
+- **No flags** — the default flow.
 
 ## Guardrails
 
-A few things that matter, and why:
-
-- **Don't force-push to `main` / `master`.** Force-pushing a shared branch rewrites history under everyone else's feet — it's the single most common way to destroy other people's work. If the user explicitly asks for it, surface the risk and confirm before proceeding.
-- **Don't force-push any branch without explicit user confirmation.** Even on feature branches, someone may have pulled or based work off it — ask first.
-- **Don't merge, request reviewers, add labels, or close issues as part of this skill.** Those are human judgment calls that depend on team conventions and context this skill doesn't have. Open the PR; let the user drive the rest.
-- **Don't add Claude / Anthropic co-author tags in the PR body.** Co-authorship belongs on individual commits (where configured), not repeated in PR descriptions where it just adds noise.
-- **If the working tree is dirty, stop and point the user at `/wf:commit`.** This skill doesn't commit pre-existing working-tree changes — mixing the two obscures what the PR actually contains. The only commits it makes are review fixes in step 9, staging just the files it fixed.
+- **Don't force-push without explicit confirmation, and never to the trunk branch.** Force-pushing rewrites history under everyone who has pulled it; surface the risk and confirm first.
+- **Don't merge, request reviewers, add labels or milestones, or close issues.** Those depend on team conventions this skill doesn't have. The body or commits may reference an issue (`Closes #N`), but closing is the user's decision.
+- **No Claude / Anthropic co-author tags in the PR body.** Co-authorship belongs on commits, not repeated in the description.
+- **A dirty working tree stops the skill**; point the user at `/wf:commit`. Mixing uncommitted work in obscures what the PR contains. The only commits this skill makes are review fixes in step 9, staging just the files it fixed.
 
 ## Steps
 
-1. **Check preconditions in parallel:**
-   ```
-   git status
-   git rev-parse --abbrev-ref HEAD
-   git remote show origin | grep 'HEAD branch'   # detect base branch (main/master)
-   ```
+1. **Check preconditions** (in parallel where possible).
+   - `gh auth status` — if it fails, stop and print the manual `git push` plus the proposed title and body.
+   - `gh pr view --json url,state,isDraft 2>/dev/null` — if an open PR already exists for this branch, don't create another: push any new commits and continue at step 9 (review), then step 10.
+   - Resolve the trunk branch once as `<base>`: `gh repo view --json defaultBranchRef -q .defaultBranchRef.name`, falling back to `git symbolic-ref --short refs/remotes/origin/HEAD` (strip `origin/`). Run `git fetch origin <base>` and use `origin/<base>` in every range below.
+   - `git status` and `git rev-parse --abbrev-ref HEAD`.
+   - **Dirty tree:** stop — *"Working tree has uncommitted changes. Run `/wf:commit` first, then re-run `/wf:pr`."*
+   - **On `<base>`:** stop — *"You're on `<base>`. Create a feature branch first."*
+   - **Branch name off the convention** (`feat|fix|refactor|docs|chore|test|perf|security/<slug>`, see **Trunk-Based Workflow** in your global `CLAUDE.md`): warn and offer to rename before pushing.
+   - **Size.** Measure the added hand-written source:
+     `git diff --numstat origin/<base>...HEAD -- . ':(exclude,glob)**/tests/**' ':(exclude,glob)**/__tests__/**' ':(exclude,glob)**/*_test.*' ':(exclude,glob)**/*.test.*' ':(exclude,glob)**/*.spec.*' ':(exclude,glob)**/*_spec.*' ':(exclude,glob)**/test_*' ':(exclude,glob)**/*.lock' ':(exclude,glob)**/*-lock.*'`
+     and sum the first column. Leave out generated files and files that only moved. Over ~500: decide whether it is one concern. One concern: carry on, say in your report how large it is and why it stays together, and add that line to the PR body. More than one: warn, suggest the split, and proceed only if the user confirms. Never split one concern to get under the number.
 
-   - **Dirty tree?** Stop and tell the user: *"Working tree has uncommitted changes. Run `/wf:commit` first, then re-run `/wf:pr`."*
-   - **On `main` / `master`?** Stop and tell the user: *"You're on `<base>`. Create a feature branch first."*
-   - **Branch name doesn't match the trunk-based convention?** (`feat/*`, `fix/*`, `refactor/*`, `docs/*`, `chore/*`, `test/*`, `perf/*`, `security/*`) Warn the user and offer to rename before pushing. The convention lives in root `CLAUDE.md` → **Trunk-Based Workflow**.
-   - **Over ~500 lines?** To check, measure the hand-written source this change adds: run `git diff --numstat <base>...HEAD -- . ':(exclude,glob)**/tests/**' ':(exclude,glob)**/*_test.*' ':(exclude,glob)**/*.test.*' ':(exclude,glob)**/test_*' ':(exclude,glob)**/*.lock' ':(exclude,glob)**/*-lock.*'` (or the same pathspec against `git diff` for unstaged work) and sum the first column — added lines. Leave out generated files and files that only moved; deletions are not in that column. If the total is over **~500 lines**, decide whether the change is one concern. **One concern:** carry on, and say in your report how large it is and why it stays together. **More than one:** warn the user, suggest the split, and proceed only if they confirm ("ship it anyway") — a warning, not a hard block, since `/wf:pr` runs after the commits exist. For a single concern over the number, add a line to the PR body saying why it is one PR.
-   - Record the base branch name (usually `main`, sometimes `master` or `develop`).
+2. **Gather the range:** `git log origin/<base>..HEAD --oneline`, `git diff origin/<base>...HEAD --stat`, and the full diff when drafting. Empty range: stop, nothing to PR. Read every commit and the whole diff — the summary describes the branch, not the tip commit.
 
-2. **Gather the commit range** — with the base branch resolved:
-   ```
-   git log <base>..HEAD --oneline
-   git diff <base>...HEAD --stat
-   git diff <base>...HEAD        # for the full picture when drafting the body
-   ```
+3. **Check upstream state:** `git rev-parse --abbrev-ref --symbolic-full-name @{u}` and `git status -sb`.
+   - No upstream: `git push -u origin <branch>`.
+   - Ahead: `git push origin <branch>`.
+   - Behind or diverged: stop; don't pull, rebase or force-push. Tell the user.
+   - Up to date: proceed.
 
-   If `<base>..HEAD` is empty, stop and tell the user there's nothing to PR.
+4. **Title** — under 70 characters, imperative, **no type prefix** (that belongs in commit messages), describing the outcome. Good: `Add rate limiting to auth endpoints`. Bad: `feat: added rate limiter middleware with token bucket algorithm`.
 
-3. **Check upstream state:**
-   ```
-   git rev-parse --abbrev-ref --symbolic-full-name @{u}   # upstream branch, if any
-   git status -sb                                          # ahead/behind counts
-   ```
-
-   - **No upstream:** push with `git push -u origin <branch>`.
-   - **Behind upstream:** stop and tell the user to pull / rebase first. Don't auto-pull.
-   - **Ahead of upstream:** push with `git push origin <branch>` (fast-forward).
-   - **Up to date:** proceed.
-
-4. **Analyze ALL commits in the range** (not just the latest) to draft the PR. Read each commit message and the overall diff — the PR summary describes the *whole branch*, not the tip commit.
-
-5. **Draft the title** — concise, under 70 chars, imperative mood, **no type prefix** (`feat:`, `fix:`, etc. belong in commit messages — GitHub's PR UI already shows the branch). Describe the outcome, not the mechanism.
-   - Good: `Add rate limiting to auth endpoints`
-   - Bad: `feat: added rate limiter middleware with token bucket algorithm`
-
-6. **Draft the body** — use these sections, in order, and **omit sections that don't apply**:
+5. **Body** — these sections in order; delete any that has nothing to say:
 
    ```markdown
    ## Summary
    - <1-3 bullets on what changed and why>
 
    ## Spec
-   <link to the spec file if one exists — scan docs/specs/, specs/, or
-   a feature dir for a matching spec. Omit this section entirely if
-   there is no spec.>
+   <link to the matching spec (scan docs/specs/, specs/, the feature dir)>
 
    ## Review
-   <Only when `--no-review` was used: `Review: skipped — <reason>`. Omit otherwise.>
+   <only with --no-review: `Review: skipped — <reason>`>
 
    ## Security checklist
-   <Only include this section if the diff touches: auth, sessions, crypto,
-   password handling, input validation, SQL/command construction, file
-   uploads, secrets, env vars, or external API calls. Omit entirely
-   otherwise.>
+   <only if the diff touches auth, sessions, crypto, password handling, input validation,
+   SQL/command construction, file uploads, secrets, env vars, or external API calls>
    - [ ] Inputs validated at system boundary
    - [ ] No secrets or credentials in code/logs
    - [ ] Auth/authz checks unchanged or reviewed
    - [ ] External API calls use timeouts and error handling
-   - [ ] <any other checks specific to what changed>
+   - [ ] <checks specific to what changed>
 
    ## Test plan
-   - [ ] <how to verify change 1>
-   - [ ] <how to verify change 2>
-   - [ ] <commands to run, URLs to hit, manual steps>
+   - [ ] <how to verify each change: commands, URLs, manual steps>
    ```
 
-   **Rules for the body:**
-   - If a section header has nothing to say, delete the header. Empty sections are noise.
-   - The Test Plan is **always required** — even "run the existing test suite" counts.
-   - Don't pad. A focused 5-line body beats a templated 30-line one.
+   The Test plan is always required; "run the existing suite" counts. A focused 5-line body beats a templated 30-line one.
 
-7. **Present the draft** — show the user:
+6. **Present the draft** and wait for approval; revise on edits and re-present.
    ```
    Title: <title>
-   Base:  <base-branch>
-   Head:  <current-branch>
+   Base:  <base>
+   Head:  <branch>
    Flow:  draft → fresh review → ready   (or: draft-only [--draft] / direct, no review [--no-review])
 
    Body:
    <full body>
    ```
-   Wait for approval. Accept edits ("reword title", "add X to test plan", "drop security section"). Revise and re-present until approved.
 
-8. **Create the PR** — use `gh pr create` with a HEREDOC for the body:
+7. **Create the PR** with a HEREDOC body:
    ```
-   gh pr create \
-     --base <base> \
-     --title "<title>" \
-     [--draft] \
-     --body "$(cat <<'EOF'
+   gh pr create --base <base> --title "<title>" [--draft] --body "$(cat <<'EOF'
    <body>
    EOF
    )"
    ```
+   Always pass `--draft` when the review loop will run, so the branch is never review-ready before its review. With `--no-review`, pass it only if the user wants a draft.
 
-   **When the review loop runs** (default — anything except `--no-review`), always pass `--draft` here so the branch is never review-ready before its fresh review. When `--no-review` is set, add `--draft` only if the user passed `--draft` (or asked for a draft during approval).
-
-9. **Fresh-context review + bounded fix loop** — **run this by default; skip only when `--no-review` was passed.** You are the writer; you do **not** review your own work (writer/reviewer rule, root `CLAUDE.md`), and an in-session review skill does not count — it runs in your context. Dispatch the `wf:reviewer` agent, which starts cold:
+8. **Review.** Skip only when `--no-review` was passed. You are the writer and never review your own work; an in-session review skill runs in your context and does not count. Dispatch the `wf:reviewer` agent, which starts cold. It runs in your working tree, so the tree must be clean:
 
    ```
    Agent(
@@ -137,32 +102,24 @@ A few things that matter, and why:
    )
    ```
 
-   The agent definition carries the checklist and the output format; the prompt only supplies the inputs. Take the `Verify` commands from `CLAUDE.md`, the `Makefile`, or the package scripts; pass `none` if the project has none. It returns `VERDICT`, `CHECKS`, `FINDINGS` (`HIGH` / `MED` / `LOW`) and a one-line `SUMMARY`.
+   Take the `Verify` commands from the project's `CLAUDE.md`, `Makefile` or package scripts; pass `none` if there are none. It returns `VERDICT` (`PASS` or `FIX_REQUIRED`), `CHECKS`, `FINDINGS` (`HIGH` / `MED` / `LOW`) and `SUMMARY`.
 
-   **Process the verdict:**
-   - `PASS`, no findings → record `Review: PASS`. Go to step 10.
-   - `PASS` with LOW findings only → record `Review: PASS_WITH_NITS`; surface the LOW list verbatim in the final report. Go to step 10.
-   - `FIX_REQUIRED` (HIGH/MED present) → fix exactly the listed items in your current context (you're warm). Then re-run the project's lint/typecheck/tests, **commit the fixes** (conventional message) and `git push`, and re-dispatch the reviewer with one extra prompt line: `Previous findings: <list>`.
+9. **Process the verdict and fix.** Record the verdict as a PR comment (`gh pr comment <url> --body …`), never as `gh pr review --approve`.
+   - `PASS`, no findings: `Review: PASS`; go to step 10.
+   - `PASS` with only LOW findings: `Review: PASS_WITH_NITS`; list the LOW items in the final report; go to step 10.
+   - `FIX_REQUIRED`: fix exactly the listed HIGH/MED items, re-run the project's lint, typecheck and tests, commit the fixes (conventional message), `git push`, and re-dispatch the reviewer with an extra line `Previous findings: <list>`.
 
-   **Bounded loop: max 2 fix cycles.** If cycle 2 still returns `FIX_REQUIRED`, record `Review: NEEDS_HUMAN — <count> HIGH/MED unresolved after 2 cycles` (and `Spec ambiguity suspected at <spec-path>` if the same finding category recurred). Do NOT loop further, and do NOT mark the PR ready.
+   At most 2 fix cycles. If cycle 2 still returns `FIX_REQUIRED`, record `Review: NEEDS_HUMAN — <count> HIGH/MED unresolved after 2 cycles` (add `Spec ambiguity suspected at <spec-path>` if one finding category recurred), leave the PR a draft, and stop looping. `PASS_WITH_NITS` and `NEEDS_HUMAN` are this skill's labels, not reviewer verdicts. Commits that change behaviour after a `PASS` need a fresh review before merge.
 
-10. **Ready transition (auto-ready on PASS).**
-    - If the review is `PASS` or `PASS_WITH_NITS` **and** `--draft` was not passed → run `gh pr ready <url>` to flip the draft to review-ready.
-    - If `--draft` was passed → leave it as a draft (report the passing verdict so the user knows it's review-clean WIP).
-    - If the review is `NEEDS_HUMAN` → **leave it as a draft** and report the unresolved HIGH/MED findings; the user decides.
-    - If `--no-review` was passed → the PR is already in its final state from step 8; nothing to flip.
+10. **Ready transition.**
+    - If the diff touches auth, crypto, input parsing, secrets or permissions, run the built-in `/security-review` first (fresh context); a HIGH finding keeps the PR a draft.
+    - `PASS` or `PASS_WITH_NITS` and no `--draft`: `gh pr ready <url>`.
+    - `--draft`: leave it a draft and report the passing verdict.
+    - `NEEDS_HUMAN`: leave it a draft and report the unresolved items.
+    - `--no-review`: nothing to flip; step 7 set the final state.
 
-11. **Return the PR URL and review verdict** — show the PR URL, its final draft/ready state, and the review outcome (`PASS` / `PASS_WITH_NITS` with the LOW nits listed / `NEEDS_HUMAN` with the unresolved items). If the reviewer's `CHECKS` line says a check left the working tree dirty, say so too — otherwise the next `/wf:pr` run stops on a dirty tree with no explanation. This is the final output.
+11. **Report** the PR URL, its draft/ready state, and the review outcome (`PASS`, `PASS_WITH_NITS` with the nits, or `NEEDS_HUMAN` with the unresolved items). If the reviewer's `CHECKS` says a check left the tree dirty, say so, or the next `/wf:pr` run stops on a dirty tree unexplained. Then add this reminder without running it (the PR isn't merged yet):
 
-12. **Post-merge cleanup reminder.** After the URL, append a one-liner reminder (do not execute — the PR isn't merged yet):
+    *"After merge: `git checkout <base> && git pull --ff-only && git push origin --delete <branch>; git branch -D <branch>` (only once the PR shows MERGED; the remote delete is a no-op if GitHub already deleted it), plus `git worktree remove <path>` if you used a worktree. Never reuse a merged branch."*
 
-    *"After merge, clean up: `git checkout <base> && git pull && git branch -d <branch> && git push origin --delete <branch>` (and `git worktree remove <path>` if you used a worktree). Trunk-based workflow — never reuse a merged branch."*
-
-## Scope boundary
-
-This skill stops once the PR URL is printed. It does **not**:
-- Merge the PR
-- Request reviewers (user's call — team/project convention)
-- Add labels or milestones
-- Close linked issues (the PR body or commits can reference them with `Closes #N`, but that's the user's decision)
-- Push to any branch other than the current one
+The skill ends here.
