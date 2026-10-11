@@ -1,6 +1,6 @@
 ---
 name: issues
-description: "File GitHub milestones + issues for a roadmap, a phase, or a spec — one milestone per phase, one issue per task/slice — using the trunk-based patterns from /wf:spec, /wf:roadmap, and /wf:feature. Use when the user says 'create the GitHub issues', 'file the issues for this roadmap', 'open issues for this spec', 'make the milestones', or points at docs/roadmap/*.md or docs/specs/*.md and asks to hand them to GitHub."
+description: "File GitHub milestones and issues from a roadmap, a phase file or a spec — one milestone per phase, one issue per task or slice — then write the issue numbers back into the docs so /wf:feature and /wf:autopilot can name branches and close issues. Safe to re-run: reconciles issues already filed. Use when the user says 'create the GitHub issues', 'file the issues for this roadmap', 'open issues for this spec', 'make the milestones', or points at docs/roadmap or docs/specs and wants them on GitHub."
 argument-hint: "<roadmap, phase or spec file>"
 ---
 File GitHub milestones and issues for: $ARGUMENTS
@@ -9,117 +9,65 @@ File GitHub milestones and issues for: $ARGUMENTS
 
 `/wf:issues` is the hand-off between planning artifacts (`docs/roadmap/*.md`, `docs/specs/*.md`) and GitHub. It files:
 
-- **One milestone per phase** — `Phase NNN — <phase-name>`
-- **One issue per task/slice** — title `[NNN.N] <task-name>` for a roadmap task, `[NNN.N.N] <slice-name>` for a sliced sub-task, or `[<feature>.NNN] <slice-name>` for a standalone spec's slice.
-- **Labels per issue** — `type:<type>`, `complexity:<low|med|high>`, `mvp` or `post-mvp` (if derivable), and `needs-spec` / `spec-ready` / `blocked` as appropriate.
-- **Issue body** — spec link, file list, dependencies, verification command, feature flag, acceptance criteria pulled from the spec.
+- **One milestone per phase:** `Phase NNN — <phase-name>`
+- **One issue per task/slice:** title `[NNN.N] <task-name>` for a roadmap task, `[NNN.N.N] <slice-name>` for a slice of a roadmap task, `[<feature>.NNN] <slice-name>` for a standalone spec's slice. `N` in `[NNN.N]` is the task's position in its phase (Task 2 gives `[003.2]`), not the letter suffix of the spec file.
+- **Labels:** `type:<type>`, `complexity:<low|med|high>`, `mvp` or `post-mvp` (if derivable), `needs-spec` if the spec file does not exist yet.
+- **Body:** spec link, file list, dependencies, verification command, flag, acceptance criteria from the spec.
 
-After filing, `/wf:issues` writes the issue numbers back into the source `Issue:` / `Issues:` columns so `/wf:feature` can read them when building branch names.
+It then writes the issue numbers back into the source docs (see Writeback).
 
 ## Parse arguments
 
-The argument is one of:
+- **Roadmap index** (`docs/roadmap/README.md`): everything: a milestone per phase file, an issue per task, an issue per slice where a task points at a sliced spec.
+- **Phase file** (`docs/roadmap/NNN_<phase>.md`): one milestone plus its tasks (and slices).
+- **Sliced spec index** (`docs/specs/NNN_<feature>/README.md`): one issue per Slices row. Uses the feature's existing milestone if the spec references a phase, otherwise no milestone.
+- **Single spec** (`docs/specs/NNN_<feature>.md`): one issue; a milestone only if the spec references a phase.
 
-- **Roadmap index** — `/wf:issues docs/roadmap/README.md` files *everything*: one milestone per phase file, one issue per task, one issue per slice where a task points at a sliced spec.
-- **Phase file** — `/wf:issues docs/roadmap/NNN_<phase>.md` files one milestone + the phase's tasks (and slices where applicable).
-- **Sliced spec index** — `/wf:issues docs/specs/NNN_<feature>/README.md` files one issue per row in the Slices table. Uses the feature's existing milestone if found (matched by phase reference in the spec), otherwise creates a standalone no-milestone batch.
-- **Single spec** — `/wf:issues docs/specs/NNN_<feature>.md` files one issue. No milestone unless the spec references a phase.
-
-No argument? Default to `docs/roadmap/README.md` if it exists; otherwise prompt.
+No argument: use `docs/roadmap/README.md`; if it is missing but `docs/roadmap/NNN_*.md` exist, offer those; otherwise ask.
 
 ## Transport: `gh` CLI
 
-Every read and write goes through the `gh` CLI. Run `gh auth status` once at skill start; if it fails, tell the user to run `gh auth login` (their call — don't do it for them) and stop.
+Every read and write goes through `gh`. Run `gh auth status` once at the start; if it fails, tell the user to run `gh auth login` (their call) and stop. Milestones have no `gh milestone` command, so use `gh api "repos/{owner}/{repo}/milestones"` (list with `?state=all&per_page=100 --paginate`, create with `-f title=... -f description=...`). Create issues with `gh issue create --title ... --body-file <tmp> --milestone "..." --label "..."`; the body goes through a file so Markdown and backticks survive.
 
-| Operation | Command |
-|-----------|---------|
-| List milestones | `gh api "repos/{owner}/{repo}/milestones?state=all&per_page=100" --paginate --jq '.[]'` |
-| Create milestone | `gh api "repos/{owner}/{repo}/milestones" -f title=... -f description=...` |
-| List labels | `gh label list --limit 200 --json name,color` |
-| Create label | `gh label create "<name>" --color <hex>` |
-| Create issue | `gh issue create --title ... --body-file <tmp> --milestone "..." --label "..."` |
-| View issue | `gh issue view <N> --json title,state,milestone,labels,body` |
-| Edit issue | `gh issue edit <N> --title ... --add-label ... --remove-label ... --milestone ...` |
-| Close issue | `gh issue close <N> --comment "..."` |
-| List issues | `gh issue list --state all --limit 500 --json number,title,labels,milestone` |
+## Asking the user
 
-## User prompts — use `AskUserQuestion`
+Use `AskUserQuestion` at each decision point: structured options are unambiguous where "ok"/"go" is not. First option is the recommendation; "Other" means the user is correcting you, so re-plan. Batch decisions needed back-to-back into one call.
 
-Every interactive decision point in this skill must use the `AskUserQuestion` tool, not free-text prompts. Confirmations rendered as plain text are easy for the user to miss and produce ambiguous answers ("ok", "sure", "go"); structured options are faster to answer, unambiguous to parse, and let the user pick "Other" to override.
+- **Reconcile** (drifted or closed issues found): Update in place (recommended) / Close + refile / Skip.
+- **Horizon** (roadmap index only): Current + next phase (recommended) / Full roadmap.
+- **Proceed?** (dry-run confirmation): Yes / Cancel.
+- **Next phase** (after each milestone batch, only when the user chose Full roadmap): Yes, continue / Stop here.
 
-The four decision points in this skill are:
-
-| When | Question | Header (≤12 chars) | Options (first = recommended) |
-|------|----------|--------------------|-------------------------------|
-| Preflight step 4 — drifted / gone issues found | "How should I reconcile the drifted or closed issues?" | `Reconcile` | **Update in place (Recommended)**, Close + refile, Skip |
-| Preflight step 6 — dry-run confirmation | "Proceed with the plan above?" | `Proceed?` | **Yes, proceed (Recommended)**, Cancel |
-| Pacing — roadmap-index horizon | "Which horizon should I file?" | `Horizon` | **Current + next phase (Recommended)**, Full roadmap |
-| Execution loop — after each milestone batch | "Proceed to Phase NNN+1?" | `Next phase` | **Yes, continue (Recommended)**, Stop here |
-
-All four are single-select (`multiSelect: false`). The user can always pick the auto-added "Other" to type free-form guidance — treat that as a correction and re-plan rather than proceeding.
-
-If two decisions are needed back-to-back (e.g., horizon choice + dry-run confirm on the same roadmap-index run), batch them into one `AskUserQuestion` call with two questions, so the user clicks once.
+If `AskUserQuestion` is unavailable (headless run, or dispatched by `/wf:autopilot` with the plan already approved), do not file anything on your own: print the dry-run plan and stop, unless the caller said the plan is approved.
 
 ## Preflight
 
-1. **Check `gh auth status`** (above). Stop if it fails.
-2. **Confirm we're in a git repo with a GitHub remote** — `git remote get-url origin` and check it's a github.com URL. If not, stop.
-3. **Read the source file(s) top-to-bottom** — parse the Tasks and Slices tables, collect `Type`, `Complexity`, `Feature flag`, `Dependencies`, `Spec`, and the existing `Issue:` / `Issues:` columns.
+1. **`gh auth status`** (above). Stop if it fails.
+2. **Confirm a GitHub remote:** `gh repo view --json nameWithOwner` must succeed (this also covers GitHub Enterprise). If not, stop.
+3. **Read the source file(s) top to bottom.** Collect `Type`, `Complexity`, `Flag`, `Depends on`, `Spec` and the existing `Issue` / `Issues` values from the Tasks and Slices tables and Trunk Metadata.
 4. **Detect already-filed issues.**
-   - For each row that already has a `#<N>` in the `Issue` column, fetch the issue (`gh issue view`).
-   - Classify each as `match` (still aligned with the source), `drift` (title/labels/milestone or body need an update), or `gone` (issue was closed or deleted).
-   - Print the summary in text: `X rows already filed: Y match / Z drift / W gone`.
-   - Then call `AskUserQuestion` (see "User prompts" above) with a single `Reconcile` question to choose the bulk action (Update in place / Close + refile / Skip). If the user picks "Other" and names specific rows, re-plan per-row before proceeding.
-   - Rows without an `Issue` value are always new and don't enter this prompt.
-5. **Fetch existing milestones** — match phase filenames against existing milestone titles so reruns are idempotent.
-6. **Dry-run the plan.** Before any write, print the full list of what will be created or changed — milestones, issues (title + labels + milestone), and writebacks. Then call `AskUserQuestion` with a `Proceed?` question (Yes / Cancel) to confirm before proceeding. Do not proceed on free-text affirmations — wait for the structured answer. For a roadmap-index input, batch this with the `Horizon` question in the same `AskUserQuestion` call.
+   - For each row with a `#<N>`, run `gh issue view`. Classify it `match` (aligned with the source), `drift` (title, labels, milestone or body need an update) or `gone` (closed or deleted).
+   - For rows with no `Issue` value, search open and closed issues by title prefix (`gh issue list --state all --search "[003.2] in:title"`). Adopt a match instead of creating a duplicate: a previous run may have died between creating the issue and the writeback.
+   - Print `X rows already filed: Y match / Z drift / W gone`, then ask the **Reconcile** question. If the user names specific rows under "Other", re-plan per row.
+5. **Fetch existing milestones** and match them against the phase titles so reruns are idempotent.
+6. **Dry-run.** Print everything that will be created or changed (milestones, issues with title, labels and milestone, writebacks) and ask **Proceed?**. A free-text "ok" does not count; wait for the structured answer. For a roadmap index, batch it with **Horizon**.
 
 ## Milestone shape
 
-- **Title:** `Phase NNN — <phase-name>` (exact, copy from `docs/roadmap/NNN_<phase-name>.md`'s `# Phase NNN:` heading)
-- **Description:** copy the phase's `## Context` paragraph (truncate to ~500 chars).
+- **Title:** `Phase NNN — <phase-name>`, from the phase file's `# Phase NNN: <name>` heading or the task's `Milestone:` field.
+- **Description:** the phase's `## Context` paragraph, truncated to ~500 chars.
 - **Due date:** skip unless the phase file names one.
-
-Create via `gh api "repos/{owner}/{repo}/milestones" -f title="..." -f description="..."`.
 
 ## Issue shape
 
-**Title patterns:**
+**Labels:**
 
-| Source | Title |
-|--------|-------|
-| Roadmap task (single-file spec) | `[NNN.N] <task-name>` — e.g., `[003.2] Jira sync worker` |
-| Roadmap task (sliced spec, sub-issue) | `[NNN.N.N] <slice-name>` — e.g., `[003.2.1] Jira issue-list fetcher` |
-| Standalone spec slice | `[<feature>.NNN] <slice-name>` — e.g., `[atlassian.002] Confluence page index` |
-| Standalone single-file spec | `<feature-name>` — e.g., `atlassian-integration` |
+- `type:<type>` from the `Type` field (`feat`, `fix`, `refactor`, `chore`, `test`, `docs`, `perf`, `security`).
+- `complexity:low` / `complexity:med` / `complexity:high` from `Complexity`.
+- `mvp` or `post-mvp` from the roadmap index's MVP column; omit when not derivable.
+- `needs-spec` if the task's spec file does not exist yet.
 
-**Labels (apply in this order):**
-
-- `type:<type>` — from the spec's `Type` field (one of `feat`, `fix`, `refactor`, `chore`, `test`, `docs`, `perf`, `security`).
-- `complexity:low` / `complexity:med` / `complexity:high` — from the spec's `Complexity` field.
-- `mvp` or `post-mvp` — derivable only from the roadmap index's MVP column. Omit when not derivable.
-- `needs-spec` — if the task's spec file doesn't exist yet.
-- `spec-ready` — if the spec exists and has a filled-in Verification section.
-- `blocked` — if `Dependencies` names another task whose issue is still open.
-
-**Bootstrap the labels on first run.** Use `gh label list --limit 200 --json name --jq '.[].name'` + `gh label create "<name>" --color <color>`. Enumerate existing labels and create only what's missing, using this default palette:
-
-- `type:feat` — `1d76db` (blue)
-- `type:fix` — `d73a4a` (red)
-- `type:refactor` — `a2eeef` (cyan)
-- `type:chore` — `cccccc` (grey)
-- `type:test` — `0e8a16` (green)
-- `type:docs` — `0075ca` (dark blue)
-- `type:perf` — `fbca04` (yellow)
-- `type:security` — `b60205` (dark red)
-- `complexity:low` — `c2e0c6` (light green)
-- `complexity:med` — `fef2c0` (light yellow)
-- `complexity:high` — `f9d0c4` (light red)
-- `mvp` — `0e8a16` (green)
-- `post-mvp` — `cfd3d7` (light grey)
-- `needs-spec` — `e99695` (salmon)
-- `spec-ready` — `c5def5` (pale blue)
-- `blocked` — `b60205` (dark red)
+Create missing labels on first run (`gh label list --limit 200 --json name`, then `gh label create "<name>" --color <hex>`). Colors: `type:feat` `1d76db`, `type:fix` `d73a4a`, `type:refactor` `a2eeef`, `type:chore` `cccccc`, `type:test` `0e8a16`, `type:docs` `0075ca`, `type:perf` `fbca04`, `type:security` `b60205`; `complexity:low` `c2e0c6`, `complexity:med` `fef2c0`, `complexity:high` `f9d0c4`; `mvp` `0e8a16`, `post-mvp` `cfd3d7`, `needs-spec` `e99695`.
 
 **Body template:**
 
@@ -135,7 +83,7 @@ Create via `gh api "repos/{owner}/{repo}/milestones" -f title="..." -f descripti
 <bullet list of files from the task's Files field>
 
 ## Dependencies
-<one of: `None.` · `Blocked by {{issue:<slice-id>}}[, {{issue:<slice-id>}}...].` — see "Dependencies: two-pass resolution" below>
+<`None.` or `Blocked by #<N>[, #<N>...].`>
 
 ## Verification
 ```
@@ -143,104 +91,57 @@ Create via `gh api "repos/{owner}/{repo}/milestones" -f title="..." -f descripti
 ```
 
 ## Acceptance Criteria
-<pull Verification Criteria bullets from the spec — each becomes a `- [ ]` checklist item>
+<Verification Criteria bullets from the spec, each as a `- [ ]` item>
 
 ## Feature Flag
 <flag name and default, or `None — slice is user-ready on merge`>
-
-## Branch
-`<type>/<issue-number>-<slug>` — created with `gh issue develop` after this issue is filed, or manually via `git checkout -b <type>/<this-issue-number>-<slug>`.
 
 ---
 Filed by `/wf:issues` from `<source-file>`.
 ```
 
-Create via `gh issue create --title "..." --body-file <tmp> --milestone "Phase NNN — <name>" --label "type:feat" --label "complexity:med" ...`.
-
-## Dependencies: two-pass resolution
-
-**Never write `#001`, `#002`, … in an issue body.** GitHub auto-links any `#N` to the real issue with that number — so `#001` resolves to issue #1 in the repo, not the slice you meant. This silently produces cross-linked, wrong references.
-
-GitHub issue numbers are assigned by the server at creation time and can't be predicted, so dependency references must be filled **after** each issue is created. Use a two-pass approach:
-
-**Pass 1 — write with placeholders.** In the body template's `Dependencies` section, reference other slices/tasks using a `{{issue:<slice-id>}}` token whose key is the source identifier (e.g., `{{issue:atlassian.001}}`, `{{issue:003.2}}`, `{{issue:004.2.1}}`), not a `#N`. Example body fragment:
-
-```markdown
 ## Dependencies
-Blocked by {{issue:atlassian.001}}, {{issue:atlassian.004}}.
-```
 
-Any `#` token you write at this stage is a bug. If a dependency is external (already filed), write its real `#N` directly — those are stable.
+File issues in dependency order. Roadmap order already puts dependencies first, and `/wf:spec` forbids a slice depending on an unmerged slice. Each body then names the real `#N` of an already-filed blocker. A dependency already filed earlier is looked up in the source docs' `Issue` / `Issues` values. If a dependency points forward (to something not yet filed), stop and fix the source ordering.
 
-**Pass 2 — rewrite once the mapping is known.** After all issues in this batch are filed and you have a `slice-id → #N` map (e.g., `atlassian.001 → #48`), walk every filed issue in the batch, substitute each `{{issue:<slice-id>}}` token with the corresponding `#<N>`, and update the body via `gh issue edit --body-file <tmp>`. Pass 2 is also where you update the **source spec files' Dependencies fields** if they used slice-id references — the canonical form in the repo should match the canonical form on GitHub.
+**Never write the source's `001`, `002`, ... as `#001` in a body.** GitHub auto-links `#N` to the issue with that number, so `#001` silently points at issue #1, not the slice you meant.
 
-**Idempotency.** On re-runs, any `{{issue:…}}` token still present in a filed issue body means pass 2 was interrupted; resolve it. Any `#N` already in place that matches the current mapping is left alone.
+## Pacing: two-phase horizon
 
-**Applies to every source type** (roadmap index, phase file, sliced spec, single spec). Single-spec inputs with `None.` dependencies skip pass 2 entirely.
+For a roadmap index spanning many phases, default to filing only the current phase and the next. Issues are the short-range artifact and the roadmap is the long-range one; filing 50 issues up front just rots into stale labels and half-done milestones. Phase and single-spec inputs are already scoped and skip this.
 
-## Pacing: two-milestone horizon (default recommendation)
+1. **Current phase:** the first phase whose Status is not `Completed`, or whose tasks don't all have `Issue` values.
+2. **Next phase:** the phase after it in the index.
+3. The dry-run files only those two and lists the skipped phases ("Phases 004–009 stay in docs/roadmap/ for now; re-run `/wf:issues` when you're ready for the next wave").
+4. Ask **Horizon**. If the user picks Full roadmap, drop the cap and warn about the label-rot cost.
 
-When the input is a roadmap index (`docs/roadmap/README.md`) spanning many phases, **default to filing only the current phase + the next phase** — not the entire roadmap. Everything further out stays in the roadmap doc and nowhere else.
+Re-running later is idempotent on filed phases and picks up the next window.
 
-Why this is the default (team practice that translates cleanly to solo):
-- GitHub issues rot. Filing 50+ upfront creates stale `blocked` / `needs-spec` labels, milestones that close with half their items undone, and branches pointing at dead scope.
-- The roadmap doc is the long-range artifact; GitHub issues are the short-range one. Don't duplicate them — they serve different cadences.
-- Two phases of horizon is enough to see upcoming dependencies without fabricating backlog pressure for work months out.
-- A solo dev gets team discipline (issue-per-PR, milestone-scoped work) without the team overhead (triage meetings, stale-label maintenance).
+## Execution: one milestone at a time
 
-**Dropped on purpose** (team overhead with no solo payoff):
-- Story points / effort estimates.
-- Skeleton issues for every post-MVP phase.
-- `needs-spec` / `blocked` labels on work 3+ phases out — the roadmap doc already carries that state.
-
-**Default behavior when the input is a roadmap index:**
-
-1. Identify the **current phase** — first phase whose status is not `Completed` in the index table, or whose tasks don't all have filled `Issue` values.
-2. Identify the **next phase** — the phase directly after the current one in the index.
-3. Propose filing *only those two* in the dry-run. Explicitly list the phases being skipped ("Phases 004–009 stay in docs/roadmap/ for now — re-run `/wf:issues` when you're ready to start the next wave").
-4. Ask the user via `AskUserQuestion` (see "User prompts" above) with the `Horizon` question — options "Current + next phase (Recommended)" and "Full roadmap". If they pick full, proceed without the horizon cap — but warn them about the label-rot cost. Batch this with the dry-run `Proceed?` question in the same call to save a click.
-
-This rule does not apply to phase-file or single-spec inputs — those are already scoped.
-
-**Rolling forward:** re-running `/wf:issues docs/roadmap/README.md` later is idempotent on already-filed phases (see Idempotency rules) and picks up the next two-phase window. Typical rhythm: when you're mid-way through the current milestone, re-run to file the next-next phase, keeping the two-phase buffer ahead of active work.
-
-## Execution mode: per-milestone confirmation
-
-For roadmap/phase inputs, file **one milestone + its issues at a time**, in roadmap order. After each milestone batch:
-
-1. Print the created milestone URL + issue URLs and numbers.
-2. **Run pass 2** (see "Dependencies: two-pass resolution"): build the `slice-id → #N` map from this batch, then rewrite every issue in the batch whose body contains `{{issue:…}}` tokens. Do this before the writeback in step 3 so downstream spec edits can reference final `#N` values.
-3. Patch the `Issue:` / `Issues:` columns in the source roadmap/spec files with the newly-minted `#<N>` values.
-4. Call `AskUserQuestion` with the `Next phase` question (Yes, continue / Stop here) — halt unless the user selects "Yes, continue". An "Other" response is also a halt: re-plan before continuing.
-
-This keeps a broken run recoverable (stop after any batch and fix the source file) and keeps writebacks atomic per phase.
-
-For single-spec inputs, skip the confirmation loop — file the issue(s), writeback, done.
+For roadmap and phase inputs, file one milestone and its issues at a time, in roadmap order, so a broken run is recoverable and writebacks stay atomic per phase. Write each `#N` back into the source right after its issue is created, so an interrupted run does not leave an issue the source does not know about. After each batch, print the milestone and issue URLs. When the user chose Full roadmap, ask **Next phase** and halt unless they continue; otherwise move on to the next phase in the horizon. Single-spec inputs: file, write back, done.
 
 ## Writeback
 
-After filing, update the source Markdown in place:
+Update the source Markdown with `Edit` (exact-string replace), preserving surrounding formatting:
 
-- **Roadmap tasks:** replace `- **Issues:** —` with `- **Issues:** #<N>` (or `#<N>, #<N+1>, ...` for sliced tasks).
-- **Spec Slices table:** replace the `—` in the `Issue` column with `#<N>`.
-- **Single-spec Trunk Metadata:** replace `- **Issue:** — (filled by `/wf:issues`)` with `- **Issue:** #<N>`.
+- **Roadmap task:** `- **Issues:** —` becomes `- **Issues:** #<N>` (or `#<N>, #<N+1>, ...` for a sliced task).
+- **Roadmap task with a single-file spec:** also write `#<N>` to the spec's Trunk Metadata `**Issue:**` line, because `/wf:feature` and `/wf:autopilot` read it there.
+- **Roadmap task with a sliced spec:** write each slice's `#<N>` to the Slices table `Issue` column and list them all in the roadmap's `Issues:`.
+- **Standalone sliced spec:** `#<N>` in the Slices table `Issue` column.
+- **Standalone single spec:** `- **Issue:** — (filled by `/wf:issues`)` becomes `- **Issue:** #<N>`.
 
-Do this with `Edit` (exact-string replace), not by rewriting the file — preserve surrounding formatting.
+A row updated in place (not newly filed) keeps its existing `Issue` value.
 
-If a row was updated in place (not newly filed), leave the `Issue:` column alone.
+## Idempotency
 
-## Idempotency rules
-
-- Re-running on a fully-filed source is a no-op: dry-run shows 0 creates, 0 updates.
-- Re-running after some rows were hand-closed on GitHub treats them as `gone` and offers refile/skip.
-- Re-running after the source spec was edited surfaces drift for every affected row; user decides update-in-place vs. close+refile.
-- Never delete issues; close them with a pointer comment instead. The user can clean up closed issues manually.
+- Re-running on a fully filed source is a no-op: the dry-run shows 0 creates, 0 updates.
+- Rows hand-closed on GitHub are `gone`; offer refile or skip.
+- Spec edits since filing show up as `drift` on the affected rows.
+- Never delete issues; close them with a pointer comment (`gh issue close <N> --comment "..."`).
 
 ## After writing
 
-1. Print a final summary: N milestones created, M issues created, K updated, list the URLs.
-2. Remind the user of the horizon: which phases were filed, which stayed in the roadmap doc, and when to re-run to advance the window.
-3. Suggest the next step based on what's now in place:
-   - **Current phase filed?** → "Run `/wf:feature docs/specs/NNN_<name>.md` (or a slice file `docs/specs/NNN_<name>/MMM_<slice>.md`) to implement one task, or `/wf:autopilot docs/roadmap/NNN_<phase>.md` to run the phase end-to-end."
-   - **Mid-phase check-in?** → "When you're ~halfway through the current phase, re-run `/wf:issues docs/roadmap/README.md` to file the next phase and keep a two-phase buffer ahead."
-   - **Finished a phase?** → "Mark the phase `Completed` in the roadmap index's Status column, then re-run `/wf:issues docs/roadmap/README.md` — it'll advance the window to the next unstarted phase."
+1. Print a summary: milestones created, issues created, issues updated, with URLs.
+2. Say which phases were filed and which stayed in the roadmap, and when to re-run to advance the window.
+3. Suggest the next step: `/wf:feature docs/specs/NNN_<name>.md` (or a slice file `docs/specs/NNN_<name>/MMM_<slice>.md`) for one task, or `/wf:autopilot docs/roadmap/NNN_<phase>.md` for a whole phase. When a phase finishes, `/wf:autopilot` marks it `Completed`; re-run `/wf:issues docs/roadmap/README.md` to advance the window.
