@@ -188,7 +188,7 @@ MATCHED=0
 # Ensure ~/.claude exists
 mkdir -p "$CLAUDE_DIR"/{agents,commands,skills}
 
-# Install the aiwf launcher so follow-up platform commands work from a clone.
+# Install the aiwf launcher so follow-up commands work from a clone.
 link_bin "aiwf" "aiwf"
 
 # Global config (the global Claude defaults — applies to every project).
@@ -238,14 +238,6 @@ for guide in go rust typescript python; do
     link "reviews/$guide.md" "reviews/$guide.md"
 done
 
-# Ensure adapter scripts are executable (important after a fresh clone)
-chmod +x \
-    "$SCRIPT_DIR/adapters/cursor/install.sh" \
-    "$SCRIPT_DIR/adapters/cursor/uninstall.sh" \
-    "$SCRIPT_DIR/adapters/codex/install.sh" \
-    "$SCRIPT_DIR/adapters/codex/uninstall.sh" \
-    2>/dev/null || true
-
 echo ""
 if [ ${#FILTERS[@]} -gt 0 ] && [ "$MATCHED" -eq 0 ]; then
     if [ "$INSTALL_SETTINGS" -eq 0 ] && should_install "settings.json" "settings.json"; then
@@ -258,5 +250,4 @@ if [ ${#FILTERS[@]} -gt 0 ] && [ "$MATCHED" -eq 0 ]; then
 fi
 info "Done! $MATCHED target(s) linked."
 info "Edit files in $SCRIPT_DIR and changes apply to $CLAUDE_DIR/ automatically."
-info "For Cursor: aiwf install-cursor | For Codex: aiwf install-codex | For all: aiwf install-all"
 echo ""

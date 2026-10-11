@@ -4,7 +4,7 @@
     Full SDLC (Software Development Life Cycle) for AI-assisted coding — from idea to production.<br/>
     Built on SDD (Spec-Driven Development): specs are the source of truth, AI agents execute them.<br/>
     Skills, agents, review guides, and conventions — installed globally, applied everywhere.<br/><br/>
-    Works with <a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a>, <a href="https://www.cursor.com/">Cursor</a>, and <a href="https://openai.com/codex">OpenAI Codex CLI</a>.
+    For <a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code</a>.
   </p>
 </p>
 
@@ -33,23 +33,12 @@ Each phase of development has dedicated tooling:
 ## Features
 
 - **18 slash-command skills** covering every phase from idea to merged PR
-- **Multi-platform** — native support for Claude Code, Cursor, and OpenAI Codex CLI
 - **Specialized review agents** — architecture and security reviewers spawned as subagents
 - **Language-aware code review** — auto-detects Go, Rust, TypeScript, or Python and loads stack-specific best practices
 - **Parallel execution** — worktree-based development with `/autopilot` for full roadmap execution
 - **Writer/reviewer separation** — a fresh-context reviewer is always spawned for every branch, never the session that wrote it; merging stays a separate, human-gated decision
-- **Notification hooks** — desktop notifications when Claude needs attention (Claude Code)
-- **Custom status line** — git branch, model and context on one quiet row; rate limits and their reset times appear only once they need attention (Claude Code)
-
-## Platform Support
-
-| Platform | How it installs | How skills are invoked |
-|----------|----------------|------------------------|
-| **Claude Code** | Symlinks into `~/.claude/` — skills, agents, CLAUDE.md, settings | `/skill-name` slash commands |
-| **Cursor** | Generates `~/.cursor/rules/aiwf-*.mdc` — one MDC rule per skill | Reference by name: `"follow the /spec workflow for X"` |
-| **Codex CLI** | Symlinks each skill into `~/.agents/skills/aiwf-*/` (native Codex skills) + writes `~/.codex/AGENTS.md` with global conventions | `$skill-name` at the prompt (e.g. `$spec`, `$roadmap`) or describe the task and Codex matches by description |
-
-The bootstrap script auto-detects which tools are installed and sets up all of them. You can also install for each platform independently.
+- **Notification hooks** — desktop notifications when Claude needs attention
+- **Custom status line** — git branch, model and context on one quiet row; rate limits and their reset times appear only once they need attention
 
 ## Development Lifecycle
 
@@ -81,9 +70,9 @@ The workflow uses a tiered model strategy — Opus for decisions, Sonnet for exe
 
 ### Prerequisites
 
-- At least one of: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Cursor](https://www.cursor.com/), or [Codex CLI](https://openai.com/codex)
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
 - `git`, `bash`
-- Claude Code extras: `jq` (status line — required), `notify-send` (Linux) or `osascript` (macOS, built in) for desktop notifications
+- `jq` (status line — required), `notify-send` (Linux) or `osascript` (macOS, built in) for desktop notifications
 
 ### Install (recommended — one-liner)
 
@@ -91,9 +80,7 @@ The workflow uses a tiered model strategy — Opus for decisions, Sonnet for exe
 curl -fsSL https://raw.githubusercontent.com/0xrafasec/ai-workflow/main/bootstrap.sh | bash
 ```
 
-This clones the repo into `~/.local/share/ai-workflow`, installs for all detected platforms, and puts `aiwf` in `~/.local/bin`. Pin to a specific release with `AIWF_REF=v0.1.0 bash`.
-
-**Auto-detection:** bootstrap installs for Claude Code always, then checks for Cursor (`~/.cursor` or `cursor` binary) and Codex CLI (`~/.codex` or `codex` binary) and installs those too.
+This clones the repo into `~/.local/share/ai-workflow`, symlinks the toolkit into `~/.claude`, and puts `aiwf` in `~/.local/bin`. Pin to a specific release with `AIWF_REF=v0.1.0 bash`.
 
 Prefer to read the script before running it? [bootstrap.sh](bootstrap.sh) is short and auditable — the whole toolkit is bash + markdown by design.
 
@@ -102,20 +89,7 @@ Prefer to read the script before running it? [bootstrap.sh](bootstrap.sh) is sho
 ```bash
 git clone https://github.com/0xrafasec/ai-workflow.git
 cd ai-workflow
-./install.sh          # Claude Code + install the aiwf launcher in ~/.local/bin
-aiwf install-cursor   # add Cursor
-aiwf install-codex    # add Codex CLI
-# or all at once:
-aiwf install-all
-```
-
-### Per-platform install
-
-```bash
-aiwf install           # Claude Code — symlinks into ~/.claude/
-aiwf install-cursor    # Cursor — generates ~/.cursor/rules/aiwf-*.mdc
-aiwf install-codex     # Codex CLI — symlinks skills into ~/.agents/skills/ + writes ~/.codex/AGENTS.md
-aiwf install-all       # all three at once
+./install.sh          # symlink into ~/.claude + install the aiwf launcher in ~/.local/bin
 ```
 
 ### Manage the install
@@ -123,25 +97,12 @@ aiwf install-all       # all three at once
 Once `aiwf` is on your PATH:
 
 ```bash
-aiwf status            # install dir, version, and per-platform health
-aiwf update            # git pull + re-link Claude (refuses dirty trees; --force stashes)
-aiwf reinstall         # repair broken Claude symlinks
-aiwf uninstall         # remove Claude symlinks (--purge deletes the clone too)
-aiwf uninstall-cursor  # remove Cursor rules
-aiwf uninstall-codex   # remove Codex instructions
-aiwf uninstall-all     # remove from all platforms
+aiwf status            # install dir, version, and symlink health
+aiwf update            # git pull + re-link (refuses dirty trees; --force stashes)
+aiwf reinstall         # repair broken symlinks
+aiwf uninstall         # remove symlinks (--purge deletes the clone too)
 aiwf version           # git describe
 aiwf help              # all commands
-```
-
-**Keeping Cursor/Codex in sync with updates:**
-
-```bash
-aiwf update            # pull latest from git
-aiwf install-cursor    # regenerate Cursor rules
-aiwf install-codex     # recompile Codex instructions
-# or just:
-aiwf update && aiwf install-all
 ```
 
 **Update conflict handling.** `aiwf update` fast-forwards `main` by default and refuses to proceed if the working tree is dirty or your local branch is ahead of `origin/main`. Both suggest you've edited the clone directly — which is supported. Resolve by committing/pushing, or use `--force` to auto-stash and hard-reset.
@@ -195,13 +156,13 @@ What each profile sets for itself, in its own `settings.json` — model, permiss
 
 Uninstall the same way (`CLAUDE_DIR="$HOME/.claude-work" ./uninstall.sh`). It only removes symlinks, so a profile-local `settings.json` survives, and it leaves `~/.local/bin/aiwf` in place because the launcher is shared by every profile.
 
-`install-all` and `uninstall-all` are only **half** profile-scoped: the Claude half honours `CLAUDE_DIR`, but the Cursor and Codex adapters write to `~/.cursor` and `~/.codex`, which have no profile concept — so an `uninstall-all` run from a profile still wipes those globally. Use plain `aiwf install` / `aiwf uninstall` for a profile. `aiwf uninstall --purge` deletes the shared clone every profile links against, so it is refused unless `CLAUDE_DIR` is the primary dir.
+`aiwf uninstall --purge` deletes the shared clone every profile links against, so it is refused unless `CLAUDE_DIR` is the primary dir.
 
 ### Uninstall
 
 ```bash
-aiwf uninstall-all        # remove from all platforms
-aiwf uninstall --purge    # remove from Claude + delete the clone
+aiwf uninstall            # remove the symlinks
+aiwf uninstall --purge    # remove the symlinks + delete the clone
 ```
 
 ## Skills
@@ -335,14 +296,7 @@ ai-workflow/
 ├── aiwf                       # Toolkit manager CLI
 ├── install.sh                 # Claude Code symlink installer
 ├── uninstall.sh               # Claude Code uninstaller
-├── bootstrap.sh               # One-liner multi-platform bootstrap
-├── adapters/
-│   ├── cursor/
-│   │   ├── install.sh         # Generates ~/.cursor/rules/aiwf-*.mdc
-│   │   └── uninstall.sh       # Removes ~/.cursor/rules/aiwf-*.mdc
-│   └── codex/
-│       ├── install.sh         # Symlinks skills into ~/.agents/skills/aiwf-* + writes ~/.codex/AGENTS.md
-│       └── uninstall.sh       # Removes skill symlinks and AGENTS.md
+├── bootstrap.sh               # One-liner bootstrap
 ├── agents/
 │   ├── architecture-reviewer.md
 │   └── security-reviewer.md
@@ -428,23 +382,14 @@ Details worth knowing:
 
 ## Modifying the Toolkit
 
-All config lives in this repo. **Never edit platform config files directly** (`~/.claude/`, `~/.cursor/rules/aiwf-*.mdc`, `~/.codex/AGENTS.md`, `~/.agents/skills/aiwf-*/`) — changes will be lost on the next install or symlink conflict.
+All config lives in this repo. **Never edit the installed files under `~/.claude/` directly** — changes will be lost on the next install or symlink conflict.
 
 To modify anything:
 
 1. Edit the source file in this repo (skills, agents, CLAUDE.md, reviews, etc.)
 2. Commit and push
 
-**Claude Code / Codex** — skills are symlinked (`~/.claude/skills/`, `~/.agents/skills/aiwf-*/`), so edits to SKILL.md files in this repo take effect immediately. Re-run `aiwf install-codex` only when adding new skills or changing global conventions/agents/reviews (the AGENTS.md file is compiled, not symlinked).
-
-**Cursor** — uses generated MDC files; regenerate after any change:
-
-```bash
-aiwf install-cursor   # regenerate ~/.cursor/rules/aiwf-*.mdc
-aiwf install-codex    # re-link skills + recompile ~/.codex/AGENTS.md
-# or both:
-aiwf install-all
-```
+Skills are symlinked into `~/.claude/skills/`, so edits to SKILL.md files in this repo take effect immediately. Re-run `aiwf install` only when adding, removing, or renaming a skill, agent, or command.
 
 ## Contributing
 

@@ -1,6 +1,6 @@
 # Workflow Toolkit Reference
 
-> Quick reference for all agents, skills, settings, and conventions — and how to install them on Claude Code, Cursor, and Codex CLI.
+> Quick reference for all agents, skills, settings, and conventions, and how to install them.
 
 ---
 
@@ -27,55 +27,36 @@ This toolkit implements the workflow described in [WORKFLOW.md](./WORKFLOW.md), 
 - **Settings** — notification hooks for parallel work (Claude Code)
 - **CLAUDE.md** — global defaults applied to every project
 
-The toolkit supports three platforms. Each installs everything from the same source:
-
-| Platform | Installed to | Invocation |
-|----------|-------------|------------|
-| Claude Code | `~/.claude/` (symlinks) | `/skill-name` slash commands |
-| Cursor | `~/.cursor/rules/aiwf-*.mdc` (generated) | `"follow the /spec workflow for X"` |
-| Codex CLI | `~/.agents/skills/aiwf-*/` (symlinked native skills) + `~/.codex/AGENTS.md` (compiled global context) | `$skill-name` at the prompt (e.g. `$spec`, `$roadmap`) or describe the task |
+Everything installs into `~/.claude/` as symlinks; skills are invoked as `/skill-name` slash commands.
 
 ---
 
 ## Installation
 
-### One-liner (auto-detects all installed platforms)
+### One-liner
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/0xrafasec/ai-workflow/main/bootstrap.sh | bash
 ```
 
-### Per-platform
+### From a clone
 
 ```bash
-aiwf install           # Claude Code — symlinks into ~/.claude/
-aiwf install-cursor    # Cursor — generates ~/.cursor/rules/aiwf-*.mdc
-aiwf install-codex     # Codex CLI — symlinks skills into ~/.agents/skills/ + writes ~/.codex/AGENTS.md
-aiwf install-all       # all three at once
+aiwf install           # symlinks into ~/.claude/
 ```
 
 ### Manage
 
 ```bash
-aiwf status            # health check across all platforms
-aiwf update            # git pull + re-link Claude Code
-aiwf install-all       # re-run after update to refresh Cursor and Codex
-aiwf uninstall-all     # remove from all platforms
+aiwf status            # install dir, version, and symlink health
+aiwf update            # git pull + re-link
+aiwf uninstall         # remove the symlinks
 aiwf help              # full command reference
 ```
 
 ### After modifying skills or config
 
-Skill edits take effect immediately for Claude Code and Codex — both use symlinks (`~/.claude/skills/`, `~/.agents/skills/aiwf-*/`). Re-run the adapter only when:
-
-- **Adding/removing skills** → run `aiwf install-codex` (new symlinks) or `aiwf install` (Claude)
-- **Editing global conventions, agents, or review guides** → run `aiwf install-codex` (these are compiled into `~/.codex/AGENTS.md`, not symlinked)
-- **Any Cursor change** → always run `aiwf install-cursor` (generated MDC files)
-
-```bash
-aiwf install-cursor    # regenerate Cursor rules
-aiwf install-codex     # re-link skills + recompile AGENTS.md
-```
+Skill edits take effect immediately — `~/.claude/skills/` holds symlinks into this repo. Re-run `aiwf install` only when adding, removing, or renaming a skill, agent, or command.
 
 ---
 
@@ -810,14 +791,7 @@ ai-workflow/
   statusline-command.sh                  # Custom status line (Claude Code)
   aiwf                                   # Toolkit manager CLI
   install.sh / uninstall.sh              # Claude Code symlink installer
-  bootstrap.sh                           # Multi-platform one-liner installer
-  adapters/
-    cursor/
-      install.sh                         # Generates ~/.cursor/rules/aiwf-*.mdc
-      uninstall.sh
-    codex/
-      install.sh                         # Symlinks skills into ~/.agents/skills/aiwf-* + compiles ~/.codex/AGENTS.md
-      uninstall.sh
+  bootstrap.sh                           # One-liner installer
   agents/
     security-reviewer.md
     architecture-reviewer.md
@@ -830,8 +804,6 @@ ai-workflow/
     spec / roadmap / feature / fix / commit / pr /
     review / autopilot / new-project /
     design / verify-design / factory
-    # (feature-workspace/ exists alongside but is benchmarking data, not a skill —
-    #  it has no top-level SKILL.md so install adapters skip it.)
 ```
 
 ### Claude Code install (`~/.claude/`)
@@ -870,63 +842,6 @@ The install directory is `~/.claude` unless `CLAUDE_DIR` says otherwise. Claude 
     verify-design/SKILL.md               # /verify-design
     factory/SKILL.md                     # /factory
 ```
-
-### Cursor install (`~/.cursor/rules/`)
-
-```
-~/.cursor/rules/
-  aiwf-global.mdc                        # Global conventions (alwaysApply: true)
-  aiwf-skill-prd.mdc
-  aiwf-skill-architecture.mdc
-  aiwf-skill-tdd.mdc
-  aiwf-skill-security.mdc
-  aiwf-skill-adr.mdc
-  aiwf-skill-rfc.mdc
-  aiwf-skill-spec.mdc
-  aiwf-skill-roadmap.mdc
-  aiwf-skill-feature.mdc
-  aiwf-skill-fix.mdc
-  aiwf-skill-commit.mdc
-  aiwf-skill-pr.mdc
-  aiwf-skill-review.mdc
-  aiwf-skill-autopilot.mdc
-  aiwf-skill-new-project.mdc
-  aiwf-skill-design.mdc
-  aiwf-skill-verify-design.mdc
-  aiwf-skill-factory.mdc
-  aiwf-agent-security-reviewer.mdc
-  aiwf-agent-architecture-reviewer.mdc
-  aiwf-review-go.mdc
-  aiwf-review-rust.mdc
-  aiwf-review-typescript.mdc
-  aiwf-review-python.mdc
-```
-
-### Codex CLI install
-
-Codex uses two locations: native skill discovery at `~/.agents/skills/`,
-and a compiled global-context file at `~/.codex/AGENTS.md`.
-
-```
-~/.agents/skills/
-  aiwf-spec     -> <repo>/skills/spec/       # symlinks — each dir has a SKILL.md
-  aiwf-roadmap  -> <repo>/skills/roadmap/    # invoke at the prompt as $spec,
-  aiwf-feature  -> <repo>/skills/feature/    # $roadmap, $feature, etc.
-  ... (one per skill, aiwf- prefix avoids collisions)
-
-~/.codex/
-  AGENTS.md                        # Compiled: global workflow conventions,
-                                   # agent definitions, review guides. Skills
-                                   # are NOT duplicated here — Codex loads
-                                   # them natively from ~/.agents/skills/.
-  config.toml                      # Installer ensures project_doc_max_bytes
-                                   # is large enough to read AGENTS.md in
-                                   # full (Codex default is 32 KiB).
-```
-
-**Invocation:** type `$<name>` at the Codex prompt — e.g. `$spec`,
-`$roadmap`, `$commit`. Codex also matches skills implicitly by their
-`description:` frontmatter, so you can just describe the task.
 
 ---
 
